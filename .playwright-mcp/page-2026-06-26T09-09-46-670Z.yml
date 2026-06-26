@@ -1,0 +1,60 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e3]:
+    - banner [ref=e4]:
+      - link [ref=e5] [cursor=pointer]:
+        - /url: /karya/senja-di-ujung-maret
+        - img [ref=e6]
+      - generic [ref=e8]:
+        - generic [ref=e9]: "2"
+        - generic [ref=e10]: Hujan dan Kopi
+    - article [ref=e12]:
+      - generic [ref=e13]:
+        - paragraph [ref=e14]: Seminggu setelah pertemuan di perpustakaan, Raya kembali bertemu Arga. Kali ini di kedai kopi dekat kampus.
+        - paragraph [ref=e15]: Tempat itu bernama Kedai Rindu—namanya terlalu puitis untuk ukuran kedai kopi murah di pinggir jalan. Tapi kopinya enak, dan harganya cocok untuk kantong mahasiswa.
+        - paragraph [ref=e16]: Raya sedang menulis esai tentang puisi Chairil Anwar ketika seseorang meletakkan cangkir di mejanya.
+        - paragraph [ref=e17]: "\"Cappuccino. Katanya ini minuman favorit anak sastra.\""
+        - paragraph [ref=e18]: Raya mendongak. Arga berdiri di samping mejanya, kali ini tanpa jaket denim. Hanya kaus hitam polos yang entah kenapa membuatnya terlihat lebih tinggi.
+        - paragraph [ref=e19]: "\"Aku tidak bilang aku suka cappuccino,\" kata Raya."
+        - paragraph [ref=e20]: "\"Tapi kamu tidak menolak juga, kan?\""
+        - paragraph [ref=e21]: Raya tidak menolak. Arga duduk di depannya dengan es kopi susu versinya sendiri.
+        - paragraph [ref=e22]: "\"Jadi, esai tentang apa?\" Arga melirik layar laptop Raya."
+        - paragraph [ref=e23]: "\"Chairil Anwar. Aku sedang membahas puisinya yang paling terkenal.\""
+        - paragraph [ref=e24]: "\"Aku. Itu judulnya kan? 'Aku ini binatang jalang',\" Arga mendeklamasi dengan nada dramatis."
+        - paragraph [ref=e25]: Raya tertawa. "Kamu hafal?"
+        - paragraph [ref=e26]: "\"Hanya dua baris pertama. Selebihnya aku lupa. Teknik Sipil, ingat?\""
+        - paragraph [ref=e27]: Mereka ngobrol sampai sore. Tentang puisi, tentang jembatan (Arga bercerita tentang tugas besar merancang jembatan), tentang masa kecil, tentang mimpi-mimpi yang belum tercapai. Raya bercerita tentang keinginannya menjadi editor naskah, Arga bercerita tentang mimpinya membangun jembatan di desa terpencil.
+        - paragraph [ref=e28]: "Saat matahari mulai turun, Raya menyadari sesuatu: ia baru saja menghabiskan tiga jam tanpa menyentuh esainya."
+        - paragraph [ref=e29]: "\"Aku harus pulang,\" katanya, meskipun setengah dari dirinya enggan beranjak."
+        - paragraph [ref=e30]: Arga mengangguk. "Aku antar ke halte lagi?"
+        - paragraph [ref=e31]: "\"Hari ini tidak hujan.\""
+        - paragraph [ref=e32]: "\"Siapa bilang antar itu harus pakai payung?\""
+        - paragraph [ref=e33]: "Mereka berjalan di bawah langit senja. Cahaya jingga menyelinap di antara pohon-pohon trembesi di sepanjang jalan. Raya berpikir: mungkin ini yang disebut sajak—saat dua orang berjalan bersama dan seluruh dunia terasa seperti bait puisi."
+        - paragraph [ref=e34]: Di halte, Arga memberikan secarik kertas. "Nomerku. Kalau suatu saat kamu ingin diantar lagi. Hujan atau tidak."
+        - paragraph [ref=e35]: Raya menggenggam kertas itu. Kertasnya sedikit lembab, mungkin dari gelas kopi yang dingin. Tapi nomor-nomor yang tertulis di atasnya terasa seperti kode rahasia menuju sesuatu yang belum ia pahami sepenuhnya.
+        - paragraph [ref=e36]: Bus datang. Raya naik, duduk di dekat jendela. Kali ini, ia berbalik dan melambaikan tangan.
+        - paragraph [ref=e37]: "Arga membalas lambaiannya. Tersenyum. Dan di bawah langit Maret yang mulai gelap, Raya tahu: ini baru permulaan."
+    - generic [ref=e39]:
+      - link "Prev" [ref=e40] [cursor=pointer]:
+        - /url: /baca/senja-di-ujung-maret/pertemuan-pertama
+        - img [ref=e41]
+        - text: Prev
+      - generic [ref=e44]: Chapter 2 dari 3
+      - button "Tampilan" [ref=e45]:
+        - img [ref=e46]
+        - text: Tampilan
+      - link "Next" [ref=e49] [cursor=pointer]:
+        - /url: /baca/senja-di-ujung-maret/maret-belum-berakhir
+        - text: Next
+        - img [ref=e50]
+  - generic [ref=e56] [cursor=pointer]:
+    - button "Open Next.js Dev Tools" [ref=e57]:
+      - img [ref=e58]
+    - generic [ref=e61]:
+      - button "Open issues overlay" [ref=e62]:
+        - generic [ref=e63]:
+          - generic [ref=e64]: "0"
+          - generic [ref=e65]: "1"
+        - generic [ref=e66]: Issue
+      - button "Collapse issues badge" [ref=e67]:
+        - img [ref=e68]
+  - alert [ref=e70]

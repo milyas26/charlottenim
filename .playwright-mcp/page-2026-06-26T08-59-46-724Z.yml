@@ -1,0 +1,36 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e3]:
+    - banner [ref=e4]:
+      - link [ref=e5] [cursor=pointer]:
+        - /url: /karya/senja-di-ujung-maret
+        - img [ref=e6]
+      - generic [ref=e8]:
+        - generic [ref=e9]: "3"
+        - generic [ref=e10]: Maret Belum Berakhir
+      - generic [ref=e11]: PREMIUM
+    - generic [ref=e12]:
+      - article [ref=e13]:
+        - generic [ref=e14]:
+          - paragraph [ref=e15]: Minggu-minggu berikutnya berlalu seperti halaman buku yang dibalik terlalu cepat.
+          - paragraph [ref=e16]: Raya dan Arga bertemu hampir setiap hari. Kadang di perpustakaan, kadang di Kedai Rindu, kadang di taman kampus yang mulai bersemi. Mereka berbagi playlist Spotify, saling merekomendasikan buku, dan menghabiskan malam-malam panjang lewat chat yang tidak pernah berakhir dengan "selamat tidur"—karena selalu ada satu topik lagi yang harus dibahas.
+          - paragraph [ref=e17]: Tapi Raya mulai merasakan sesuatu. Sesuatu yang tidak bisa ia jelaskan dengan puisi Chairil Anwar atau novel-novel yang ia baca.
+      - generic [ref=e18]: konten terkunci
+      - generic [ref=e21]:
+        - generic [ref=e22]: 🔒
+        - heading "Chapter Premium" [level=3] [ref=e23]
+        - paragraph [ref=e24]: Beli chapter ini untuk melanjutkan membaca. Satu kali beli, akses selamanya.
+        - button "Beli Chapter · Rp 5.000" [ref=e25]
+        - link "Sudah beli? Login di sini" [ref=e26] [cursor=pointer]:
+          - /url: /login
+    - generic [ref=e28]:
+      - link "Prev" [ref=e29] [cursor=pointer]:
+        - /url: /baca/senja-di-ujung-maret/hujan-dan-kopi
+        - img [ref=e30]
+        - text: Prev
+      - generic [ref=e33]: Chapter 3 dari 3
+      - button "Tampilan" [ref=e34]:
+        - img [ref=e35]
+        - text: Tampilan
+  - button "Open Next.js Dev Tools" [ref=e43] [cursor=pointer]:
+    - img [ref=e44]
+  - alert [ref=e47]

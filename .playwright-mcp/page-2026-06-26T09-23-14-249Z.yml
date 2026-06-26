@@ -1,0 +1,70 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - banner [ref=e3]:
+      - generic [ref=e4]:
+        - link "charlottenimmm" [ref=e5] [cursor=pointer]:
+          - /url: /
+        - button "Login Google" [ref=e6]:
+          - img [ref=e7]
+          - text: Login Google
+    - main [ref=e12]:
+      - generic [ref=e14]:
+        - generic [ref=e15]:
+          - generic [ref=e19]: Senja di Ujung Maret
+          - generic [ref=e23]: Ongoing
+        - generic [ref=e24]:
+          - generic [ref=e25]:
+            - generic [ref=e26]: Romance
+            - generic [ref=e27]: Slice of Life
+            - generic [ref=e28]: Campus
+          - heading "Senja di Ujung Maret" [level=1] [ref=e29]
+          - paragraph [ref=e30]: Raya tidak pernah menyangka pertemuannya dengan Arga di perpustakaan kampus akan mengubah seluruh hidupnya. Di antara halaman buku dan senja bulan Maret, mereka menemukan bahwa cinta kadang datang dari tempat yang paling tak terduga.
+          - generic [ref=e31]:
+            - link "Mulai Baca" [ref=e32] [cursor=pointer]:
+              - /url: /karya/senja-di-ujung-maret
+              - text: Mulai Baca
+              - img [ref=e33]
+            - generic [ref=e35]:
+              - img [ref=e36]
+              - generic [ref=e39]: 3 chapter
+      - generic [ref=e41]: ◆
+      - generic [ref=e42]:
+        - heading "Semua Karya" [level=2] [ref=e43]
+        - paragraph [ref=e44]: 2 karya tersedia
+      - generic [ref=e45]:
+        - img
+        - textbox "Cari judul karya..." [ref=e46]
+      - generic [ref=e47]:
+        - link "Senja di Ujung Maret Ongoing Senja di Ujung Maret Romance Slice of Life +1 3 chapter" [ref=e49] [cursor=pointer]:
+          - /url: /karya/senja-di-ujung-maret
+          - generic [ref=e50]:
+            - generic [ref=e53]: Senja di Ujung Maret
+            - generic [ref=e56]: Ongoing
+          - generic [ref=e57]:
+            - heading "Senja di Ujung Maret" [level=3] [ref=e58]
+            - generic [ref=e59]:
+              - generic [ref=e60]: Romance
+              - generic [ref=e61]: Slice of Life
+              - generic [ref=e62]: "+1"
+            - generic [ref=e63]:
+              - img [ref=e64]
+              - text: 3 chapter
+        - link "Dua Detik Sebelum Kamu Completed Dua Detik Sebelum Kamu Fantasy Romance +1 3 chapter" [ref=e68] [cursor=pointer]:
+          - /url: /karya/dua-detik-sebelum-kamu
+          - generic [ref=e69]:
+            - generic [ref=e72]: Dua Detik Sebelum Kamu
+            - generic [ref=e74]: Completed
+          - generic [ref=e75]:
+            - heading "Dua Detik Sebelum Kamu" [level=3] [ref=e76]
+            - generic [ref=e77]:
+              - generic [ref=e78]: Fantasy
+              - generic [ref=e79]: Romance
+              - generic [ref=e80]: "+1"
+            - generic [ref=e81]:
+              - img [ref=e82]
+              - text: 3 chapter
+    - contentinfo [ref=e85]:
+      - generic [ref=e87]: ◆
+      - paragraph [ref=e88]: charlottenimmm
+  - button "Open Next.js Dev Tools" [ref=e94] [cursor=pointer]:
+    - img [ref=e95]
