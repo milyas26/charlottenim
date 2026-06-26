@@ -41,7 +41,7 @@ export default function ReadingCustomization({ settings, onChange }: Props) {
 
   return (
     <div
-      className="rounded-2xl p-3.5 space-y-3.5"
+      className="rounded-2xl p-2.5 space-y-2"
       style={{
         backgroundColor: "var(--surface)",
         border: "1px solid var(--border)",
@@ -49,17 +49,17 @@ export default function ReadingCustomization({ settings, onChange }: Props) {
     >
       <div>
         <label
-          className="block text-xs font-semibold uppercase tracking-widest mb-2"
+          className="block text-[11px] font-semibold uppercase tracking-widest mb-1.5"
           style={{ color: "var(--muted)" }}
         >
           Jenis Font
         </label>
-        <div className="grid grid-cols-3 gap-2">
+        <div className="grid grid-cols-3 gap-1.5">
           {fonts.map(({ key, label, sample }) => (
             <button
               key={key}
               onClick={() => update("fontFamily", key)}
-              className={`py-2 px-3 rounded-xl text-center transition-all ${fontFamilyClass[key]}`}
+              className={`py-1.5 px-2 rounded-lg text-center transition-all ${fontFamilyClass[key]}`}
               style={{
                 backgroundColor:
                   settings.fontFamily === key
@@ -76,8 +76,8 @@ export default function ReadingCustomization({ settings, onChange }: Props) {
                 opacity: settings.fontFamily === key ? 1 : 0.6,
               }}
             >
-              <span className="text-sm font-semibold block leading-tight">{sample}</span>
-              <span className="text-[10px] opacity-70">{label}</span>
+              <span className="text-xs font-semibold block leading-tight">{sample}</span>
+              <span className="text-[9px] opacity-70">{label}</span>
             </button>
           ))}
         </div>
@@ -85,17 +85,17 @@ export default function ReadingCustomization({ settings, onChange }: Props) {
 
       <div>
         <label
-          className="block text-xs font-semibold uppercase tracking-widest mb-2"
+          className="block text-[11px] font-semibold uppercase tracking-widest mb-1.5"
           style={{ color: "var(--muted)" }}
         >
           Ukuran Font
         </label>
-        <div className="grid grid-cols-3 gap-2">
+        <div className="grid grid-cols-3 gap-1.5">
           {sizes.map(({ key, label }) => (
             <button
               key={key}
               onClick={() => update("fontSize", key)}
-              className="py-2 px-3 rounded-xl text-center text-sm font-medium transition-all"
+              className="py-1.5 px-2 rounded-lg text-center text-sm font-medium transition-all"
               style={{
                 backgroundColor:
                   settings.fontSize === key
@@ -109,7 +109,7 @@ export default function ReadingCustomization({ settings, onChange }: Props) {
                   settings.fontSize === key
                     ? "1px solid var(--accent)"
                     : "1px solid var(--border)",
-                fontSize: key === "small" ? "13px" : key === "medium" ? "15px" : "17px",
+                fontSize: key === "small" ? "12px" : key === "medium" ? "14px" : "16px",
                 opacity: settings.fontSize === key ? 1 : 0.6,
               }}
             >
@@ -121,17 +121,17 @@ export default function ReadingCustomization({ settings, onChange }: Props) {
 
       <div>
         <label
-          className="block text-xs font-semibold uppercase tracking-widest mb-2"
+          className="block text-[11px] font-semibold uppercase tracking-widest mb-1.5"
           style={{ color: "var(--muted)" }}
         >
           Spasi Baris
         </label>
-        <div className="grid grid-cols-3 gap-2">
+        <div className="grid grid-cols-3 gap-1.5">
           {spacings.map(({ key, label }) => (
             <button
               key={key}
               onClick={() => update("lineSpacing", key)}
-              className="py-2 rounded-xl text-center text-sm font-medium transition-all"
+              className="py-1.5 rounded-lg text-center text-xs font-medium transition-all"
               style={{
                 backgroundColor:
                   settings.lineSpacing === key
@@ -154,16 +154,16 @@ export default function ReadingCustomization({ settings, onChange }: Props) {
         </div>
       </div>
 
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between pt-0.5">
         <label
-          className="text-xs font-semibold uppercase tracking-widest"
+          className="text-[11px] font-semibold uppercase tracking-widest"
           style={{ color: "var(--muted)" }}
         >
           Mode Gelap
         </label>
         <button
           onClick={() => update("darkMode", !settings.darkMode)}
-          className="relative w-11 h-6 rounded-full transition-colors"
+          className="relative w-9 h-5 rounded-full transition-colors"
           style={{
             backgroundColor: settings.darkMode
               ? "var(--accent)"
@@ -171,9 +171,9 @@ export default function ReadingCustomization({ settings, onChange }: Props) {
           }}
         >
           <span
-            className="absolute top-0.5 w-5 h-5 rounded-full bg-white shadow-sm transition-transform"
+            className="absolute top-0.5 w-4 h-4 rounded-full bg-white shadow-sm transition-transform"
             style={{
-              left: settings.darkMode ? "calc(100% - 1.375rem)" : "0.125rem",
+              left: settings.darkMode ? "calc(100% - 1.125rem)" : "0.125rem",
             }}
           />
         </button>

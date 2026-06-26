@@ -13,6 +13,18 @@ const dummyComments: Comment[] = [
   { id: 1, author: "Pembaca Setia", text: "Keren banget chapter ini, gak sabar nunggu kelanjutannya!", date: "2 jam lalu" },
   { id: 2, author: "BukuLover99", text: "Plot twist-nya bikin merinding...", date: "5 jam lalu" },
   { id: 3, author: "NimReader", text: "Tolong update lagi kak, udah gak tahan nunggu 😭", date: "1 hari lalu" },
+  { id: 4, author: "CeritaMalam", text: "Deskripsi setting-nya dapet banget, kebayang suasananya.", date: "2 hari lalu" },
+  { id: 5, author: "NovelHunter", text: "Karakter MC-nya kuat banget, growingnya kerasa dari awal.", date: "2 hari lalu" },
+  { id: 6, author: "MataPenaku", text: "Aku reread dari awal lagi sambil nunggu update, gak bosen 😍", date: "3 hari lalu" },
+  { id: 7, author: "BacaTerus", text: "Chapter ini short tapi impactful. Love it!", date: "3 hari lalu" },
+  { id: 8, author: "KataKata", text: "Dialognya natural, gak kaku. Penulisnya berbakat!", date: "4 hari lalu" },
+  { id: 9, author: "SastraDigital", text: "Akhirnya nemu novel bagus di sini. Langsung bookmark.", date: "4 hari lalu" },
+  { id: 10, author: "HalamanLembar", text: "Gaya nulisnya flowing banget, gak terasa bacanya.", date: "5 hari lalu" },
+  { id: 11, author: "RinduAksara", text: "Semoga cepet tamat, penasaran sama akhir ceritanya!", date: "6 hari lalu" },
+  { id: 12, author: "BintangCerita", text: "Konfliknya dapet, bikin gregetan sendiri bacanya.", date: "6 hari lalu" },
+  { id: 13, author: "TintaEmas", text: "Rekomendasi dari temen, ternyata beneran bagus 👍", date: "1 minggu lalu" },
+  { id: 14, author: "PenaMalam", text: "Setiap chapter selalu ada plot yang gak terduga.", date: "1 minggu lalu" },
+  { id: 15, author: "ImajiKertas", text: "Karakter sampingannya juga gak cuma tempelan, ada depth.", date: "1 minggu lalu" },
 ];
 
 export default function CommentsSection() {
@@ -68,7 +80,7 @@ export default function CommentsSection() {
         </button>
       </form>
 
-      <div className="space-y-3">
+      <div className="space-y-3 max-h-[420px] overflow-y-auto pr-1">
         {comments.map((c) => (
           <div key={c.id} className="flex gap-3">
             <div
