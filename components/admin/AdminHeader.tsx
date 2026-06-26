@@ -9,6 +9,7 @@ const pathLabels: Record<string, string> = {
   karya: "Karya",
   baru: "Tambah Baru",
   chapter: "Chapter",
+  create: "Tambah Baru",
   users: "Users",
 }
 

@@ -14,7 +14,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       <div className="ml-60 min-h-screen">
         <AdminHeader />
         <main>
-          <div className="p-8">{children}</div>
+          <div className="p-4 min-h-[calc(100vh-64px)]">{children}</div>
         </main>
       </div>
     </div>

@@ -62,8 +62,8 @@ Aplikasi baca novel & AU (Alternate Universe) khusus creator **charlotenimmm**. 
 | `/admin`                  | Dashboard — list semua karya admin     |
 | `/admin/karya/baru`       | Upload karya baru + upload cover ke S3 |
 | `/admin/karya/[slug]`     | Detail karya — list chapter            |
-| `/admin/karya/[slug]/chapter/baru` | Tambah chapter baru            |
-| `/admin/karya/[slug]/chapter/[id]/edit` | Edit chapter               |
+| `/admin/karya/[slug]/chapter/create` | Tambah chapter baru           |
+| `/admin/karya/[slug]/chapter/[slug]` | Edit chapter                   |
 | `/admin/users`            | List semua user, detail user + history pembelian |
 
 ---
