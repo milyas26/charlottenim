@@ -15,12 +15,12 @@ export default function DetailPage({ work, chapters }: Props) {
     <div className="min-h-screen bg-[var(--background)]">
       <Navbar />
 
-      <main className="max-w-[480px] mx-auto px-5 pt-6 pb-16">
+      <main className="max-w-[480px] mx-auto px-4 pt-4 pb-8">
         <WorkHeader work={work} />
         <ChapterList chapters={chapters} workSlug={work.slug} />
       </main>
 
-      <footer className="text-center py-8">
+      <footer className="text-center py-6">
         <p
           className="text-xs tracking-widest uppercase font-medium"
           style={{ color: "var(--muted)", opacity: 0.4 }}

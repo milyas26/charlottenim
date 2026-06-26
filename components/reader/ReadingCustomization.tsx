@@ -41,7 +41,7 @@ export default function ReadingCustomization({ settings, onChange }: Props) {
 
   return (
     <div
-      className="rounded-2xl p-5 space-y-5"
+      className="rounded-2xl p-3.5 space-y-3.5"
       style={{
         backgroundColor: "var(--surface)",
         border: "1px solid var(--border)",
@@ -49,7 +49,7 @@ export default function ReadingCustomization({ settings, onChange }: Props) {
     >
       <div>
         <label
-          className="block text-xs font-semibold uppercase tracking-widest mb-3"
+          className="block text-xs font-semibold uppercase tracking-widest mb-2"
           style={{ color: "var(--muted)" }}
         >
           Jenis Font
@@ -59,7 +59,7 @@ export default function ReadingCustomization({ settings, onChange }: Props) {
             <button
               key={key}
               onClick={() => update("fontFamily", key)}
-              className={`py-2.5 px-3 rounded-xl text-center transition-all ${fontFamilyClass[key]}`}
+              className={`py-2 px-3 rounded-xl text-center transition-all ${fontFamilyClass[key]}`}
               style={{
                 backgroundColor:
                   settings.fontFamily === key
@@ -85,7 +85,7 @@ export default function ReadingCustomization({ settings, onChange }: Props) {
 
       <div>
         <label
-          className="block text-xs font-semibold uppercase tracking-widest mb-3"
+          className="block text-xs font-semibold uppercase tracking-widest mb-2"
           style={{ color: "var(--muted)" }}
         >
           Ukuran Font
@@ -95,7 +95,7 @@ export default function ReadingCustomization({ settings, onChange }: Props) {
             <button
               key={key}
               onClick={() => update("fontSize", key)}
-              className="py-2.5 px-3 rounded-xl text-center text-sm font-medium transition-all"
+              className="py-2 px-3 rounded-xl text-center text-sm font-medium transition-all"
               style={{
                 backgroundColor:
                   settings.fontSize === key
@@ -121,7 +121,7 @@ export default function ReadingCustomization({ settings, onChange }: Props) {
 
       <div>
         <label
-          className="block text-xs font-semibold uppercase tracking-widest mb-3"
+          className="block text-xs font-semibold uppercase tracking-widest mb-2"
           style={{ color: "var(--muted)" }}
         >
           Spasi Baris
@@ -131,7 +131,7 @@ export default function ReadingCustomization({ settings, onChange }: Props) {
             <button
               key={key}
               onClick={() => update("lineSpacing", key)}
-              className="py-2.5 rounded-xl text-center text-sm font-medium transition-all"
+              className="py-2 rounded-xl text-center text-sm font-medium transition-all"
               style={{
                 backgroundColor:
                   settings.lineSpacing === key

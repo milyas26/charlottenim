@@ -32,10 +32,10 @@ export default function WorkHeader({ work }: Props) {
   const gradient = coverGradients[work.slug] || fallbackGradient;
 
   return (
-    <div className="mb-8">
+    <div className="mb-5">
       <a
         href="/"
-        className="inline-flex items-center gap-1.5 text-sm font-medium mb-5 transition-colors"
+        className="inline-flex items-center gap-1.5 text-sm font-medium mb-3 transition-colors"
         style={{ color: "var(--muted)" }}
       >
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -44,7 +44,7 @@ export default function WorkHeader({ work }: Props) {
         Semua Karya
       </a>
 
-      <div className="flex flex-col gap-5">
+      <div className="flex flex-col gap-3">
         <div
           className="w-full aspect-[3/2] rounded-2xl flex items-center justify-center relative overflow-hidden"
           style={{ background: gradient }}
@@ -115,7 +115,7 @@ export default function WorkHeader({ work }: Props) {
             {work.synopsis}
           </p>
 
-          <div className="flex items-center gap-3 mt-5">
+          <div className="flex items-center gap-3 mt-4">
             <a
               href={`/baca/${work.slug}/pertemuan-pertama`}
               className="inline-flex items-center gap-2 text-sm font-semibold px-5 py-2.5 rounded-xl text-white transition-all hover:opacity-90 active:scale-[0.98]"
@@ -143,7 +143,7 @@ export default function WorkHeader({ work }: Props) {
         </div>
       </div>
 
-      <div className="ornamental-divider mt-8">
+      <div className="ornamental-divider mt-5">
         <span className="ornamental-divider-icon">✦</span>
       </div>
     </div>

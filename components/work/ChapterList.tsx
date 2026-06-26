@@ -11,7 +11,7 @@ export default function ChapterList({ chapters, workSlug }: Props) {
   return (
     <div>
       <h2
-        className="text-base font-bold mb-4 font-[family-name:var(--font-display)]"
+        className="text-base font-bold mb-3 font-[family-name:var(--font-display)]"
         style={{ color: "var(--foreground)" }}
       >
         Daftar Chapter
@@ -22,7 +22,7 @@ export default function ChapterList({ chapters, workSlug }: Props) {
           <a
             key={chapter.id}
             href={`/baca/${workSlug}/${chapter.slug}`}
-            className="flex items-center justify-between px-4 py-3.5 rounded-xl transition-all hover:bg-[var(--surface)] group"
+            className="flex items-center justify-between px-3.5 py-3 rounded-xl transition-all hover:bg-[var(--surface)] group"
             style={{ border: "1px solid var(--border)" }}
           >
             <div className="flex items-center gap-3 min-w-0">

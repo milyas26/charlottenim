@@ -7,7 +7,7 @@ interface Props {
 
 export default function SearchBar({ value, onChange }: Props) {
   return (
-    <div className="relative mb-7">
+    <div className="relative mb-4">
       <svg
         className="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none transition-all duration-300"
         width="16"

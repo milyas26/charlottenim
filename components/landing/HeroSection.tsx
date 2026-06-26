@@ -32,7 +32,7 @@ export default function HeroSection({ work }: Props) {
   const gradient = coverGradients[work.slug] || coverFallback;
 
   return (
-    <section className="relative w-full animate-fade-in-up mb-14">
+    <section className="relative w-full animate-fade-in-up mb-5">
       <div
         className="relative w-full aspect-[4/5] overflow-hidden rounded-2xl"
         style={{ background: gradient }}
@@ -62,9 +62,9 @@ export default function HeroSection({ work }: Props) {
           }}
         />
 
-        <div className="absolute inset-0 flex flex-col justify-end p-8 pb-9">
-          <div className="mb-7">
-            <div className="gold-rule max-w-[48px] mb-5" />
+        <div className="absolute inset-0 flex flex-col justify-end p-4 pb-5">
+          <div className="mb-3">
+            <div className="gold-rule max-w-[48px] mb-2" />
           </div>
 
           <h1
@@ -105,8 +105,8 @@ export default function HeroSection({ work }: Props) {
         </div>
       </div>
 
-      <div className="px-1 mt-6">
-        <div className="flex flex-wrap gap-1.5 mb-5">
+      <div className="px-1 mt-3">
+        <div className="flex flex-wrap gap-1.5 mb-2">
           {work.genres.map((genre) => (
             <span
               key={genre}
@@ -130,7 +130,7 @@ export default function HeroSection({ work }: Props) {
         </div>
 
         <p
-          className="text-sm leading-relaxed text-center italic px-4 mb-8 font-[family-name:var(--font-body)] relative"
+          className="text-sm leading-relaxed text-center italic px-4 mb-3 font-[family-name:var(--font-body)] relative"
           style={{ color: "var(--muted)" }}
         >
           <span

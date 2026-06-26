@@ -89,9 +89,9 @@ export default function WorkCard({ work }: Props) {
           }}
         />
 
-        <div className="relative z-10 flex flex-col items-center px-4 mt-auto pb-9">
+        <div className="relative z-10 flex flex-col items-center px-4 mt-auto pb-4">
           <div
-            className="w-8 h-px mb-3 opacity-50"
+            className="w-8 h-px mb-2 opacity-50"
             style={{ background: "rgba(255,255,255,0.55)" }}
           />
           <span
@@ -125,9 +125,9 @@ export default function WorkCard({ work }: Props) {
         </div>
       </div>
 
-      <div className="px-3.5 pt-3.5 pb-4">
+      <div className="px-3 pt-2.5 pb-3">
         <h3
-          className="font-bold text-[13px] leading-snug mb-3 line-clamp-2 font-[family-name:var(--font-display)] group-hover:text-[var(--accent)] transition-colors duration-200"
+          className="font-bold text-[13px] leading-snug mb-2 line-clamp-2 font-[family-name:var(--font-display)] group-hover:text-[var(--accent)] transition-colors duration-200"
           style={{ color: "var(--foreground)" }}
         >
           {work.title}

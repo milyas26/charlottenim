@@ -30,16 +30,16 @@ export default function LandingPage({ works }: Props) {
     <div className="min-h-screen bg-[var(--background)] relative">
       <Navbar />
 
-      <main className="max-w-[480px] mx-auto px-5 pt-2 pb-16 relative z-[1]">
+      <main className="max-w-[480px] mx-auto px-4 pt-2 pb-6 relative z-[1]">
         {heroWork && <HeroSection work={heroWork} />}
 
-        <div className="section-ornament mt-2">
+        <div className="section-ornament mt-1.5">
           <span className="section-ornament-icon font-[family-name:var(--font-display)]">
             &#10086;
           </span>
         </div>
 
-        <div className="mb-8">
+        <div className="mb-3">
           <h2
             className="text-lg font-bold font-[family-name:var(--font-display)] text-center tracking-wide"
             style={{ color: "var(--foreground)" }}
@@ -80,7 +80,7 @@ export default function LandingPage({ works }: Props) {
             </p>
           </div>
         ) : (
-          <div className="grid grid-cols-2 gap-5">
+          <div className="grid grid-cols-2 gap-3">
             {filtered.map((work, i) => (
               <div
                 key={work.id}
@@ -94,8 +94,8 @@ export default function LandingPage({ works }: Props) {
         )}
       </main>
 
-      <footer className="text-center py-12 relative z-[1]">
-        <div className="gold-rule max-w-[120px] mx-auto mb-6" />
+      <footer className="text-center py-6 relative z-[1]">
+        <div className="gold-rule max-w-[120px] mx-auto mb-3" />
         <p
           className="text-[11px] tracking-[0.35em] uppercase font-medium"
           style={{ color: "var(--muted)", opacity: 0.3 }}

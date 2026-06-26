@@ -13,14 +13,14 @@ export default function PaywallOverlay({ price }: Props) {
 
   return (
     <div
-      className="rounded-2xl p-8 text-center"
+      className="rounded-2xl p-4 text-center"
       style={{
         backgroundColor: "var(--surface)",
         border: "1px solid var(--border)",
       }}
     >
       <div
-        className="inline-flex items-center justify-center w-16 h-16 rounded-full mb-5 text-2xl"
+        className="inline-flex items-center justify-center w-12 h-12 rounded-full mb-3 text-xl"
         style={{ backgroundColor: "color-mix(in srgb, var(--accent) 10%, transparent)" }}
       >
         🔒
@@ -34,7 +34,7 @@ export default function PaywallOverlay({ price }: Props) {
       </h3>
 
       <p
-        className="text-sm mb-6 leading-relaxed max-w-xs mx-auto"
+        className="text-sm mb-3 leading-relaxed max-w-xs mx-auto"
         style={{ color: "var(--muted)" }}
       >
         Beli chapter ini untuk melanjutkan membaca. Satu kali beli, akses selamanya.
@@ -49,7 +49,7 @@ export default function PaywallOverlay({ price }: Props) {
 
       <a
         href="/login"
-        className="block mt-4 text-xs font-medium hover:underline transition-colors"
+        className="block mt-3 text-xs font-medium hover:underline transition-colors"
         style={{ color: "var(--accent)" }}
       >
         Sudah beli? Login di sini
