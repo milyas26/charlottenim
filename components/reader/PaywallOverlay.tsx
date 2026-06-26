@@ -1,5 +1,7 @@
 "use client";
 
+import LoginDialog from "@/components/LoginDialog";
+
 interface Props {
   price: number;
 }
@@ -47,13 +49,14 @@ export default function PaywallOverlay({ price }: Props) {
         Beli Chapter &middot; {formattedPrice}
       </button>
 
-      <a
-        href="/login"
-        className="block mt-3 text-xs font-medium hover:underline transition-colors"
-        style={{ color: "var(--accent)" }}
-      >
-        Sudah beli? Login di sini
-      </a>
+      <LoginDialog>
+        <button
+          className="block mt-3 text-xs font-medium mx-auto hover:underline transition-colors"
+          style={{ color: "var(--accent)" }}
+        >
+          Sudah beli? Login di sini
+        </button>
+      </LoginDialog>
     </div>
   );
 }
