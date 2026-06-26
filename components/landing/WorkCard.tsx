@@ -11,6 +11,18 @@ const coverGradients: Record<string, string> = {
     "linear-gradient(155deg, #f0d4ae 0%, #e2bc8a 12%, #d4a574 25%, #c08858 40%, #b87b5c 55%, #a46340 68%, #8b4e32 80%, #6b3a2a 92%, #4a2418 100%)",
   "dua-detik-sebelum-kamu":
     "linear-gradient(155deg, #bcc8d6 0%, #9aacbf 12%, #7b8da0 28%, #5e7188 45%, #4a5568 60%, #3a4460 75%, #2d3748 88%, #1a202c 100%)",
+  "hujan-terakhir-di-bulan-juni":
+    "linear-gradient(155deg, #a8c8d8 0%, #7aa7bf 12%, #5a8ea6 28%, #3e708a 45%, #2a5a72 60%, #1c4358 75%, #102f40 88%, #0a1e2c 100%)",
+  "surat-kecil-untuk-bintang":
+    "linear-gradient(155deg, #c5b8e0 0%, #a892d4 12%, #8d6fc4 28%, #6b4dae 45%, #523898 60%, #3d2580 75%, #291765 88%, #180e42 100%)",
+  "antara-jakarta-dan-kenangan":
+    "linear-gradient(155deg, #d9c5a8 0%, #c4a87e 12%, #b08e5c 28%, #95703e 45%, #7a5a30 60%, #604422 75%, #453018 88%, #2c1e0e 100%)",
+  "pagi-yang-tertukar":
+    "linear-gradient(155deg, #f2c4b8 0%, #e8a090 12%, #d47a68 28%, #ba5848 45%, #9a382e 60%, #7a221a 75%, #56120e 88%, #360804 100%)",
+  "stasiun-terakhir":
+    "linear-gradient(155deg, #9cada0 0%, #768e7a 12%, #577058 28%, #3a523c 45%, #243a26 60%, #14261a 75%, #0a1810 88%, #040c06 100%)",
+  "kedai-hujan":
+    "linear-gradient(155deg, #b8ccb4 0%, #8fb088 12%, #6a9460 28%, #487840 45%, #2e5c28 60%, #1c4218 75%, #0e2a0c 88%, #061604 100%)",
 };
 
 const fallbackGradient =

@@ -11,6 +11,18 @@ const coverGradients: Record<string, string> = {
     "linear-gradient(135deg, #d4a574 0%, #b87b5c 30%, #8b5e3c 60%, #5c3a28 100%)",
   "dua-detik-sebelum-kamu":
     "linear-gradient(135deg, #6b7b8d 0%, #4a5568 30%, #2d3748 60%, #1a202c 100%)",
+  "hujan-terakhir-di-bulan-juni":
+    "linear-gradient(135deg, #87b3c8 0%, #5a8ea6 30%, #3e708a 60%, #1c4358 100%)",
+  "surat-kecil-untuk-bintang":
+    "linear-gradient(135deg, #a892d4 0%, #7a58b8 30%, #553898 60%, #2d1e60 100%)",
+  "antara-jakarta-dan-kenangan":
+    "linear-gradient(135deg, #c4a87e 0%, #a08058 30%, #7a5a30 60%, #4a3418 100%)",
+  "pagi-yang-tertukar":
+    "linear-gradient(135deg, #e0a090 0%, #c07058 30%, #8a3020 60%, #501810 100%)",
+  "stasiun-terakhir":
+    "linear-gradient(135deg, #809a84 0%, #557058 30%, #304a34 60%, #142618 100%)",
+  "kedai-hujan":
+    "linear-gradient(135deg, #9cba94 0%, #6e9460 30%, #487040 60%, #204a1c 100%)",
 };
 
 const fallbackGradient =
