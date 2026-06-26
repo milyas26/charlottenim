@@ -29,14 +29,23 @@ const coverFallback =
   "linear-gradient(160deg, #d9cec0 0%, #c4b5a5 40%, #b09e8d 70%, #8c7b6b 100%)";
 
 export default function HeroSection({ work }: Props) {
+  const hasImage = work.coverUrl.startsWith("http");
   const gradient = coverGradients[work.slug] || coverFallback;
 
   return (
     <section className="relative w-full animate-fade-in-up mb-5">
       <div
         className="relative w-full aspect-[4/5] overflow-hidden rounded-2xl"
-        style={{ background: gradient }}
+        style={{ background: hasImage ? "var(--surface)" : gradient }}
       >
+        {hasImage && (
+          <img
+            src={work.coverUrl}
+            alt={work.title}
+            className="absolute inset-0 w-full h-full object-cover"
+          />
+        )}
+
         <div
           className="absolute inset-0 opacity-[0.06]"
           style={{

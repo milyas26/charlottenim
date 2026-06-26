@@ -29,6 +29,7 @@ const fallbackGradient =
   "linear-gradient(155deg, #e0d6c8 0%, #d0c4b4 20%, #c4b5a5 45%, #b09e8d 65%, #948274 85%, #6b5d50 100%)";
 
 export default function WorkCard({ work }: Props) {
+  const hasImage = work.coverUrl.startsWith("http");
   const gradient = coverGradients[work.slug] || fallbackGradient;
 
   return (
@@ -54,8 +55,16 @@ export default function WorkCard({ work }: Props) {
     >
       <div
         className="aspect-[3/4] w-full relative flex flex-col items-center justify-center overflow-hidden"
-        style={{ background: gradient }}
+        style={{ background: hasImage ? "var(--surface)" : gradient }}
       >
+        {hasImage && (
+          <img
+            src={work.coverUrl}
+            alt={work.title}
+            className="absolute inset-0 w-full h-full object-cover"
+          />
+        )}
+
         <div
           className="absolute inset-0"
           style={{
@@ -89,21 +98,23 @@ export default function WorkCard({ work }: Props) {
           }}
         />
 
-        <div className="relative z-10 flex flex-col items-center px-4 mt-auto pb-4">
-          <div
-            className="w-8 h-px mb-2 opacity-50"
-            style={{ background: "rgba(255,255,255,0.55)" }}
-          />
-          <span
-            className="text-sm sm:text-[15px] font-bold text-center leading-tight drop-shadow-lg font-[family-name:var(--font-display)]"
-            style={{
-              color: "rgba(255,255,255,0.95)",
-              textShadow: "0 2px 8px rgba(0,0,0,0.3)",
-            }}
-          >
-            {work.title}
-          </span>
-        </div>
+        {!hasImage && (
+          <div className="relative z-10 flex flex-col items-center px-4 mt-auto pb-4">
+            <div
+              className="w-8 h-px mb-2 opacity-50"
+              style={{ background: "rgba(255,255,255,0.55)" }}
+            />
+            <span
+              className="text-sm sm:text-[15px] font-bold text-center leading-tight drop-shadow-lg font-[family-name:var(--font-display)]"
+              style={{
+                color: "rgba(255,255,255,0.95)",
+                textShadow: "0 2px 8px rgba(0,0,0,0.3)",
+              }}
+            >
+              {work.title}
+            </span>
+          </div>
+        )}
 
         <div className="absolute top-2.5 right-2.5 flex items-center gap-1.5 z-20">
           {work.status === "ONGOING" && (

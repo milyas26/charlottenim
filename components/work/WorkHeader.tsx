@@ -29,6 +29,7 @@ const fallbackGradient =
   "linear-gradient(135deg, #c4b5a5 0%, #a89888 50%, #8c7b6b 100%)";
 
 export default function WorkHeader({ work }: Props) {
+  const hasImage = work.coverUrl.startsWith("http");
   const gradient = coverGradients[work.slug] || fallbackGradient;
 
   return (
@@ -47,11 +48,20 @@ export default function WorkHeader({ work }: Props) {
       <div className="flex flex-col gap-3">
         <div
           className="w-full aspect-[3/2] rounded-2xl flex items-center justify-center relative overflow-hidden"
-          style={{ background: gradient }}
+          style={{ background: hasImage ? "var(--surface)" : gradient }}
         >
-          <span className="text-sm font-bold text-center text-white/85 drop-shadow-md leading-snug p-4 font-[family-name:var(--font-display)]">
-            {work.title}
-          </span>
+          {hasImage && (
+            <img
+              src={work.coverUrl}
+              alt={work.title}
+              className="absolute inset-0 w-full h-full object-cover"
+            />
+          )}
+          {!hasImage && (
+            <span className="text-sm font-bold text-center text-white/85 drop-shadow-md leading-snug p-4 font-[family-name:var(--font-display)]">
+              {work.title}
+            </span>
+          )}
           <div className="absolute top-3 right-3">
             <span
               className="text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-md backdrop-blur-sm"

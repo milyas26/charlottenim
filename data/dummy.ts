@@ -7,7 +7,7 @@ export const works: Work[] = [
     slug: "senja-di-ujung-maret",
     synopsis:
       "Raya tidak pernah menyangka pertemuannya dengan Arga di perpustakaan kampus akan mengubah seluruh hidupnya. Di antara halaman buku dan senja bulan Maret, mereka menemukan bahwa cinta kadang datang dari tempat yang paling tak terduga.",
-    coverUrl: "/covers/senja-maret.jpg",
+    coverUrl: "https://picsum.photos/seed/senja/400/600",
     genres: ["Romance", "Slice of Life", "Campus"],
     status: "ONGOING",
     totalChapters: 3,
@@ -18,7 +18,7 @@ export const works: Work[] = [
     slug: "dua-detik-sebelum-kamu",
     synopsis:
       "Aksara memiliki kemampuan unik: ia bisa melihat dua detik ke masa depan. Kemampuan yang menurutnya tidak berguna, sampai ia bertemu Senja—gadis yang masa depannya selalu kosong setiap kali Aksara mencoba melihat.",
-    coverUrl: "/covers/dua-detik.jpg",
+    coverUrl: "https://picsum.photos/seed/duadetik/400/600",
     genres: ["Fantasy", "Romance", "Mystery"],
     status: "COMPLETED",
     totalChapters: 3,
@@ -29,7 +29,7 @@ export const works: Work[] = [
     slug: "hujan-terakhir-di-bulan-juni",
     synopsis:
       "Setiap bulan Juni, hujan selalu mempertemukan Bara dan Hujan di halte bus yang sama. Namun Juni tahun ini berbeda—hujan tak kunjung turun, dan Bara harus memutuskan apakah ia akan menunggu lebih lama atau pergi sebelum halte itu menjadi kenangan.",
-    coverUrl: "/covers/hujan-juni.jpg",
+    coverUrl: "https://picsum.photos/seed/hujan/400/600",
     genres: ["Romance", "Drama", "Slice of Life"],
     status: "ONGOING",
     totalChapters: 3,
@@ -40,7 +40,7 @@ export const works: Work[] = [
     slug: "surat-kecil-untuk-bintang",
     synopsis:
       "Raka, seorang anak laki-laki berusia dua belas tahun, menulis surat untuk bintang setiap malam. Ia tidak pernah menyangka bahwa suatu hari, sebuah surat balasan akan jatuh dari langit—mengantarkannya pada petualangan yang akan mengubah cara ia melihat alam semesta.",
-    coverUrl: "/covers/surat-bintang.jpg",
+    coverUrl: "https://picsum.photos/seed/suratbintang/400/600",
     genres: ["Fantasy", "Coming of Age", "Adventure"],
     status: "ONGOING",
     totalChapters: 3,
@@ -51,7 +51,7 @@ export const works: Work[] = [
     slug: "antara-jakarta-dan-kenangan",
     synopsis:
       "Setelah tujuh tahun merantau di Melbourne, Kania kembali ke Jakarta untuk menghadiri pemakaman ayahnya. Di tengah kota yang telah berubah, ia menemukan kembali potongan-potongan masa lalu—termasuk seseorang yang pernah ia tinggalkan tanpa pamit.",
-    coverUrl: "/covers/jakarta-kenangan.jpg",
+    coverUrl: "https://picsum.photos/seed/jakarta/400/600",
     genres: ["Romance", "Family", "Drama"],
     status: "COMPLETED",
     totalChapters: 3,
@@ -62,7 +62,7 @@ export const works: Work[] = [
     slug: "pagi-yang-tertukar",
     synopsis:
       "Ara dan Bima tidak sengaja menukar ponsel mereka di kedai kopi. Satu pagi yang kacau berubah menjadi rangkaian pertemuan tak terduga—pesan yang salah sasaran, panggilan tak dikenal, dan dua orang yang perlahan menemukan bahwa takdir kadang bekerja lewat kesalahan kecil.",
-    coverUrl: "/covers/au-pagi-tertukar.jpg",
+    coverUrl: "https://picsum.photos/seed/pagi-tertukar/400/600",
     genres: ["AU", "Romance", "Comedy"],
     status: "COMPLETED",
     totalChapters: 3,
@@ -73,7 +73,7 @@ export const works: Work[] = [
     slug: "stasiun-terakhir",
     synopsis:
       "Setiap malam pukul 23.47, Nara naik kereta terakhir dari Stasiun Kota. Di gerbong ke-3, ia selalu bertemu Revan—lelaki yang tak pernah turun sebelum stasiun terakhir. Dua orang asing yang berbagi perjalanan tanpa kata-kata, sampai suatu malam semuanya berubah.",
-    coverUrl: "/covers/au-stasiun-terakhir.jpg",
+    coverUrl: "https://picsum.photos/seed/stasiun/400/600",
     genres: ["AU", "Drama", "Romance"],
     status: "ONGOING",
     totalChapters: 3,
@@ -84,7 +84,7 @@ export const works: Work[] = [
     slug: "kedai-hujan",
     synopsis:
       "Di sudut kota yang selalu basah, ada sebuah kedai kecil yang hanya buka saat hujan. Pemiliknya, Genta, menyajikan teh hangat untuk setiap jiwa yang butuh berteduh. Sampai suatu hari, seorang pelanggan datang bukan untuk berteduh dari hujan—tapi untuk mencari sesuatu yang telah lama hilang.",
-    coverUrl: "/covers/au-kedai-hujan.jpg",
+    coverUrl: "https://picsum.photos/seed/kedaihujan/400/600",
     genres: ["AU", "Fantasy", "Slice of Life"],
     status: "ONGOING",
     totalChapters: 3,

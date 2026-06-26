@@ -93,9 +93,13 @@ export default function AdminWorksPage() {
                   <TableRow key={work.id}>
                     <TableCell>
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-14 rounded bg-gradient-to-br from-accent/40 to-accent/10 flex items-center justify-center text-[10px] font-medium text-accent shrink-0">
-                          {work.title.charAt(0)}
-                        </div>
+                        {work.coverUrl.startsWith("http") ? (
+                          <img src={work.coverUrl} alt={work.title} className="w-10 h-14 rounded object-cover shrink-0" />
+                        ) : (
+                          <div className="w-10 h-14 rounded bg-gradient-to-br from-accent/40 to-accent/10 flex items-center justify-center text-[10px] font-medium text-accent shrink-0">
+                            {work.title.charAt(0)}
+                          </div>
+                        )}
                         <div className="min-w-0">
                           <Link href={`/admin/karya/${work.slug}`} className="font-medium hover:text-primary transition-colors block truncate">
                             {work.title}

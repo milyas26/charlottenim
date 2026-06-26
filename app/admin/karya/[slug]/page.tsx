@@ -153,9 +153,13 @@ export default function AdminWorkDetailPage({ params }: { params: Promise<{ slug
             <CardTitle>Info Karya</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="w-full aspect-[3/4] rounded-lg bg-gradient-to-br from-accent/40 to-accent/10 flex items-center justify-center">
-              <span className="text-4xl font-bold text-accent/40">{work.title.charAt(0)}</span>
-            </div>
+            {work.coverUrl.startsWith("http") ? (
+              <img src={work.coverUrl} alt={work.title} className="w-full aspect-[3/4] rounded-lg object-cover" />
+            ) : (
+              <div className="w-full aspect-[3/4] rounded-lg bg-gradient-to-br from-accent/40 to-accent/10 flex items-center justify-center">
+                <span className="text-4xl font-bold text-accent/40">{work.title.charAt(0)}</span>
+              </div>
+            )}
 
             <div className="space-y-2">
               <div className="flex items-center justify-between">
