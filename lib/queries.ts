@@ -741,6 +741,16 @@ export async function getAllPurchases(): Promise<Purchase[]> {
   }))
 }
 
+export async function isChapterPurchasedByUser(
+  userId: string,
+  chapterId: string
+): Promise<boolean> {
+  const purchase = await prisma.purchase.findFirst({
+    where: { userId, chapterId, status: "PAID" },
+  })
+  return !!purchase
+}
+
 export async function getUserPurchasedChapters(userId: string) {
   const purchases = await prisma.purchase.findMany({
     where: { userId, status: "PAID" },

@@ -1,19 +1,53 @@
 "use client";
 
+import { useState } from "react";
 import LoginDialog from "@/components/LoginDialog";
 import { useAuth } from "@/contexts/AuthContext";
+import api from "@/lib/axios";
 
 interface Props {
   price: number;
+  chapterId: string;
+  workSlug: string;
+  chapterSlug: string;
 }
 
-export default function PaywallOverlay({ price }: Props) {
+export default function PaywallOverlay({ price, chapterId, workSlug, chapterSlug }: Props) {
   const { user } = useAuth();
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
   const formattedPrice = new Intl.NumberFormat("id-ID", {
     style: "currency",
     currency: "IDR",
     minimumFractionDigits: 0,
   }).format(price);
+
+  const handleBuy = async () => {
+    if (!user) return;
+    setLoading(true);
+    setError(null);
+
+    try {
+      const { data } = await api.post("/api/payments/create", {
+        chapterId,
+        workSlug,
+        chapterSlug,
+        payerEmail: user.email,
+      });
+
+      if (data.invoiceUrl) {
+        window.location.href = data.invoiceUrl;
+      }
+    } catch (err: unknown) {
+      const axiosErr = err as { response?: { data?: { error?: string } } };
+      setError(
+        axiosErr?.response?.data?.error ?? "Gagal memproses pembayaran. Coba lagi."
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div
@@ -44,14 +78,31 @@ export default function PaywallOverlay({ price }: Props) {
         Beli chapter ini untuk melanjutkan membaca. Satu kali beli, akses selamanya.
       </p>
 
-      <button
-        className="w-full max-w-xs py-3 px-6 rounded-xl text-white font-semibold text-sm transition-opacity hover:opacity-90 active:scale-[0.98]"
-        style={{ backgroundColor: "var(--accent)" }}
-      >
-        Beli Chapter &middot; {formattedPrice}
-      </button>
+      {error && (
+        <p className="text-xs mb-3 max-w-xs mx-auto text-red-500">{error}</p>
+      )}
 
-      {!user && (
+      {user ? (
+        <button
+          onClick={handleBuy}
+          disabled={loading}
+          className="w-full max-w-xs py-3 px-6 rounded-xl text-white font-semibold text-sm transition-opacity hover:opacity-90 active:scale-[0.98] disabled:opacity-60"
+          style={{ backgroundColor: "var(--accent)" }}
+        >
+          {loading ? "Memproses..." : `Beli Chapter \u00B7 ${formattedPrice}`}
+        </button>
+      ) : (
+        <LoginDialog>
+          <button
+            className="w-full max-w-xs py-3 px-6 rounded-xl text-white font-semibold text-sm transition-opacity hover:opacity-90 active:scale-[0.98]"
+            style={{ backgroundColor: "var(--accent)" }}
+          >
+            Login untuk Beli &middot; {formattedPrice}
+          </button>
+        </LoginDialog>
+      )}
+
+      {user && (
         <LoginDialog>
           <button
             className="block mt-3 text-xs font-medium mx-auto hover:underline transition-colors"
