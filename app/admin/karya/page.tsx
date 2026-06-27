@@ -44,14 +44,7 @@ export default function AdminWorksPage() {
   })
 
   return (
-    <div className="space-y-6 p-4">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">Karya</h1>
-          <p className="text-muted-foreground mt-1">Kelola semua karya kamu di sini.</p>
-        </div>
-      </div>
-
+    <div className="space-y-4 p-4">
       <div className="flex items-center gap-3">
         <div className="relative flex-1 max-w-sm">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />

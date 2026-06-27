@@ -21,6 +21,18 @@ export interface Purchase {
   createdAt: string;
 }
 
+export interface AdminComment {
+  id: number;
+  userId: number;
+  userName: string;
+  userAvatar: string;
+  workTitle: string;
+  workSlug: string;
+  chapterTitle: string;
+  content: string;
+  createdAt: string;
+}
+
 export interface AdminStats {
   totalWorks: number;
   totalChapters: number;

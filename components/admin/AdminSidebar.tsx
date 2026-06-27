@@ -9,6 +9,8 @@ import {
   PlusCircle,
   ChevronLeft,
   FileText,
+  ShoppingCart,
+  MessageSquare,
 } from "lucide-react"
 
 import { cn } from "@/lib/utils"
@@ -42,6 +44,16 @@ const sidebarItems = [
     title: "Users",
     href: "/admin/users",
     icon: Users,
+  },
+  {
+    title: "Orders",
+    href: "/admin/orders",
+    icon: ShoppingCart,
+  },
+  {
+    title: "Comments",
+    href: "/admin/comments",
+    icon: MessageSquare,
   },
 ]
 

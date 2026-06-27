@@ -29,12 +29,7 @@ export default function AdminUsersPage() {
   }
 
   return (
-    <div className="space-y-6 p-4">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">Users</h1>
-        <p className="text-muted-foreground mt-1">Kelola semua pengguna terdaftar.</p>
-      </div>
-
+    <div className="space-y-4 p-4">
       <div className="relative max-w-sm">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
         <Input

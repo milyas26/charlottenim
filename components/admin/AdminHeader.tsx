@@ -31,6 +31,13 @@ const pathLabels: Record<string, string> = {
   users: "Users",
 }
 
+function unslugify(slug: string) {
+  return slug
+    .split("-")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ")
+}
+
 function getBreadcrumbs(pathname: string) {
   const segments = pathname.split("/").filter(Boolean)
   const crumbs: { label: string; href: string }[] = []
@@ -41,7 +48,7 @@ function getBreadcrumbs(pathname: string) {
     if (seg === "admin" && segments.length === 1) {
       crumbs.push({ label: "Dashboard", href: accumulated })
     } else {
-      crumbs.push({ label: pathLabels[seg] || seg, href: accumulated })
+      crumbs.push({ label: pathLabels[seg] || unslugify(seg), href: accumulated })
     }
   }
 
@@ -78,7 +85,7 @@ export function AdminHeader() {
       className="sticky top-0 z-30 backdrop-blur-xl transition-all duration-300"
       style={{ borderBottom: "1px solid transparent" }}
     >
-      <div className="flex items-center h-14 px-8 text-sm">
+      <div className="flex items-center h-14 px-4 text-sm">
         <div className="flex items-center gap-1.5 flex-1 min-w-0">
           {breadcrumbs.map((crumb, i) => {
             const isLast = i === breadcrumbs.length - 1

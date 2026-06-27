@@ -67,7 +67,7 @@ export default function AdminNewWorkPage() {
   }
 
   return (
-    <div className="space-y-6 p-4">
+    <div className="space-y-4 p-4">
       <div className="flex items-center gap-3">
         <Button variant="ghost" size="icon" asChild>
           <Link href="/admin/karya">
@@ -76,12 +76,11 @@ export default function AdminNewWorkPage() {
         </Button>
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Tambah Karya Baru</h1>
-          <p className="text-muted-foreground mt-1">Unggah karya baru ke platform.</p>
         </div>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-5">
-        <div className="lg:col-span-3 space-y-6">
+      <div className="grid gap-4 lg:grid-cols-5">
+        <div className="lg:col-span-3 space-y-4">
           <Card>
             <CardHeader>
               <CardTitle>Informasi Karya</CardTitle>

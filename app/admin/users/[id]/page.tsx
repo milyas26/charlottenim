@@ -29,7 +29,7 @@ export default function AdminUserDetailPage({ params }: { params: Promise<{ id: 
   }
 
   return (
-    <div className="space-y-6 p-4">
+    <div className="space-y-4 p-4">
       <div className="flex items-center gap-3">
         <Button variant="ghost" size="icon" asChild>
           <Link href="/admin/users">
@@ -39,7 +39,7 @@ export default function AdminUserDetailPage({ params }: { params: Promise<{ id: 
         <h1 className="text-2xl font-bold tracking-tight">Detail User</h1>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-3">
+      <div className="grid gap-4 lg:grid-cols-3">
         <Card className="lg:col-span-1">
           <CardHeader className="text-center">
             <Avatar className="size-20 mx-auto">

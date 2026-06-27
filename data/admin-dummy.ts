@@ -1,4 +1,4 @@
-import { AdminUser, Purchase, AdminStats } from "./admin-types";
+import { AdminUser, Purchase, AdminStats, AdminComment } from "./admin-types";
 import { works, chapters } from "./dummy";
 
 export const adminStats: AdminStats = {
@@ -157,6 +157,19 @@ export const adminPurchases: Purchase[] = [
   { id: 8, userId: 5, userName: "Dimas Nugroho", chapterTitle: "Maret Belum Berakhir", workTitle: "Senja di Ujung Maret", amount: 5000, status: "PAID", createdAt: "2025-04-15" },
   { id: 9, userId: 8, userName: "Gina Olivia", chapterTitle: "Maret Belum Berakhir", workTitle: "Senja di Ujung Maret", amount: 5000, status: "PAID", createdAt: "2025-05-05" },
   { id: 10, userId: 9, userName: "Hendra Kusuma", chapterTitle: "Pengakuan di Atas Genteng", workTitle: "Dua Detik Sebelum Kamu", amount: 5000, status: "FAILED", createdAt: "2025-05-18" },
+];
+
+export const adminComments: AdminComment[] = [
+  { id: 1, userId: 2, userName: "Alya Putri", userAvatar: "", workTitle: "Senja di Ujung Maret", workSlug: "senja-di-ujung-maret", chapterTitle: "Maret Belum Berakhir", content: "Wah, bab ini bikin aku baper banget. Akhirnya mereka bertemu lagi setelah sekian lama!", createdAt: "2025-06-01" },
+  { id: 2, userId: 3, userName: "Bima Aditya", userAvatar: "", workTitle: "Dua Detik Sebelum Kamu", workSlug: "dua-detik-sebelum-kamu", chapterTitle: "Pengakuan di Atas Genteng", content: "Pengakuannya manis banget, tapi kenapa harus di atas genteng sih wkwk", createdAt: "2025-06-02" },
+  { id: 3, userId: 4, userName: "Citra Dewi", userAvatar: "", workTitle: "Hujan Terakhir di Bulan Juni", workSlug: "hujan-terakhir-di-bulan-juni", chapterTitle: "Hujan Tak Lagi Turun", content: "Sedih banget bacanya. Aku nangis pas scene perpisahan di stasiun.", createdAt: "2025-06-03" },
+  { id: 4, userId: 5, userName: "Dimas Nugroho", userAvatar: "", workTitle: "Surat Kecil untuk Bintang", workSlug: "surat-kecil-untuk-bintang", chapterTitle: "Perjalanan ke Utara", content: "Aku suka banget sama pesan moral di bab ini. Bikin mikir ulang tentang hidup.", createdAt: "2025-06-04" },
+  { id: 5, userId: 6, userName: "Elisa Putri", userAvatar: "", workTitle: "Antara Jakarta dan Kenangan", workSlug: "antara-jakarta-dan-kenangan", chapterTitle: "Kembali", content: "Plot twist-nya kaget banget! Gak nyangka ternyata selama ini dia yang dicari.", createdAt: "2025-06-05" },
+  { id: 6, userId: 7, userName: "Fajar Rahman", userAvatar: "", workTitle: "Pagi yang Tertukar", workSlug: "pagi-yang-tertukar", chapterTitle: "Prolog", content: "Baru baca prolog aja udah penasaran. Lanjutannya kapan rilis?", createdAt: "2025-06-06" },
+  { id: 7, userId: 8, userName: "Gina Olivia", userAvatar: "", workTitle: "Senja di Ujung Maret", workSlug: "senja-di-ujung-maret", chapterTitle: "Kopi Pahit di Pagi Hari", content: "Gaya nulisnya khas banget, deskripsinya hidup. Aku suka!", createdAt: "2025-06-07" },
+  { id: 8, userId: 2, userName: "Alya Putri", userAvatar: "", workTitle: "Kedai Hujan", workSlug: "kedai-hujan", chapterTitle: "Hari Pertama", content: "Aku mau tau kelanjutan hubungan mereka. Please update cepet ya author 😭", createdAt: "2025-06-08" },
+  { id: 9, userId: 12, userName: "Kartika Sari", userAvatar: "", workTitle: "Dua Detik Sebelum Kamu", workSlug: "dua-detik-sebelum-kamu", chapterTitle: "Pengakuan di Atas Genteng", content: "Bacanya sampe subuh, nggak bisa berhenti. Ceritanya seru banget!", createdAt: "2025-06-09" },
+  { id: 10, userId: 5, userName: "Dimas Nugroho", userAvatar: "", workTitle: "Stasiun Terakhir", workSlug: "stasiun-terakhir", chapterTitle: "Keberangkatan", content: "Ini cerita favoritku. Udah baca ulang 3x tapi tetep aja nangis.", createdAt: "2025-06-10" },
 ];
 
 export const allGenres = [

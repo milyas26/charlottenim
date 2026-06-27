@@ -20,7 +20,7 @@ export default function AdminDashboardPage() {
   const recentWorks = [...works].sort((a, b) => b.id - a.id).slice(0, 5)
 
   return (
-    <div className="space-y-8 p-4">
+    <div className="space-y-4 p-4">
       <div>
         <h1 className="text-2xl font-bold tracking-tight">Dashboard</h1>
         <p className="text-muted-foreground mt-1">Selamat datang kembali, Charlotte.</p>
@@ -46,7 +46,7 @@ export default function AdminDashboardPage() {
         })}
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-7">
+      <div className="grid gap-4 lg:grid-cols-7">
         <Card className="lg:col-span-4">
           <CardHeader className="flex flex-row items-center justify-between">
             <div>

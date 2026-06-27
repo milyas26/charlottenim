@@ -254,7 +254,7 @@ export default function AdminChapterEditorPage({
         </div>
       </div>
 
-      <aside className="w-52 shrink-0 border-l border-border/50 flex flex-col p-4 gap-5 overflow-y-auto">
+      <aside className="w-52 shrink-0 border-l border-border/50 flex flex-col p-4 gap-4 overflow-y-auto">
         <div className="space-y-1.5">
           <Label className="text-xs text-muted-foreground uppercase tracking-wider">Status</Label>
           <Select value={status} onValueChange={(v) => setStatus(v as ChapterStatus)}>
