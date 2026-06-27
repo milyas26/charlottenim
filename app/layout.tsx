@@ -31,6 +31,10 @@ const lora = Lora({
 export const metadata: Metadata = {
   title: "charlottenimmm",
   description: "Baca novel & AU karya charlottenimmm",
+  icons: {
+    icon: "/favicon.ico",
+    apple: "/apple-touch-icon.png",
+  },
 };
 
 export default function RootLayout({

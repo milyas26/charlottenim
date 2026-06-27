@@ -2,6 +2,14 @@
 
 import { useState } from "react";
 import LoginDialog from "@/components/LoginDialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { useAuth } from "@/contexts/AuthContext";
 import api from "@/lib/axios";
 
@@ -16,6 +24,7 @@ export default function PaywallOverlay({ price, chapterId, workSlug, chapterSlug
   const { user, loading: authLoading } = useAuth();
   const [buying, setBuying] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [confirmOpen, setConfirmOpen] = useState(false);
 
   const formattedPrice = new Intl.NumberFormat("id-ID", {
     style: "currency",
@@ -25,6 +34,7 @@ export default function PaywallOverlay({ price, chapterId, workSlug, chapterSlug
 
   const handleBuy = async () => {
     if (!user) return;
+    setConfirmOpen(false);
     setBuying(true);
     setError(null);
 
@@ -95,7 +105,7 @@ export default function PaywallOverlay({ price, chapterId, workSlug, chapterSlug
 
       {user ? (
         <button
-          onClick={handleBuy}
+          onClick={() => setConfirmOpen(true)}
           disabled={buying}
           className="w-full max-w-xs py-3 px-6 rounded-xl text-white font-semibold text-sm transition-opacity hover:opacity-90 active:scale-[0.98] disabled:opacity-60"
           style={{ backgroundColor: "var(--accent)" }}
@@ -112,6 +122,44 @@ export default function PaywallOverlay({ price, chapterId, workSlug, chapterSlug
           </button>
         </LoginDialog>
       )}
+
+      <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+        <DialogContent className="w-[90vw] max-w-sm rounded-xl p-6">
+          <DialogHeader>
+            <DialogTitle className="font-[family-name:var(--font-display)] tracking-tight">
+              Konfirmasi Pembelian
+            </DialogTitle>
+            <DialogDescription className="text-sm" style={{ color: "var(--muted)" }}>
+              Anda akan membeli chapter ini seharga{" "}
+              <span className="font-semibold" style={{ color: "var(--foreground)" }}>
+                {formattedPrice}
+              </span>
+              . Satu kali beli, akses selamanya. Lanjutkan?
+            </DialogDescription>
+          </DialogHeader>
+
+          <DialogFooter className="gap-2 sm:gap-2">
+            <button
+              onClick={() => setConfirmOpen(false)}
+              className="flex-1 py-2.5 px-4 rounded-xl text-sm font-medium transition-opacity hover:opacity-80"
+              style={{
+                backgroundColor: "color-mix(in srgb, var(--muted) 15%, transparent)",
+                color: "var(--foreground)",
+              }}
+            >
+              Batal
+            </button>
+            <button
+              onClick={handleBuy}
+              disabled={buying}
+              className="flex-1 py-2.5 px-4 rounded-xl text-white text-sm font-semibold transition-opacity hover:opacity-90 disabled:opacity-60"
+              style={{ backgroundColor: "var(--accent)" }}
+            >
+              Ya, Beli
+            </button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
