@@ -6,9 +6,7 @@ import {
   LayoutDashboard,
   BookOpen,
   Users,
-  PlusCircle,
   ChevronLeft,
-  FileText,
   ShoppingCart,
   MessageSquare,
 } from "lucide-react"
@@ -27,18 +25,6 @@ const sidebarItems = [
     title: "Karya",
     href: "/admin/karya",
     icon: BookOpen,
-    children: [
-      {
-        title: "Semua Karya",
-        href: "/admin/karya",
-        icon: FileText,
-      },
-      {
-        title: "Tambah Karya",
-        href: "/admin/karya/baru",
-        icon: PlusCircle,
-      },
-    ],
   },
   {
     title: "Users",
@@ -79,41 +65,6 @@ export function AdminSidebar() {
               ? pathname === "/admin"
               : pathname === item.href || pathname.startsWith(item.href + "/")
             const Icon = item.icon
-
-            if (item.children) {
-              return (
-                <div key={item.href} className="flex flex-col gap-1">
-                  <div
-                    className={cn(
-                      "flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium",
-                      isActive && "bg-sidebar-accent text-sidebar-accent-foreground"
-                    )}
-                  >
-                    <Icon className="size-4 opacity-50" />
-                    <span>{item.title}</span>
-                  </div>
-                  <div className="ml-4 flex flex-col gap-1 border-l border-sidebar-border pl-3">
-                    {item.children.map((child) => {
-                      const childActive = pathname === child.href
-                      const ChildIcon = child.icon
-                      return (
-                        <Link
-                          key={child.href}
-                          href={child.href}
-                          className={cn(
-                            "flex items-center gap-2 rounded-md px-3 py-1.5 text-sm transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
-                            childActive && "bg-sidebar-accent text-sidebar-accent-foreground font-medium"
-                          )}
-                        >
-                          <ChildIcon className="size-3.5 opacity-50" />
-                          <span>{child.title}</span>
-                        </Link>
-                      )
-                    })}
-                  </div>
-                </div>
-              )
-            }
 
             return (
               <Link
