@@ -1,0 +1,153 @@
+"use client"
+
+import { use } from "react"
+import { useQuery } from "@tanstack/react-query"
+import Link from "next/link"
+import { notFound } from "next/navigation"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Separator } from "@/components/ui/separator"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { ArrowLeft, Mail, Calendar, ShoppingBag, BookOpen, Loader2 } from "lucide-react"
+import api from "@/lib/axios"
+import type { AdminUser, Purchase } from "@/data/admin-types"
+
+type UserDetail = AdminUser & { purchases: Purchase[] }
+
+export default function AdminUserDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = use(params)
+
+  const { data: user, isLoading } = useQuery({
+    queryKey: ["admin-user", id],
+    queryFn: async () => {
+      try {
+        const { data } = await api.get<UserDetail>(`/api/nulis/users/${id}`)
+        return data
+      } catch {
+        return null
+      }
+    },
+  })
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <Loader2 className="size-8 animate-spin text-muted-foreground" />
+      </div>
+    )
+  }
+
+  if (!user) notFound()
+
+  const getInitials = (name: string) => {
+    return name
+      .split(" ")
+      .map((n) => n[0])
+      .join("")
+      .toUpperCase()
+      .slice(0, 2)
+  }
+
+  return (
+    <div className="space-y-4 p-4">
+      <div className="flex items-center gap-3">
+        <Button variant="ghost" size="icon" asChild>
+          <Link href="/nulis/users">
+            <ArrowLeft className="size-4" />
+          </Link>
+        </Button>
+        <h1 className="text-2xl font-bold tracking-tight">Detail User</h1>
+      </div>
+
+      <div className="grid gap-4 lg:grid-cols-3">
+        <Card className="lg:col-span-1">
+          <CardHeader className="text-center">
+            <Avatar className="size-20 mx-auto">
+              <AvatarFallback className="bg-primary/10 text-primary text-xl font-bold">
+                {getInitials(user.name)}
+              </AvatarFallback>
+            </Avatar>
+            <CardTitle className="mt-3">{user.name}</CardTitle>
+            <CardDescription>
+              <Badge variant={user.role === "ADMIN" ? "default" : "secondary"}>
+                {user.role === "ADMIN" ? "Admin" : "Reader"}
+              </Badge>
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <div className="flex items-center gap-2 text-sm">
+              <Mail className="size-4 text-muted-foreground" />
+              <span className="text-muted-foreground">{user.email}</span>
+            </div>
+            <div className="flex items-center gap-2 text-sm">
+              <Calendar className="size-4 text-muted-foreground" />
+              <span className="text-muted-foreground">Bergabung: {new Date(user.joinedAt).toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" })}</span>
+            </div>
+            <Separator />
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2 text-sm">
+                <ShoppingBag className="size-4 text-muted-foreground" />
+                <span className="text-muted-foreground">Total Pembelian</span>
+              </div>
+              <span className="font-medium">{user.totalPurchases}</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-muted-foreground ml-6">Total Spent</span>
+              <span className="font-medium">Rp {user.totalSpent.toLocaleString("id-ID")}</span>
+            </div>
+            {user.lastReadWork && (
+              <div className="flex items-center gap-2 text-sm">
+                <BookOpen className="size-4 text-muted-foreground" />
+                <span className="text-muted-foreground">Terakhir baca: {user.lastReadWork}</span>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card className="lg:col-span-2">
+          <CardHeader>
+            <CardTitle>Riwayat Pembelian ({user.purchases.length})</CardTitle>
+          </CardHeader>
+          <CardContent className="pt-4">
+            {user.purchases.length === 0 ? (
+              <p className="text-center py-8 text-muted-foreground text-sm">
+                Belum ada riwayat pembelian.
+              </p>
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Karya</TableHead>
+                    <TableHead>Chapter</TableHead>
+                    <TableHead>Jumlah</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead className="text-right">Tanggal</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {user.purchases.map((p) => (
+                    <TableRow key={p.createdAt + p.userId + p.workTitle}>
+                      <TableCell className="font-medium">{p.workTitle}</TableCell>
+                      <TableCell className="text-muted-foreground">{p.chapterTitle}</TableCell>
+                      <TableCell>Rp {p.amount.toLocaleString("id-ID")}</TableCell>
+                      <TableCell>
+                        <Badge variant={p.status === "PAID" ? "default" : p.status === "FAILED" ? "destructive" : "secondary"}>
+                          {p.status === "PAID" ? "Sukses" : p.status === "FAILED" ? "Gagal" : "Pending"}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-right text-muted-foreground">
+                        {new Date(p.createdAt).toLocaleDateString("id-ID")}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  )
+}

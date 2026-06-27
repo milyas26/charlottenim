@@ -18,27 +18,27 @@ import { Separator } from "@/components/ui/separator"
 const sidebarItems = [
   {
     title: "Dashboard",
-    href: "/admin",
+    href: "/nulis",
     icon: LayoutDashboard,
   },
   {
     title: "Karya",
-    href: "/admin/karya",
+    href: "/nulis/karya",
     icon: BookOpen,
   },
   {
     title: "Users",
-    href: "/admin/users",
+    href: "/nulis/users",
     icon: Users,
   },
   {
     title: "Orders",
-    href: "/admin/orders",
+    href: "/nulis/orders",
     icon: ShoppingCart,
   },
   {
     title: "Comments",
-    href: "/admin/comments",
+    href: "/nulis/comments",
     icon: MessageSquare,
   },
 ]
@@ -49,7 +49,7 @@ export function AdminSidebar() {
   return (
     <aside className="fixed inset-y-0 left-0 z-40 flex w-60 flex-col border-r bg-sidebar text-sidebar-foreground">
       <div className="flex h-14 items-center gap-2 border-b border-sidebar-border px-4">
-        <Link href="/admin" className="flex items-center gap-2 font-semibold text-sm">
+        <Link href="/nulis" className="flex items-center gap-2 font-semibold text-sm">
           <BookOpen className="size-5 text-sidebar-primary" />
           <span>charlottenimmm</span>
         </Link>
@@ -61,8 +61,8 @@ export function AdminSidebar() {
       <nav className="flex-1 overflow-y-auto px-3 py-4">
         <div className="flex flex-col gap-1">
           {sidebarItems.map((item) => {
-            const isActive = item.href === "/admin"
-              ? pathname === "/admin"
+            const isActive = item.href === "/nulis"
+              ? pathname === "/nulis"
               : pathname === item.href || pathname.startsWith(item.href + "/")
             const Icon = item.icon
 

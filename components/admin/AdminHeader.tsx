@@ -23,7 +23,7 @@ export function useAdminHeaderActions() {
 }
 
 const pathLabels: Record<string, string> = {
-  admin: "Dashboard",
+  nulis: "Dashboard",
   karya: "Karya",
   baru: "Tambah Baru",
   chapter: "Chapter",
@@ -45,7 +45,7 @@ function getBreadcrumbs(pathname: string) {
   let accumulated = ""
   for (const seg of segments) {
     accumulated += "/" + seg
-    if (seg === "admin" && segments.length === 1) {
+    if (seg === "nulis" && segments.length === 1) {
       crumbs.push({ label: "Dashboard", href: accumulated })
     } else {
       crumbs.push({ label: pathLabels[seg] || unslugify(seg), href: accumulated })
