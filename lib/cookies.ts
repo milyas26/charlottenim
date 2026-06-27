@@ -1,6 +1,7 @@
 export interface DbUser {
   id: string
   name: string | null
+  email: string
   avatarUrl: string | null
   role: "READER" | "ADMIN"
 }

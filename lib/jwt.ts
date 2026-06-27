@@ -2,6 +2,7 @@ import { SignJWT, jwtVerify } from "jose"
 
 export interface JwtPayload {
   userId: string
+  email: string
   role: "READER" | "ADMIN"
   name: string | null
   avatarUrl: string | null

@@ -13,8 +13,8 @@ interface Props {
 }
 
 export default function PaywallOverlay({ price, chapterId, workSlug, chapterSlug }: Props) {
-  const { user } = useAuth();
-  const [loading, setLoading] = useState(false);
+  const { user, loading: authLoading } = useAuth();
+  const [buying, setBuying] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const formattedPrice = new Intl.NumberFormat("id-ID", {
@@ -25,7 +25,7 @@ export default function PaywallOverlay({ price, chapterId, workSlug, chapterSlug
 
   const handleBuy = async () => {
     if (!user) return;
-    setLoading(true);
+    setBuying(true);
     setError(null);
 
     try {
@@ -45,9 +45,20 @@ export default function PaywallOverlay({ price, chapterId, workSlug, chapterSlug
         axiosErr?.response?.data?.error ?? "Gagal memproses pembayaran. Coba lagi."
       );
     } finally {
-      setLoading(false);
+      setBuying(false);
     }
   };
+
+  if (authLoading) {
+    return (
+      <div
+        className="rounded-2xl p-4 text-center"
+        style={{ backgroundColor: "var(--surface)", border: "1px solid var(--border)" }}
+      >
+        <div className="w-20 h-5 mx-auto rounded-full bg-[var(--border)] animate-pulse" />
+      </div>
+    );
+  }
 
   return (
     <div
@@ -85,11 +96,11 @@ export default function PaywallOverlay({ price, chapterId, workSlug, chapterSlug
       {user ? (
         <button
           onClick={handleBuy}
-          disabled={loading}
+          disabled={buying}
           className="w-full max-w-xs py-3 px-6 rounded-xl text-white font-semibold text-sm transition-opacity hover:opacity-90 active:scale-[0.98] disabled:opacity-60"
           style={{ backgroundColor: "var(--accent)" }}
         >
-          {loading ? "Memproses..." : `Beli Chapter \u00B7 ${formattedPrice}`}
+          {buying ? "Memproses..." : `Beli Chapter \u00B7 ${formattedPrice}`}
         </button>
       ) : (
         <LoginDialog>
@@ -98,17 +109,6 @@ export default function PaywallOverlay({ price, chapterId, workSlug, chapterSlug
             style={{ backgroundColor: "var(--accent)" }}
           >
             Login untuk Beli &middot; {formattedPrice}
-          </button>
-        </LoginDialog>
-      )}
-
-      {user && (
-        <LoginDialog>
-          <button
-            className="block mt-3 text-xs font-medium mx-auto hover:underline transition-colors"
-            style={{ color: "var(--accent)" }}
-          >
-            Sudah beli? Login di sini
           </button>
         </LoginDialog>
       )}

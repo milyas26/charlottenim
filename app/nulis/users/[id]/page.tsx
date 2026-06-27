@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { ArrowLeft, Mail, Calendar, ShoppingBag, BookOpen, Loader2 } from "lucide-react"
 import api from "@/lib/axios"
 import type { AdminUser, Purchase } from "@/data/admin-types"
@@ -65,6 +65,7 @@ export default function AdminUserDetailPage({ params }: { params: Promise<{ id: 
         <Card className="lg:col-span-1">
           <CardHeader className="text-center">
             <Avatar className="size-20 mx-auto">
+              <AvatarImage src={user.avatarUrl ?? undefined} alt="" referrerPolicy="no-referrer" crossOrigin="anonymous" />
               <AvatarFallback className="bg-primary/10 text-primary text-xl font-bold">
                 {getInitials(user.name)}
               </AvatarFallback>

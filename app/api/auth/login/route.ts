@@ -36,12 +36,13 @@ export async function POST(req: Request) {
 
     const jwt = await signJwt({
       userId: dbUser.id,
+      email: dbUser.email,
       role: dbUser.role as "READER" | "ADMIN",
       name: dbUser.name,
       avatarUrl: dbUser.avatarUrl,
     })
 
-    return Response.json({ jwt, user: { id: dbUser.id, name: dbUser.name, avatarUrl: dbUser.avatarUrl, role: dbUser.role } })
+    return Response.json({ jwt, user: { id: dbUser.id, email: dbUser.email, name: dbUser.name, avatarUrl: dbUser.avatarUrl, role: dbUser.role } })
   } catch (error) {
     console.error("POST /api/auth/login error:", error)
     return Response.json({ error: "Gagal login" }, { status: 500 })

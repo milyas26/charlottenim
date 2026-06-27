@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from "react";
 import {
   onAuthStateChanged,
   signInWithPopup,
@@ -13,8 +13,8 @@ import api, { setStoredJwt, clearStoredJwt } from "@/lib/axios";
 import { readDbUser, clearDbUser, type DbUser } from "@/lib/cookies";
 
 interface AuthContextType {
-  user: User | null;
-  dbUser: DbUser | null;
+  user: DbUser | null;
+  firebaseUser: User | null;
   loading: boolean;
   isAdmin: boolean;
   role: "READER" | "ADMIN" | null;
@@ -25,27 +25,33 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
+  const [firebaseUser, setFirebaseUser] = useState<User | null>(null);
   const [dbUser, setDbUser] = useState<DbUser | null>(null);
   const [loading, setLoading] = useState(true);
+  const initializedRef = useRef(false);
 
   useEffect(() => {
-    const readCached = () => {
-      const cached = readDbUser()
-      if (cached) setDbUser(cached)
-    }
-    readCached()
+    const cached = readDbUser()
+    if (cached) setDbUser(cached)
 
-    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
-      setUser(firebaseUser)
-      if (!firebaseUser) {
+    const unsubscribe = onAuthStateChanged(auth, (fbUser) => {
+      setFirebaseUser(fbUser)
+
+      if (!initializedRef.current) {
+        initializedRef.current = true
+        if (!fbUser && !readDbUser()) {
+          setDbUser(null)
+          clearStoredJwt()
+        }
+        setLoading(false)
+        return
+      }
+
+      if (!fbUser) {
         setDbUser(null)
         clearDbUser()
         clearStoredJwt()
-      } else if (!readDbUser()) {
-        setDbUser(null)
       }
-      setLoading(false)
     })
     return unsubscribe
   }, [])
@@ -81,8 +87,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   return (
     <AuthContext.Provider
       value={{
-        user,
-        dbUser,
+        user: dbUser,
+        firebaseUser,
         loading,
         role: dbUser?.role ?? null,
         isAdmin: dbUser?.role === "ADMIN",

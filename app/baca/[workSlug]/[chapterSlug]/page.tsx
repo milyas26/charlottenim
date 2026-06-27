@@ -6,15 +6,16 @@ import {
   getAdjacentChapters,
   isChapterPurchasedByUser,
 } from "@/lib/queries";
+import type { DbUser } from "@/lib/cookies";
 import ReaderPage from "./ReaderPage";
 
-async function getUserIdFromCookie(): Promise<string | null> {
+async function getDbUserFromCookie(): Promise<DbUser | null> {
   try {
     const jar = await cookies();
     const raw = jar.get("user-data")?.value;
     if (!raw) return null;
     const parsed = JSON.parse(decodeURIComponent(raw));
-    return parsed.id ?? null;
+    return parsed as DbUser;
   } catch {
     return null;
   }
@@ -38,9 +39,13 @@ export default async function BacaChapterPage({
   let isUnlocked = !chapter.isPremium;
 
   if (!isUnlocked) {
-    const userId = await getUserIdFromCookie();
-    if (userId) {
-      isUnlocked = await isChapterPurchasedByUser(userId, chapter.id);
+    const dbUser = await getDbUserFromCookie();
+    if (dbUser) {
+      if (dbUser.role === "ADMIN") {
+        isUnlocked = true;
+      } else {
+        isUnlocked = await isChapterPurchasedByUser(dbUser.id, chapter.id);
+      }
     }
   }
 
