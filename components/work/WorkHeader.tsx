@@ -52,32 +52,28 @@ export default function WorkHeader({ work, firstChapterSlug, readingProgress }: 
     <div className="mb-5">
       <div className="flex flex-col gap-3">
         <div
-          className="w-full aspect-[3/2] rounded-2xl flex items-center justify-center relative overflow-hidden"
-          style={{ background: hasImage ? "var(--surface)" : gradient }}
+          className="w-full aspect-[4/3] rounded-2xl flex items-center justify-center relative overflow-hidden"
+          style={{ background: hasImage ? "transparent" : gradient }}
         >
           {hasImage && (
-            <img
-              src={work.coverUrl}
-              alt={work.title}
-              className="absolute inset-0 w-full h-full object-cover"
-            />
+            <>
+              <img
+                src={work.coverUrl}
+                alt=""
+                className="absolute inset-0 w-full h-full object-cover blur-md opacity-95 scale-110"
+              />
+              <img
+                src={work.coverUrl}
+                alt={work.title}
+                className="relative z-10 h-[100%] aspect-[3/4] object-cover shadow-lg"
+              />
+            </>
           )}
           {!hasImage && (
             <span className="text-sm font-bold text-center text-white/85 drop-shadow-md leading-snug p-4 font-[family-name:var(--font-display)]">
               {work.title}
             </span>
           )}
-          <div className="absolute top-3 right-3">
-            <span
-              className="text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-md backdrop-blur-sm"
-              style={{
-                backgroundColor: "rgba(255,255,255,0.15)",
-                color: "rgba(255,255,255,0.9)",
-              }}
-            >
-              {work.status === "ONGOING" ? "Ongoing" : "Completed"}
-            </span>
-          </div>
         </div>
 
         <div className="flex-1 flex flex-col justify-center">

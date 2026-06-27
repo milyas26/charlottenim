@@ -30,9 +30,21 @@ export default function AdminNewWorkPage() {
 
   const { setActions } = useAdminHeaderActions()
 
+  const titleRef = useRef(title)
+  titleRef.current = title
+  const synopsisRef = useRef(synopsis)
+  synopsisRef.current = synopsis
+  const coverFileRef = useRef(coverFile)
+  coverFileRef.current = coverFile
+  const selectedGenresRef = useRef(selectedGenres)
+  selectedGenresRef.current = selectedGenres
+  const statusRef = useRef(status)
+  statusRef.current = status
+
   const saveMutation = useMutation({
     mutationFn: async () => {
-      const slug = title
+      const currentTitle = titleRef.current
+      const slug = currentTitle
         .toLowerCase()
         .replace(/[^a-z0-9\s-]/g, "")
         .replace(/\s+/g, "-")
@@ -40,9 +52,9 @@ export default function AdminNewWorkPage() {
         .trim()
 
       let coverUrl = ""
-      if (coverFile) {
+      if (coverFileRef.current) {
         const formData = new FormData()
-        formData.append("file", coverFile)
+        formData.append("file", coverFileRef.current)
         formData.append("type", "COVER")
         const { data: uploadData } = await api.post("/api/nulis/upload", formData, {
           headers: { "Content-Type": "multipart/form-data" },
@@ -51,12 +63,12 @@ export default function AdminNewWorkPage() {
       }
 
       const { data: work } = await api.post("/api/nulis/works", {
-        title: title.trim(),
+        title: currentTitle.trim(),
         slug,
-        synopsis: synopsis.trim(),
+        synopsis: synopsisRef.current.trim(),
         coverUrl: coverUrl || undefined,
-        genres: selectedGenres,
-        status,
+        genres: selectedGenresRef.current,
+        status: statusRef.current,
       })
       return work
     },
@@ -69,9 +81,9 @@ export default function AdminNewWorkPage() {
   })
 
   const handleSave = useCallback(() => {
-    if (!title || !synopsis) return
+    if (!titleRef.current || !synopsisRef.current) return
     saveMutation.mutate()
-  }, [title, synopsis, saveMutation])
+  }, [saveMutation.mutate])
 
   useEffect(() => {
     setActions(
@@ -79,13 +91,18 @@ export default function AdminNewWorkPage() {
         <Button variant="outline" asChild>
           <Link href="/nulis/karya">Batal</Link>
         </Button>
-        <Button disabled={!title || !synopsis || saveMutation.isPending} onClick={handleSave}>
+        <Button
+          disabled={saveMutation.isPending}
+          onClick={handleSave}
+          title={!title || !synopsis ? "Judul dan sinopsis wajib diisi" : undefined}
+        >
           {saveMutation.isPending ? <Loader2 className="size-4 animate-spin" /> : <Save className="size-4" />}
           Simpan Karya
         </Button>
       </>
     )
-  }, [setActions, title, synopsis, saveMutation.isPending, handleSave])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [setActions, saveMutation.isPending, handleSave])
 
   const toggleGenre = (genre: string) => {
     if (selectedGenres.includes(genre)) {

@@ -74,7 +74,7 @@ export default async function AdminDashboardPage() {
                 {recentWorks.map((work) => (
                   <TableRow key={work.id}>
                     <TableCell className="font-medium">
-                      <Link href={`/nulis/karya/${work.slug}`} className="hover:text-primary transition-colors">
+                      <Link href={`/nulis/karya/${work.id}`} className="hover:text-primary transition-colors">
                         {work.title}
                       </Link>
                     </TableCell>

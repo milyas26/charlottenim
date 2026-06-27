@@ -69,8 +69,8 @@ export default function UserProfilePage() {
   }
 
   return (
-    <div className="min-h-screen px-5 pb-28">
-      <div className="max-w-[480px] mx-auto pt-8 px-5">
+    <div className="min-h-screen px-4 pb-28">
+      <div className="max-w-[480px] mx-auto pt-8 px-0">
         <div className="flex items-center gap-3 mb-6">
           <Avatar className="size-12 ring-2 ring-[var(--accent)] shrink-0">
             <AvatarImage src={user.avatarUrl ?? undefined} alt="" referrerPolicy="no-referrer" crossOrigin="anonymous" />
