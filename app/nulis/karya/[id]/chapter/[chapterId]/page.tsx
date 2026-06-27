@@ -393,8 +393,10 @@ export default function AdminChapterEditorPage({
         <div className="flex-1 min-h-0 p-6 pt-4">
           <ChapterEditor
             content={content}
-              onChange={(c) => setDraft(prev => ({ ...prev, content: c }))}
+            onChange={(c) => setDraft(prev => ({ ...prev, content: c }))}
             placeholder="Mulai menulis..."
+            workId={work.id}
+            chapterId={isNew ? undefined : chapterId}
           />
         </div>
       </div>

@@ -43,6 +43,7 @@ export default function AdminNewWorkPage() {
       if (coverFile) {
         const formData = new FormData()
         formData.append("file", coverFile)
+        formData.append("type", "COVER")
         const { data: uploadData } = await api.post("/api/nulis/upload", formData, {
           headers: { "Content-Type": "multipart/form-data" },
         })

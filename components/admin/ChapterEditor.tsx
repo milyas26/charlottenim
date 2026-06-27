@@ -31,6 +31,8 @@ interface ChapterEditorProps {
   content: string
   onChange: (html: string) => void
   placeholder?: string
+  workId: string
+  chapterId?: string
 }
 
 function ToolbarButton({
@@ -58,7 +60,7 @@ function ToolbarDivider() {
   return <Separator orientation="vertical" className="h-6 mx-0.5" />
 }
 
-export default function ChapterEditor({ content, onChange, placeholder }: ChapterEditorProps) {
+export default function ChapterEditor({ content, onChange, placeholder, workId, chapterId }: ChapterEditorProps) {
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [uploading, setUploading] = useState(false)
   const editorRef = useRef<Editor | null>(null)
@@ -66,11 +68,14 @@ export default function ChapterEditor({ content, onChange, placeholder }: Chapte
   const uploadImage = useCallback(async (file: File) => {
     const formData = new FormData()
     formData.append("file", file)
+    formData.append("type", "CONTENT")
+    formData.append("workId", workId)
+    if (chapterId) formData.append("chapterId", chapterId)
     const { data } = await api.post("/api/nulis/upload", formData, {
       headers: { "Content-Type": "multipart/form-data" },
     })
     return data.url as string
-  }, [])
+  }, [workId, chapterId])
 
   const handleFilePick = useCallback(
     async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -115,6 +120,9 @@ export default function ChapterEditor({ content, onChange, placeholder }: Chapte
     onUpdate: ({ editor }) => {
       onChange(editor.getHTML())
     },
+    onCreate: ({ editor }) => {
+      editorRef.current = editor
+    },
     editorProps: {
       attributes: {
         class:
@@ -151,8 +159,6 @@ export default function ChapterEditor({ content, onChange, placeholder }: Chapte
   })
 
   if (!editor) return null
-
-  editorRef.current = editor
 
   return (
     <div className="rounded-lg border border-input bg-background flex flex-col h-full">

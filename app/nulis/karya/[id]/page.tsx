@@ -123,6 +123,8 @@ export default function AdminWorkDetailPage({ params }: { params: Promise<{ id: 
       if (editCoverFile) {
         const formData = new FormData()
         formData.append("file", editCoverFile)
+        formData.append("type", "COVER")
+        formData.append("workId", work.id)
         const { data: uploadData } = await api.post("/api/nulis/upload", formData, {
           headers: { "Content-Type": "multipart/form-data" },
         })
