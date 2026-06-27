@@ -783,3 +783,35 @@ export async function getUserPurchasedChapters(userId: string) {
     purchaseStatus: p.status as string,
   }))
 }
+
+export async function getReadingProgress(
+  userId: string,
+  workId: string
+): Promise<{ chapterSlug: string; chapterNumber: number; chapterTitle: string } | null> {
+  const progress = await prisma.readingProgress.findUnique({
+    where: { userId_workId: { userId, workId } },
+    include: {
+      chapter: {
+        select: { slug: true, chapterNumber: true, title: true },
+      },
+    },
+  })
+  if (!progress) return null
+  return {
+    chapterSlug: progress.chapter.slug,
+    chapterNumber: progress.chapter.chapterNumber,
+    chapterTitle: progress.chapter.title,
+  }
+}
+
+export async function upsertReadingProgress(
+  userId: string,
+  workId: string,
+  chapterId: string
+) {
+  await prisma.readingProgress.upsert({
+    where: { userId_workId: { userId, workId } },
+    create: { userId, workId, chapterId },
+    update: { chapterId, lastReadAt: new Date() },
+  })
+}

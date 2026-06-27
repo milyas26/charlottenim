@@ -1,9 +1,12 @@
 "use client";
 
-import { Work } from "@/data/types";
+import { Work, ReadingProgressInfo } from "@/data/types";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface Props {
   work: Work;
+  firstChapterSlug: string;
+  readingProgress: ReadingProgressInfo | null;
 }
 
 const coverGradients: Record<string, string> = {
@@ -28,9 +31,22 @@ const coverGradients: Record<string, string> = {
 const fallbackGradient =
   "linear-gradient(135deg, #c4b5a5 0%, #a89888 50%, #8c7b6b 100%)";
 
-export default function WorkHeader({ work }: Props) {
+export default function WorkHeader({ work, firstChapterSlug, readingProgress }: Props) {
+  const { user } = useAuth();
   const hasImage = work.coverUrl.startsWith("http");
   const gradient = coverGradients[work.slug] || fallbackGradient;
+
+  const isLoggedIn = !!user;
+  const hasProgress = isLoggedIn && readingProgress !== null;
+
+  const readHref = hasProgress
+    ? `/baca/${work.slug}/${readingProgress!.chapterSlug}`
+    : `/baca/${work.slug}/${firstChapterSlug}`;
+
+  const buttonLabel = hasProgress ? "Lanjutkan" : "Mulai Baca";
+  const buttonSub = hasProgress
+    ? `Ch. ${readingProgress!.chapterNumber} — ${readingProgress!.chapterTitle}`
+    : null;
 
   return (
     <div className="mb-5">
@@ -114,18 +130,22 @@ export default function WorkHeader({ work }: Props) {
             {work.synopsis}
           </p>
 
-          <div className="flex items-center gap-3 mt-4">
+          <div className="flex flex-col gap-1.5 mt-4">
             <a
-              href={`/baca/${work.slug}/pertemuan-pertama`}
-              className="inline-flex items-center gap-2 text-sm font-semibold px-5 py-2.5 rounded-xl text-white transition-all hover:opacity-90 active:scale-[0.98]"
+              href={readHref}
+              className="inline-flex items-center gap-2 text-sm font-semibold px-5 py-2.5 rounded-xl text-white transition-all hover:opacity-90 active:scale-[0.98] self-start"
               style={{ backgroundColor: "var(--accent)" }}
             >
-              Mulai Baca
+              {buttonLabel}
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M5 12h14M12 5l7 7-7 7" />
               </svg>
             </a>
-
+            {buttonSub && (
+              <span className="text-[11px] font-medium italic" style={{ color: "var(--muted)" }}>
+                {buttonSub}
+              </span>
+            )}
           </div>
         </div>
       </div>

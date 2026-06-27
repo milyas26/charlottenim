@@ -7,6 +7,7 @@ import ChapterContent from "@/components/reader/ChapterContent";
 import ReadingCustomization from "@/components/reader/ReadingCustomization";
 import PaywallOverlay from "@/components/reader/PaywallOverlay";
 import CommentsSection from "@/components/reader/CommentsSection";
+import { getStoredJwt } from "@/lib/axios";
 
 interface Props {
   work: Work;
@@ -59,6 +60,19 @@ export default function ReaderPage({
     window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
+
+  useEffect(() => {
+    const jwt = getStoredJwt();
+    if (!jwt) return;
+    fetch("/api/user/progress", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...(jwt ? { Authorization: `Bearer ${jwt}` } : {}),
+      },
+      body: JSON.stringify({ workId: work.id, chapterId: chapter.id }),
+    }).catch(() => {});
+  }, [work.id, chapter.id]);
 
   const tagBgPremium = settings.darkMode ? premiumBgDark : premiumBgLight;
 

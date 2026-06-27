@@ -33,6 +33,15 @@ export interface Chapter {
   deletedAt?: string | null;
 }
 
+export interface ReadingProgressInfo {
+  chapterId: string;
+  chapterSlug: string;
+  chapterNumber: number;
+  chapterTitle: string;
+  workSlug: string;
+  lastReadAt: string;
+}
+
 export interface ReaderSettings {
   fontSize: "small" | "medium" | "large";
   lineSpacing: "tight" | "normal" | "relaxed";
