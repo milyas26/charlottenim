@@ -1,12 +1,14 @@
 "use client";
 
 import LoginDialog from "@/components/LoginDialog";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface Props {
   price: number;
 }
 
 export default function PaywallOverlay({ price }: Props) {
+  const { user } = useAuth();
   const formattedPrice = new Intl.NumberFormat("id-ID", {
     style: "currency",
     currency: "IDR",
@@ -49,14 +51,16 @@ export default function PaywallOverlay({ price }: Props) {
         Beli Chapter &middot; {formattedPrice}
       </button>
 
-      <LoginDialog>
-        <button
-          className="block mt-3 text-xs font-medium mx-auto hover:underline transition-colors"
-          style={{ color: "var(--accent)" }}
-        >
-          Sudah beli? Login di sini
-        </button>
-      </LoginDialog>
+      {!user && (
+        <LoginDialog>
+          <button
+            className="block mt-3 text-xs font-medium mx-auto hover:underline transition-colors"
+            style={{ color: "var(--accent)" }}
+          >
+            Sudah beli? Login di sini
+          </button>
+        </LoginDialog>
+      )}
     </div>
   );
 }
