@@ -1,5 +1,8 @@
+import { requireAdmin } from "@/lib/auth-guard"
+
 export async function POST(req: Request) {
   try {
+    await requireAdmin(req)
     const formData = await req.formData()
     const file = formData.get("file") as File | null
 
@@ -22,6 +25,7 @@ export async function POST(req: Request) {
 
     return Response.json({ url: dataUrl })
   } catch (error) {
+    if (error instanceof Response) return error
     console.error("POST /api/admin/upload error:", error)
     return Response.json({ error: "Gagal upload file" }, { status: 500 })
   }

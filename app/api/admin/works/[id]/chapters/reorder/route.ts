@@ -1,7 +1,9 @@
 import { reorderChaptersByWorkId } from "@/lib/queries"
+import { requireAdmin } from "@/lib/auth-guard"
 
 export async function PUT(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
+    await requireAdmin(req)
     const { id } = await params
     const { chapterIds } = await req.json()
 
@@ -16,6 +18,7 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
 
     return Response.json({ success: true })
   } catch (error) {
+    if (error instanceof Response) return error
     console.error("PUT /api/admin/works/[id]/chapters/reorder error:", error)
     return Response.json({ error: "Gagal mengurutkan chapter" }, { status: 500 })
   }

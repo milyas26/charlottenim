@@ -1,11 +1,14 @@
 import { getChaptersByWorkIdLight, createChapterByWorkId } from "@/lib/queries"
+import { requireAdmin } from "@/lib/auth-guard"
 
-export async function GET(_req: Request, { params }: { params: Promise<{ id: string }> }) {
+export async function GET(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
+    await requireAdmin(req)
     const { id } = await params
     const chapters = await getChaptersByWorkIdLight(id)
     return Response.json(chapters)
   } catch (error) {
+    if (error instanceof Response) return error
     console.error("GET /api/admin/works/[id]/chapters error:", error)
     return Response.json({ error: "Gagal mengambil data chapter" }, { status: 500 })
   }
@@ -13,6 +16,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
 
 export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
+    await requireAdmin(req)
     const { id } = await params
     const body = await req.json()
     const { chapterNumber, chapterSlug: chSlug, title, content, isPremium, price, status } = body
@@ -37,6 +41,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
 
     return Response.json(chapter, { status: 201 })
   } catch (error) {
+    if (error instanceof Response) return error
     console.error("POST /api/admin/works/[id]/chapters error:", error)
     return Response.json({ error: "Gagal membuat chapter" }, { status: 500 })
   }

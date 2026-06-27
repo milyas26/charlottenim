@@ -1,7 +1,9 @@
 import { updateChapter, deleteChapter, getChapterById } from "@/lib/queries"
+import { requireAdmin } from "@/lib/auth-guard"
 
-export async function GET(_req: Request, { params }: { params: Promise<{ id: string; chapterId: string }> }) {
+export async function GET(req: Request, { params }: { params: Promise<{ id: string; chapterId: string }> }) {
   try {
+    await requireAdmin(req)
     const { chapterId } = await params
     const chapter = await getChapterById(chapterId)
     if (!chapter) {
@@ -9,6 +11,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
     }
     return Response.json(chapter)
   } catch (error) {
+    if (error instanceof Response) return error
     console.error("GET /api/admin/works/[id]/chapters/[chapterId] error:", error)
     return Response.json({ error: "Gagal mengambil data chapter" }, { status: 500 })
   }
@@ -16,6 +19,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
 
 export async function PUT(req: Request, { params }: { params: Promise<{ id: string; chapterId: string }> }) {
   try {
+    await requireAdmin(req)
     const { chapterId } = await params
     const body = await req.json()
 
@@ -30,13 +34,15 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
     }
     return Response.json(updated)
   } catch (error) {
+    if (error instanceof Response) return error
     console.error("PUT /api/admin/works/[id]/chapters/[chapterId] error:", error)
     return Response.json({ error: "Gagal mengupdate chapter" }, { status: 500 })
   }
 }
 
-export async function DELETE(_req: Request, { params }: { params: Promise<{ id: string; chapterId: string }> }) {
+export async function DELETE(req: Request, { params }: { params: Promise<{ id: string; chapterId: string }> }) {
   try {
+    await requireAdmin(req)
     const { chapterId } = await params
 
     const chapter = await getChapterById(chapterId)
@@ -50,6 +56,7 @@ export async function DELETE(_req: Request, { params }: { params: Promise<{ id: 
     }
     return Response.json({ success: true })
   } catch (error) {
+    if (error instanceof Response) return error
     console.error("DELETE /api/admin/works/[id]/chapters/[chapterId] error:", error)
     return Response.json({ error: "Gagal menghapus chapter" }, { status: 500 })
   }
