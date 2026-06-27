@@ -9,6 +9,7 @@ import {
   type User,
 } from "firebase/auth";
 import { auth } from "@/lib/firebase";
+import api from "@/lib/axios";
 
 interface AuthContextType {
   user: User | null;
@@ -36,15 +37,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const result = await signInWithPopup(auth, provider);
     const firebaseUser = result.user;
     if (firebaseUser) {
-      await fetch("/api/auth/sync", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          firebaseUid: firebaseUser.uid,
-          email: firebaseUser.email,
-          name: firebaseUser.displayName,
-          avatarUrl: firebaseUser.photoURL,
-        }),
+      await api.post("/api/auth/sync", {
+        firebaseUid: firebaseUser.uid,
+        email: firebaseUser.email,
+        name: firebaseUser.displayName,
+        avatarUrl: firebaseUser.photoURL,
       });
     }
   };

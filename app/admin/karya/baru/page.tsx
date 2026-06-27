@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect, useRef, useCallback } from "react"
+import { useMutation } from "@tanstack/react-query"
 import { useAdminHeaderActions } from "@/components/admin/AdminHeader"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
@@ -13,6 +14,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { ArrowLeft, Save, X, Upload, Loader2 } from "lucide-react"
 import { allGenres } from "@/data/admin-dummy"
 import { WorkStatus } from "@/data/types"
+import api from "@/lib/axios"
 
 export default function AdminNewWorkPage() {
   const router = useRouter()
@@ -24,59 +26,51 @@ export default function AdminNewWorkPage() {
 
   const [coverPreview, setCoverPreview] = useState<string | null>(null)
   const [coverFile, setCoverFile] = useState<File | null>(null)
-  const [saving, setSaving] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const { setActions } = useAdminHeaderActions()
 
-  const handleSave = useCallback(async () => {
-    if (!title || !synopsis) return
+  const saveMutation = useMutation({
+    mutationFn: async () => {
+      const slug = title
+        .toLowerCase()
+        .replace(/[^a-z0-9\s-]/g, "")
+        .replace(/\s+/g, "-")
+        .replace(/-+/g, "-")
+        .trim()
 
-    const slug = title
-      .toLowerCase()
-      .replace(/[^a-z0-9\s-]/g, "")
-      .replace(/\s+/g, "-")
-      .replace(/-+/g, "-")
-      .trim()
-
-    setSaving(true)
-    try {
       let coverUrl = ""
       if (coverFile) {
         const formData = new FormData()
         formData.append("file", coverFile)
-        const uploadRes = await fetch("/api/admin/upload", { method: "POST", body: formData })
-        if (!uploadRes.ok) throw new Error("Gagal upload cover")
-        const uploadData = await uploadRes.json()
+        const { data: uploadData } = await api.post("/api/admin/upload", formData, {
+          headers: { "Content-Type": "multipart/form-data" },
+        })
         coverUrl = uploadData.url
       }
 
-      const res = await fetch("/api/admin/works", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          title: title.trim(),
-          slug,
-          synopsis: synopsis.trim(),
-          coverUrl: coverUrl || undefined,
-          genres: selectedGenres,
-          status,
-        }),
+      const { data: work } = await api.post("/api/admin/works", {
+        title: title.trim(),
+        slug,
+        synopsis: synopsis.trim(),
+        coverUrl: coverUrl || undefined,
+        genres: selectedGenres,
+        status,
       })
-
-      if (!res.ok) {
-        const errData = await res.json()
-        throw new Error(errData.error || "Gagal membuat karya")
-      }
-
-      const work = await res.json()
+      return work
+    },
+    onSuccess: (work) => {
       router.push(`/admin/karya/${work.slug}`)
-    } catch (err) {
-      alert(err instanceof Error ? err.message : "Gagal membuat karya")
-    } finally {
-      setSaving(false)
-    }
-  }, [title, synopsis, selectedGenres, status, coverFile, router])
+    },
+    onError: (err: Error) => {
+      alert((err as { response?: { data?: { error?: string } } })?.response?.data?.error || err?.message || "Gagal membuat karya")
+    },
+  })
+
+  const handleSave = useCallback(() => {
+    if (!title || !synopsis) return
+    saveMutation.mutate()
+  }, [title, synopsis, saveMutation])
 
   useEffect(() => {
     setActions(
@@ -84,13 +78,13 @@ export default function AdminNewWorkPage() {
         <Button variant="outline" asChild>
           <Link href="/admin/karya">Batal</Link>
         </Button>
-        <Button disabled={!title || !synopsis || saving} onClick={handleSave}>
-          {saving ? <Loader2 className="size-4 animate-spin" /> : <Save className="size-4" />}
+        <Button disabled={!title || !synopsis || saveMutation.isPending} onClick={handleSave}>
+          {saveMutation.isPending ? <Loader2 className="size-4 animate-spin" /> : <Save className="size-4" />}
           Simpan Karya
         </Button>
       </>
     )
-  }, [setActions, title, synopsis, saving, handleSave])
+  }, [setActions, title, synopsis, saveMutation.isPending, handleSave])
 
   const toggleGenre = (genre: string) => {
     if (selectedGenres.includes(genre)) {

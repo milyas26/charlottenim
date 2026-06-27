@@ -1,8 +1,9 @@
 "use client"
 
-import { use, useState, useCallback, useEffect } from "react"
+import { use, useState, useCallback, useEffect, useRef } from "react"
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import type { Chapter, ChapterStatus } from "@/data/types"
-import { notFound, useRouter } from "next/navigation"
+import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -27,6 +28,7 @@ import ChapterEditor from "@/components/admin/ChapterEditor"
 import { Save, GripVertical, PlusCircle, Lock, LockOpen, ChevronRight, ChevronLeft, X, List, SlidersHorizontal, PanelLeftClose, PanelLeftOpen, PanelRightClose, PanelRightOpen, Loader2 } from "lucide-react"
 import { useAdminHeaderActions } from "@/components/admin/AdminHeader"
 import Link from "next/link"
+import api from "@/lib/axios"
 
 type WorkDetail = {
   id: string
@@ -54,6 +56,14 @@ type ChapterListItem = {
   deletedAt?: string | null
 }
 
+type DraftFields = {
+  title?: string
+  content?: string
+  isPremium?: boolean
+  price?: string
+  status?: ChapterStatus
+}
+
 export default function AdminChapterEditorPage({
   params,
 }: {
@@ -61,20 +71,10 @@ export default function AdminChapterEditorPage({
 }) {
   const { slug, chapterId } = use(params)
   const router = useRouter()
+  const queryClient = useQueryClient()
   const isNew = chapterId === "create"
 
-  const [work, setWork] = useState<WorkDetail | null>(null)
-  const [chapters, setChapters] = useState<ChapterListItem[]>([])
-  const [loading, setLoading] = useState(true)
-  const [saving, setSaving] = useState(false)
-  const [chapterNotFound, setChapterNotFound] = useState(false)
-
-  const [title, setTitle] = useState("")
-  const [content, setContent] = useState("")
-  const [isPremium, setIsPremium] = useState(false)
-  const [price, setPrice] = useState("5000")
-  const [status, setStatus] = useState<ChapterStatus>("PUBLISHED")
-  const [existingChapter, setExistingChapter] = useState<ChapterListItem | null>(null)
+  const [draft, setDraft] = useState<DraftFields>({})
 
   const [dragIndex, setDragIndex] = useState<number | null>(null)
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null)
@@ -91,47 +91,114 @@ export default function AdminChapterEditorPage({
 
   const { setActions } = useAdminHeaderActions()
 
-  const fetchWorkAndChapters = useCallback(async () => {
-    try {
-      const [workRes, chaptersRes] = await Promise.all([
-        fetch(`/api/admin/works/${slug}`),
-        fetch(`/api/admin/works/${slug}/chapters`),
-      ])
-      if (!workRes.ok) throw new Error("Karya tidak ditemukan")
-      setWork(await workRes.json())
-      if (chaptersRes.ok) {
-        const data = await chaptersRes.json()
-        setChapters(data.sort((a: ChapterListItem, b: ChapterListItem) => a.chapterNumber - b.chapterNumber))
-      }
-    } catch {
-      router.push("/admin/karya")
-    }
-  }, [slug, router])
+  const { data: work } = useQuery({
+    queryKey: ["works", slug],
+    queryFn: async () => {
+      const { data } = await api.get<WorkDetail>(`/api/admin/works/${slug}`)
+      return data
+    },
+  })
 
-  const fetchChapter = useCallback(async () => {
-    if (isNew) return
-    try {
-      const res = await fetch(`/api/admin/works/${slug}/chapters/${chapterId}`)
-      if (!res.ok) {
-        setChapterNotFound(true)
-        return
-      }
-      const chapter: Chapter = await res.json()
-      setExistingChapter(chapter)
-      setTitle(chapter.title)
-      setContent(chapter.content)
-      setIsPremium(chapter.isPremium)
-      setPrice(String(chapter.price))
-      setStatus(chapter.status)
-    } catch {
-      setChapterNotFound(true)
-    }
-  }, [slug, chapterId, isNew])
+  const { data: chapters = [] } = useQuery({
+    queryKey: ["works", slug, "chapters"],
+    queryFn: async () => {
+      const { data } = await api.get<ChapterListItem[]>(`/api/admin/works/${slug}/chapters`)
+      return data.sort((a, b) => a.chapterNumber - b.chapterNumber)
+    },
+  })
 
+  const { data: chapterData, isLoading: chapterLoading, isError: chapterError } = useQuery({
+    queryKey: ["works", slug, "chapters", chapterId],
+    queryFn: async () => {
+      const { data } = await api.get<Chapter>(`/api/admin/works/${slug}/chapters/${chapterId}`)
+      return data
+    },
+    enabled: !isNew,
+  })
+
+  const prevChapterIdRef = useRef(chapterId)
   useEffect(() => {
-    setLoading(true)
-    Promise.all([fetchWorkAndChapters(), fetchChapter()]).finally(() => setLoading(false))
-  }, [fetchWorkAndChapters, fetchChapter])
+    if (prevChapterIdRef.current !== chapterId) {
+      prevChapterIdRef.current = chapterId
+      setDraft({})
+    }
+  }, [chapterId])
+
+  const existingChapter = !isNew && chapterData ? (chapterData as unknown as ChapterListItem) : null
+  const title = draft.title ?? chapterData?.title ?? ""
+  const content = draft.content ?? chapterData?.content ?? ""
+  const isPremium = draft.isPremium ?? chapterData?.isPremium ?? false
+  const price = draft.price ?? String(chapterData?.price ?? "5000")
+  const status = draft.status ?? chapterData?.status ?? "PUBLISHED"
+
+  const chapterSlug = title
+    .toLowerCase()
+    .replace(/[^a-z0-9\s-]/g, "")
+    .replace(/\s+/g, "-")
+    .replace(/-+/g, "-")
+    .trim()
+
+  const chapterNumber = existingChapter?.chapterNumber ?? (work?.totalChapters ?? 0) + 1
+
+  const saveMutation = useMutation({
+    mutationFn: async () => {
+      if (!work || !title || !content) throw new Error("Missing data")
+
+      if (isNew) {
+        const { data: created } = await api.post(`/api/admin/works/${slug}/chapters`, {
+          chapterNumber: chapters.length + 1,
+          chapterSlug: chapterSlug || `chapter-${chapters.length + 1}`,
+          title: title.trim(),
+          content,
+          isPremium,
+          price: parseInt(price) || 0,
+          status,
+        })
+        return { created, isNew: true as const }
+      } else {
+        const { data: updated } = await api.put(`/api/admin/works/${slug}/chapters/${chapterId}`, {
+          slug: chapterSlug || undefined,
+          title: title.trim(),
+          content,
+          isPremium,
+          price: parseInt(price) || 0,
+          status,
+        })
+        return { updated, isNew: false as const }
+      }
+    },
+    onSuccess: (result) => {
+      queryClient.invalidateQueries({ queryKey: ["works", slug, "chapters"] })
+      queryClient.invalidateQueries({ queryKey: ["works"] })
+      if (result.isNew) {
+        router.replace(`/admin/karya/${slug}/chapter/${result.created.slug}`)
+      } else {
+        if (chapterSlug && chapterSlug !== chapterId) {
+          router.replace(`/admin/karya/${slug}/chapter/${result.updated.slug}`)
+        }
+      }
+    },
+    onError: (err: Error) => {
+      alert((err as { response?: { data?: { error?: string } } })?.response?.data?.error || err?.message || "Gagal menyimpan")
+    },
+  })
+
+  const reorderMutation = useMutation({
+    mutationFn: async (chapterIds: string[]) => {
+      await api.put(`/api/admin/works/${slug}/chapters/reorder`, { chapterIds })
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["works", slug, "chapters"] })
+      setPendingReorder(null)
+      setReorderDialogOpen(false)
+      setDragIndex(null)
+      setDragOverIndex(null)
+      setDragFromIndex(null)
+    },
+    onError: (err: Error) => {
+      alert((err as { response?: { data?: { error?: string } } })?.response?.data?.error || err?.message || "Gagal mengurutkan chapter")
+    },
+  })
 
   useEffect(() => {
     if (!work) return
@@ -144,78 +211,15 @@ export default function AdminChapterEditorPage({
             Batal
           </Link>
         </Button>
-        <Button size="sm" disabled={!title || !content || saving} onClick={handleSave}>
-          {saving ? <Loader2 className="size-4 animate-spin" /> : <Save className="size-4" />}
+        <Button size="sm" disabled={!title || !content || saveMutation.isPending} onClick={() => saveMutation.mutate()}>
+          {saveMutation.isPending ? <Loader2 className="size-4 animate-spin" /> : <Save className="size-4" />}
           Simpan
         </Button>
       </>
     )
     return () => setActions(null)
-  }, [setActions, work, title, content, saving])
-
-  const chapterSlug = title
-    .toLowerCase()
-    .replace(/[^a-z0-9\s-]/g, "")
-    .replace(/\s+/g, "-")
-    .replace(/-+/g, "-")
-    .trim()
-
-  const chapterNumber = existingChapter?.chapterNumber ?? (work?.totalChapters ?? 0) + 1
-
-  const handleSave = useCallback(async () => {
-    if (!work || !title || !content) return
-    setSaving(true)
-
-    try {
-      if (isNew) {
-        const res = await fetch(`/api/admin/works/${slug}/chapters`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            chapterNumber: chapters.length + 1,
-            chapterSlug: chapterSlug || `chapter-${chapters.length + 1}`,
-            title: title.trim(),
-            content,
-            isPremium,
-            price: parseInt(price) || 0,
-            status,
-          }),
-        })
-        if (!res.ok) {
-          const err = await res.json()
-          throw new Error(err.error || "Gagal membuat chapter")
-        }
-        const created = await res.json()
-        router.replace(`/admin/karya/${slug}/chapter/${created.slug}`)
-      } else {
-        const res = await fetch(`/api/admin/works/${slug}/chapters/${chapterId}`, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            slug: chapterSlug || undefined,
-            title: title.trim(),
-            content,
-            isPremium,
-            price: parseInt(price) || 0,
-            status,
-          }),
-        })
-        if (!res.ok) {
-          const err = await res.json()
-          throw new Error(err.error || "Gagal mengupdate chapter")
-        }
-        const updated = await res.json()
-        setExistingChapter(updated)
-        if (chapterSlug && chapterSlug !== chapterId) {
-          router.replace(`/admin/karya/${slug}/chapter/${updated.slug}`)
-        }
-      }
-    } catch (err) {
-      alert(err instanceof Error ? err.message : "Gagal menyimpan")
-    } finally {
-      setSaving(false)
-    }
-  }, [work, slug, chapterId, isNew, title, content, isPremium, price, status, chapterSlug, chapters.length, router])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [setActions, work, title, content, saveMutation.isPending])
 
   const handleDragStart = useCallback((index: number) => {
     setDragFromIndex(index)
@@ -256,28 +260,11 @@ export default function AdminChapterEditorPage({
     setDragOverIndex(null)
   }, [chapters, dragFromIndex])
 
-  const handleConfirmReorder = useCallback(async () => {
+  const handleConfirmReorder = useCallback(() => {
     if (!pendingReorder || !work) return
     const chapterIds = pendingReorder.result.map((ch) => ch.id)
-
-    try {
-      const res = await fetch(`/api/admin/works/${slug}/chapters/reorder`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ chapterIds }),
-      })
-      if (!res.ok) throw new Error("Gagal mengurutkan")
-      setChapters(pendingReorder.result)
-    } catch (err) {
-      alert(err instanceof Error ? err.message : "Gagal mengurutkan chapter")
-    } finally {
-      setPendingReorder(null)
-      setReorderDialogOpen(false)
-      setDragIndex(null)
-      setDragOverIndex(null)
-      setDragFromIndex(null)
-    }
-  }, [pendingReorder, work, slug])
+    reorderMutation.mutate(chapterIds)
+  }, [pendingReorder, work, reorderMutation])
 
   const handleCancelReorder = useCallback(() => {
     setPendingReorder(null)
@@ -287,7 +274,9 @@ export default function AdminChapterEditorPage({
     setDragFromIndex(null)
   }, [])
 
-  if (loading) {
+  const isLoading = !work || (chapterLoading && !isNew)
+
+  if (isLoading) {
     return (
       <div className="flex items-center justify-center h-[calc(100vh-3.5rem)]">
         <Loader2 className="size-8 animate-spin text-muted-foreground" />
@@ -295,7 +284,7 @@ export default function AdminChapterEditorPage({
     )
   }
 
-  if (chapterNotFound && !isNew) {
+  if (chapterError && !isNew) {
     return (
       <div className="flex flex-col items-center justify-center h-[calc(100vh-3.5rem)] gap-4 text-muted-foreground">
         <p>Chapter tidak ditemukan.</p>
@@ -396,7 +385,7 @@ export default function AdminChapterEditorPage({
             id="title"
             placeholder="Judul chapter..."
             value={title}
-            onChange={(e) => setTitle(e.target.value)}
+              onChange={(e) => setDraft(prev => ({ ...prev, title: e.target.value }))}
             className="h-7 text-sm border-0 border-b border-input rounded-none focus-visible:ring-0 focus-visible:border-primary px-0 font-bold"
           />
         </div>
@@ -404,7 +393,7 @@ export default function AdminChapterEditorPage({
         <div className="flex-1 min-h-0 p-6 pt-4">
           <ChapterEditor
             content={content}
-            onChange={setContent}
+              onChange={(c) => setDraft(prev => ({ ...prev, content: c }))}
             placeholder="Mulai menulis..."
           />
         </div>
@@ -432,7 +421,7 @@ export default function AdminChapterEditorPage({
 
           <div className="space-y-1.5">
             <Label className="text-xs text-muted-foreground uppercase tracking-wider">Status</Label>
-            <Select value={status} onValueChange={(v) => setStatus(v as ChapterStatus)}>
+            <Select value={status} onValueChange={(v) => setDraft(prev => ({ ...prev, status: v as ChapterStatus }))}>
               <SelectTrigger className="h-8 text-xs">
                 <SelectValue />
               </SelectTrigger>
@@ -453,7 +442,7 @@ export default function AdminChapterEditorPage({
               <Checkbox
                 id="isPremiumPanel"
                 checked={isPremium}
-                onCheckedChange={(checked) => setIsPremium(checked === true)}
+                onCheckedChange={(checked) => setDraft(prev => ({ ...prev, isPremium: checked === true }))}
               />
               <Label htmlFor="isPremiumPanel" className="cursor-pointer text-xs">
                 Premium
@@ -468,7 +457,7 @@ export default function AdminChapterEditorPage({
                   id="pricePanel"
                   type="number"
                   value={price}
-                  onChange={(e) => setPrice(e.target.value)}
+                  onChange={(e) => setDraft(prev => ({ ...prev, price: e.target.value }))}
                   className="h-7 text-sm mt-1"
                   min={1000}
                   step={500}
@@ -575,7 +564,8 @@ export default function AdminChapterEditorPage({
             <Button variant="outline" size="sm" onClick={handleCancelReorder}>
               Batal
             </Button>
-            <Button size="sm" onClick={handleConfirmReorder}>
+            <Button size="sm" onClick={handleConfirmReorder} disabled={reorderMutation.isPending}>
+              {reorderMutation.isPending ? <Loader2 className="size-4 animate-spin" /> : null}
               Ya, Sortir
             </Button>
           </DialogFooter>

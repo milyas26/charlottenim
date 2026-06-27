@@ -1,6 +1,7 @@
 "use client"
 
-import { useState, useEffect, useCallback } from "react"
+import { useState, useEffect } from "react"
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { useAdminHeaderActions } from "@/components/admin/AdminHeader"
 import Link from "next/link"
 import { Badge } from "@/components/ui/badge"
@@ -25,13 +26,15 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
-import { PlusCircle, Search, MoreHorizontal, Edit, Eye, BarChart3, Trash2, Loader2 } from "lucide-react"
+import { PlusCircle, Search, MoreHorizontal, Edit, Eye, Trash2, Loader2 } from "lucide-react"
+import api from "@/lib/axios"
 import type { WorkStatus, Work } from "@/data/types"
 
 type WorkWithReads = Work & { totalReads: number }
 
 export default function AdminWorksPage() {
   const { setActions } = useAdminHeaderActions()
+  const queryClient = useQueryClient()
 
   useEffect(() => {
     setActions(
@@ -45,42 +48,31 @@ export default function AdminWorksPage() {
     return () => setActions(null)
   }, [setActions])
 
-  const [works, setWorks] = useState<WorkWithReads[]>([])
-  const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState("")
   const [statusFilter, setStatusFilter] = useState<WorkStatus | "ALL">("ALL")
   const [deleteTarget, setDeleteTarget] = useState<WorkWithReads | null>(null)
 
-  const fetchWorks = useCallback(async () => {
-    setLoading(true)
-    try {
-      const res = await fetch("/api/admin/works")
-      if (!res.ok) throw new Error("Gagal mengambil data")
-      const data = await res.json()
-      setWorks(data)
-    } catch (err) {
-      console.error(err)
-    } finally {
-      setLoading(false)
-    }
-  }, [])
+  const { data: works = [], isLoading } = useQuery({
+    queryKey: ["works"],
+    queryFn: async () => {
+      const { data } = await api.get<WorkWithReads[]>("/api/admin/works")
+      return data
+    },
+  })
 
-  useEffect(() => {
-    fetchWorks()
-  }, [fetchWorks])
-
-  const handleDelete = async () => {
-    if (!deleteTarget) return
-    try {
-      const res = await fetch(`/api/admin/works/${deleteTarget.slug}`, { method: "DELETE" })
-      if (!res.ok) throw new Error("Gagal menghapus")
-      setWorks((prev) => prev.filter((w) => w.id !== deleteTarget.id))
-    } catch (err) {
-      console.error(err)
-    } finally {
+  const deleteMutation = useMutation({
+    mutationFn: async (slug: string) => {
+      await api.delete(`/api/admin/works/${slug}`)
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["works"] })
       setDeleteTarget(null)
-    }
-  }
+    },
+    onError: (err) => {
+      console.error(err)
+      setDeleteTarget(null)
+    },
+  })
 
   const filtered = works.filter((w) => {
     const matchSearch = w.title.toLowerCase().includes(search.toLowerCase())
@@ -88,7 +80,7 @@ export default function AdminWorksPage() {
     return matchSearch && matchStatus
   })
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="flex items-center justify-center py-20">
         <Loader2 className="size-8 animate-spin text-muted-foreground" />
@@ -226,7 +218,7 @@ export default function AdminWorksPage() {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Batal</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+            <AlertDialogAction onClick={() => deleteTarget && deleteMutation.mutate(deleteTarget.slug)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
               Hapus
             </AlertDialogAction>
           </AlertDialogFooter>

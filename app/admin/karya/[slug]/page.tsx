@@ -1,6 +1,7 @@
 "use client"
 
 import { use, useState, useCallback, useEffect } from "react"
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { useAdminHeaderActions } from "@/components/admin/AdminHeader"
 import type { WorkStatus, Chapter } from "@/data/types"
 import Link from "next/link"
@@ -55,6 +56,7 @@ import {
   Loader2,
 } from "lucide-react"
 import { allGenres } from "@/data/admin-dummy"
+import api from "@/lib/axios"
 
 type WorkDetail = {
   id: string
@@ -71,11 +73,7 @@ type WorkDetail = {
 export default function AdminWorkDetailPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = use(params)
   const router = useRouter()
-
-  const [work, setWork] = useState<WorkDetail | null>(null)
-  const [chapters, setChapters] = useState<Chapter[]>([])
-  const [loading, setLoading] = useState(true)
-  const [saving, setSaving] = useState(false)
+  const queryClient = useQueryClient()
 
   const [isEditing, setIsEditing] = useState(false)
   const [editTitle, setEditTitle] = useState("")
@@ -94,38 +92,116 @@ export default function AdminWorkDetailPage({ params }: { params: Promise<{ slug
   const [deleteWorkOpen, setDeleteWorkOpen] = useState(false)
   const { setActions } = useAdminHeaderActions()
 
-  const fetchData = useCallback(async () => {
-    setLoading(true)
-    try {
-      const [workRes, chaptersRes] = await Promise.all([
-        fetch(`/api/admin/works/${slug}`),
-        fetch(`/api/admin/works/${slug}/chapters`),
-      ])
-      if (!workRes.ok) throw new Error("Karya tidak ditemukan")
-      const workData = await workRes.json()
-      const chaptersData = chaptersRes.ok ? await chaptersRes.json() : []
+  const { data: work, isLoading } = useQuery({
+    queryKey: ["works", slug],
+    queryFn: async () => {
+      const { data } = await api.get<WorkDetail>(`/api/admin/works/${slug}`)
+      return data
+    },
+  })
 
-      const sorted = chaptersData.sort((a: Chapter, b: Chapter) => a.chapterNumber - b.chapterNumber)
-      setWork(workData)
-      setChapters(sorted)
-      setEditTitle(workData.title)
-      setEditSynopsis(workData.synopsis)
-      setEditStatus(workData.status)
-      setEditGenres(workData.genres)
+  const { data: chapters = [] } = useQuery({
+    queryKey: ["works", slug, "chapters"],
+    queryFn: async () => {
+      const { data } = await api.get<Chapter[]>(`/api/admin/works/${slug}/chapters`)
+      return data.sort((a, b) => a.chapterNumber - b.chapterNumber)
+    },
+  })
+
+  const saveMutation = useMutation({
+    mutationFn: async () => {
+      if (!work) throw new Error("No work")
+
+      const newSlug = editTitle
+        .toLowerCase()
+        .replace(/[^a-z0-9\s-]/g, "")
+        .replace(/\s+/g, "-")
+        .replace(/-+/g, "-")
+        .trim()
+
+      let coverUrl = work.coverUrl
+      if (editCoverFile) {
+        const formData = new FormData()
+        formData.append("file", editCoverFile)
+        const { data: uploadData } = await api.post("/api/admin/upload", formData, {
+          headers: { "Content-Type": "multipart/form-data" },
+        })
+        coverUrl = uploadData.url
+      } else if (editCoverPreview) {
+        coverUrl = editCoverPreview
+      }
+
+      await api.put(`/api/admin/works/${work.slug}`, {
+        title: editTitle.trim(),
+        slug: newSlug,
+        synopsis: editSynopsis.trim(),
+        status: editStatus,
+        genres: editGenres,
+        coverUrl,
+      })
+
+      return newSlug
+    },
+    onSuccess: (newSlug) => {
+      setIsEditing(false)
       setEditCoverPreview(null)
       setEditCoverFile(null)
-    } catch {
+      queryClient.invalidateQueries({ queryKey: ["works", slug] })
+      queryClient.invalidateQueries({ queryKey: ["works", slug, "chapters"] })
+      if (newSlug !== slug) {
+        router.replace(`/admin/karya/${newSlug}`)
+      }
+    },
+    onError: (err: Error) => {
+      alert((err as { response?: { data?: { error?: string } } })?.response?.data?.error || err?.message || "Gagal mengupdate karya")
+    },
+  })
+
+  const deleteWorkMutation = useMutation({
+    mutationFn: async () => {
+      if (!work) return
+      await api.delete(`/api/admin/works/${work.slug}`)
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["works"] })
       router.push("/admin/karya")
-    } finally {
-      setLoading(false)
-    }
-  }, [slug, router])
+    },
+    onError: (err: Error) => {
+      alert((err as { response?: { data?: { error?: string } } })?.response?.data?.error || err?.message || "Gagal menghapus karya")
+      setDeleteWorkOpen(false)
+    },
+  })
 
-  console.log('chapters', chapters)
+  const deleteChapterMutation = useMutation({
+    mutationFn: async (chapterId: string) => {
+      await api.delete(`/api/admin/works/${slug}/chapters/${chapterId}`)
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["works", slug, "chapters"] })
+      setDeleteChapterTarget(null)
+    },
+    onError: (err) => {
+      console.error(err)
+      setDeleteChapterTarget(null)
+    },
+  })
 
-  useEffect(() => {
-    fetchData()
-  }, [fetchData])
+  const reorderMutation = useMutation({
+    mutationFn: async (chapterIds: string[]) => {
+      await api.put(`/api/admin/works/${slug}/chapters/reorder`, { chapterIds })
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["works", slug, "chapters"] })
+      setConfirmOpen(false)
+      setDragFromIndex(null)
+      setDropIndex(null)
+    },
+    onError: (err: Error) => {
+      alert((err as { response?: { data?: { error?: string } } })?.response?.data?.error || err?.message || "Gagal mengurutkan chapter")
+    },
+  })
+
+  const totalReads = chapters.reduce((sum, ch) => sum + ch.readCount, 0)
 
   useEffect(() => {
     if (!work) return
@@ -137,12 +213,16 @@ export default function AdminWorkDetailPage({ params }: { params: Promise<{ slug
             setIsEditing(false)
             setEditCoverPreview(null)
             setEditCoverFile(null)
+            setEditTitle(work.title)
+            setEditSynopsis(work.synopsis)
+            setEditStatus(work.status)
+            setEditGenres(work.genres)
           }}>
             <X className="size-4" />
             Batal
           </Button>
-          <Button size="sm" disabled={!editTitle || !editSynopsis || saving} onClick={handleSaveEdit}>
-            {saving ? <Loader2 className="size-4 animate-spin" /> : <Save className="size-4" />}
+          <Button size="sm" disabled={!editTitle || !editSynopsis || saveMutation.isPending} onClick={() => saveMutation.mutate()}>
+            {saveMutation.isPending ? <Loader2 className="size-4 animate-spin" /> : <Save className="size-4" />}
             Simpan Perubahan
           </Button>
         </>
@@ -173,92 +253,8 @@ export default function AdminWorkDetailPage({ params }: { params: Promise<{ slug
       )
     }
     return () => setActions(null)
-  }, [setActions, isEditing, editTitle, editSynopsis, editStatus, editGenres, saving, work])
-
-  const handleSaveEdit = useCallback(async () => {
-    if (!work) return
-
-    const newSlug = editTitle
-      .toLowerCase()
-      .replace(/[^a-z0-9\s-]/g, "")
-      .replace(/\s+/g, "-")
-      .replace(/-+/g, "-")
-      .trim()
-
-    setSaving(true)
-    try {
-      let coverUrl = work.coverUrl
-      if (editCoverFile) {
-        const formData = new FormData()
-        formData.append("file", editCoverFile)
-        const uploadRes = await fetch("/api/admin/upload", { method: "POST", body: formData })
-        if (!uploadRes.ok) throw new Error("Gagal upload cover")
-        const uploadData = await uploadRes.json()
-        coverUrl = uploadData.url
-      } else if (editCoverPreview) {
-        coverUrl = editCoverPreview
-      }
-
-      const res = await fetch(`/api/admin/works/${work.slug}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          title: editTitle.trim(),
-          slug: newSlug,
-          synopsis: editSynopsis.trim(),
-          status: editStatus,
-          genres: editGenres,
-          coverUrl,
-        }),
-      })
-
-      if (!res.ok) {
-        const errData = await res.json()
-        throw new Error(errData.error || "Gagal mengupdate karya")
-      }
-
-      setIsEditing(false)
-      setEditCoverPreview(null)
-      setEditCoverFile(null)
-      await fetchData()
-
-      if (newSlug !== work.slug) {
-        router.replace(`/admin/karya/${newSlug}`)
-      }
-    } catch (err) {
-      alert(err instanceof Error ? err.message : "Gagal mengupdate karya")
-    } finally {
-      setSaving(false)
-    }
-  }, [work, editTitle, editSynopsis, editStatus, editGenres, editCoverFile, editCoverPreview, fetchData, router])
-
-  const handleDeleteWork = async () => {
-    if (!work) return
-    try {
-      const res = await fetch(`/api/admin/works/${work.slug}`, { method: "DELETE" })
-      if (!res.ok) throw new Error("Gagal menghapus")
-      router.push("/admin/karya")
-    } catch (err) {
-      alert(err instanceof Error ? err.message : "Gagal menghapus karya")
-    } finally {
-      setDeleteWorkOpen(false)
-    }
-  }
-
-  const handleDeleteChapter = async () => {
-    if (!deleteChapterTarget) return
-    try {
-      const res = await fetch(`/api/admin/works/${slug}/chapters/${deleteChapterTarget.id}`, { method: "DELETE" })
-      if (!res.ok) throw new Error("Gagal menghapus")
-      setChapters((prev) => prev.filter((c) => c.id !== deleteChapterTarget.id))
-    } catch (err) {
-      console.error(err)
-    } finally {
-      setDeleteChapterTarget(null)
-    }
-  }
-
-  const totalReads = chapters.reduce((sum, ch) => sum + ch.readCount, 0)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [setActions, isEditing, editTitle, editSynopsis, editStatus, editGenres, saveMutation.isPending, work])
 
   const handleDragStart = useCallback((index: number) => {
     setDragFromIndex(index)
@@ -295,9 +291,8 @@ export default function AdminWorkDetailPage({ params }: { params: Promise<{ slug
     setConfirmOpen(true)
   }, [dragFromIndex])
 
-  const confirmReorder = useCallback(async () => {
-    if (dragFromIndex === null || dropIndex === null) return
-    if (!work) return
+  const confirmReorder = useCallback(() => {
+    if (dragFromIndex === null || dropIndex === null || !work) return
 
     const from = dragFromIndex
     const to = dropIndex
@@ -307,22 +302,8 @@ export default function AdminWorkDetailPage({ params }: { params: Promise<{ slug
     const updated = reordered.map((ch, i) => ({ ...ch, chapterNumber: i + 1 }))
     const chapterIds = updated.map((ch) => ch.id)
 
-    try {
-      const res = await fetch(`/api/admin/works/${slug}/chapters/reorder`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ chapterIds }),
-      })
-      if (!res.ok) throw new Error("Gagal mengurutkan")
-      setChapters(updated)
-    } catch (err) {
-      alert(err instanceof Error ? err.message : "Gagal mengurutkan chapter")
-    } finally {
-      setConfirmOpen(false)
-      setDragFromIndex(null)
-      setDropIndex(null)
-    }
-  }, [chapters, slug, dragFromIndex, dropIndex, work])
+    reorderMutation.mutate(chapterIds)
+  }, [chapters, dragFromIndex, dropIndex, work, reorderMutation])
 
   const toggleGenre = (genre: string) => {
     if (editGenres.includes(genre)) {
@@ -345,7 +326,7 @@ export default function AdminWorkDetailPage({ params }: { params: Promise<{ slug
     setDropIndex(null)
   }, [])
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="flex items-center justify-center py-20">
         <Loader2 className="size-8 animate-spin text-muted-foreground" />
@@ -670,7 +651,8 @@ export default function AdminWorkDetailPage({ params }: { params: Promise<{ slug
             <Button variant="outline" onClick={cancelReorder} className="mr-2">
               Batal
             </Button>
-            <Button onClick={confirmReorder}>
+            <Button onClick={confirmReorder} disabled={reorderMutation.isPending}>
+              {reorderMutation.isPending ? <Loader2 className="size-4 animate-spin" /> : null}
               Ya, Urutkan
             </Button>
           </DialogFooter>
@@ -687,7 +669,7 @@ export default function AdminWorkDetailPage({ params }: { params: Promise<{ slug
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Batal</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDeleteChapter} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+            <AlertDialogAction onClick={() => deleteChapterTarget && deleteChapterMutation.mutate(deleteChapterTarget.id)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
               Hapus
             </AlertDialogAction>
           </AlertDialogFooter>
@@ -704,7 +686,7 @@ export default function AdminWorkDetailPage({ params }: { params: Promise<{ slug
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Batal</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDeleteWork} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+            <AlertDialogAction onClick={() => deleteWorkMutation.mutate()} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
               Hapus
             </AlertDialogAction>
           </AlertDialogFooter>
