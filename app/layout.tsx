@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono, Playfair_Display, Lora } from "next/font/google";
 import { Providers } from "@/contexts";
+import { Toaster } from "sonner";
 import "./globals.css";
 
 export const dynamic = "force-dynamic";
@@ -78,7 +79,10 @@ export default function RootLayout({
         />
       </head>
       <body className="min-h-full flex flex-col">
-        <Providers>{children}</Providers>
+        <Providers>
+          {children}
+          <Toaster position="top-center" richColors />
+        </Providers>
       </body>
     </html>
   );

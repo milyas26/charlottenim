@@ -137,11 +137,51 @@ export async function updateWork(slug: string, data: WorkUpdateData): Promise<Wo
   }
 }
 
+export async function updateWorkById(id: string, data: WorkUpdateData): Promise<Work | null> {
+  const existing = await prisma.work.findUnique({ where: { id } })
+  if (!existing) return null
+
+  const work = await prisma.work.update({
+    where: { id },
+    data: {
+      ...(data.title !== undefined && { title: data.title }),
+      ...(data.slug !== undefined && { slug: data.slug }),
+      ...(data.synopsis !== undefined && { synopsis: data.synopsis }),
+      ...(data.coverUrl !== undefined && { coverUrl: data.coverUrl }),
+      ...(data.genres !== undefined && { genres: data.genres }),
+      ...(data.status !== undefined && { status: data.status }),
+    },
+    include: { _count: { select: { chapters: true } } },
+  })
+
+  return {
+    id: work.id,
+    title: work.title,
+    slug: work.slug,
+    synopsis: work.synopsis,
+    coverUrl: work.coverUrl,
+    genres: work.genres,
+    status: work.status as Work["status"],
+    totalChapters: work._count.chapters,
+    deletedAt: work.deletedAt?.toISOString() ?? null,
+  }
+}
+
 export async function deleteWork(slug: string): Promise<boolean> {
   const existing = await prisma.work.findUnique({ where: { slug } })
   if (!existing) return false
   await prisma.work.update({
     where: { slug },
+    data: { deletedAt: new Date() },
+  })
+  return true
+}
+
+export async function deleteWorkById(id: string): Promise<boolean> {
+  const existing = await prisma.work.findUnique({ where: { id } })
+  if (!existing) return false
+  await prisma.work.update({
+    where: { id },
     data: { deletedAt: new Date() },
   })
   return true
@@ -199,8 +239,84 @@ export type ChapterCreateData = {
   status?: Chapter["status"]
 }
 
+export async function getChaptersByWorkIdLight(workId: string): Promise<ChapterListItem[]> {
+  const work = await prisma.work.findUnique({
+    where: { id: workId },
+    select: { id: true, slug: true }
+  })
+  if (!work) return []
+
+  const chapters = await prisma.chapter.findMany({
+    where: { workId: work.id, deletedAt: null },
+    orderBy: { chapterNumber: "asc" },
+    select: {
+      id: true,
+      workId: true,
+      chapterNumber: true,
+      slug: true,
+      title: true,
+      isPremium: true,
+      price: true,
+      status: true,
+      deletedAt: true,
+      readStats: { select: { count: true } },
+    },
+  })
+
+  return chapters.map((c) => ({
+    id: c.id,
+    workId: c.workId,
+    workSlug: work.slug,
+    chapterNumber: c.chapterNumber,
+    slug: c.slug,
+    title: c.title,
+    content: "" as never,
+    isPremium: c.isPremium,
+    price: c.price,
+    readCount: c.readStats?.count ?? 0,
+    status: c.status as Chapter["status"],
+    deletedAt: c.deletedAt?.toISOString() ?? null,
+  })) as ChapterListItem[]
+}
+
 export async function createChapter(workSlug: string, data: ChapterCreateData): Promise<Chapter | null> {
   const work = await prisma.work.findUnique({ where: { slug: workSlug } })
+  if (!work) return null
+
+  const status = data.status === "DELETED" ? "DRAFT" : (data.status ?? "DRAFT")
+
+  const chapter = await prisma.chapter.create({
+    data: {
+      workId: work.id,
+      chapterNumber: data.chapterNumber,
+      slug: data.slug,
+      title: data.title,
+      content: data.content,
+      isPremium: data.isPremium ?? false,
+      price: data.price ?? 0,
+      status: status as "DRAFT" | "PUBLISHED",
+    },
+    include: { readStats: true, work: { select: { slug: true } } },
+  })
+
+  return {
+    id: chapter.id,
+    workId: chapter.workId,
+    workSlug: chapter.work.slug,
+    chapterNumber: chapter.chapterNumber,
+    slug: chapter.slug,
+    title: chapter.title,
+    content: chapter.content,
+    isPremium: chapter.isPremium,
+    price: chapter.price,
+    readCount: chapter.readStats?.count ?? 0,
+    status: chapter.status as Chapter["status"],
+    deletedAt: chapter.deletedAt?.toISOString() ?? null,
+  }
+}
+
+export async function createChapterByWorkId(workId: string, data: ChapterCreateData): Promise<Chapter | null> {
+  const work = await prisma.work.findUnique({ where: { id: workId } })
   if (!work) return null
 
   const status = data.status === "DELETED" ? "DRAFT" : (data.status ?? "DRAFT")
@@ -297,6 +413,27 @@ export async function deleteChapter(chapterId: string): Promise<boolean> {
 
 export async function reorderChapters(workSlug: string, chapterIds: string[]): Promise<boolean> {
   const work = await prisma.work.findUnique({ where: { slug: workSlug } })
+  if (!work) return false
+
+  await prisma.$transaction(async (tx) => {
+    for (let i = 0; i < chapterIds.length; i++) {
+      await tx.chapter.update({
+        where: { id: chapterIds[i] },
+        data: { chapterNumber: -(i + 1) },
+      })
+    }
+    for (let i = 0; i < chapterIds.length; i++) {
+      await tx.chapter.update({
+        where: { id: chapterIds[i] },
+        data: { chapterNumber: i + 1 },
+      })
+    }
+  })
+  return true
+}
+
+export async function reorderChaptersByWorkId(workId: string, chapterIds: string[]): Promise<boolean> {
+  const work = await prisma.work.findUnique({ where: { id: workId } })
   if (!work) return false
 
   await prisma.$transaction(async (tx) => {

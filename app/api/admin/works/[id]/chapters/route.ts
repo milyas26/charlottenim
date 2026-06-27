@@ -1,19 +1,19 @@
-import { getChaptersByWorkSlugLight, createChapter } from "@/lib/queries"
+import { getChaptersByWorkIdLight, createChapterByWorkId } from "@/lib/queries"
 
-export async function GET(_req: Request, { params }: { params: Promise<{ slug: string }> }) {
+export async function GET(_req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const { slug } = await params
-    const chapters = await getChaptersByWorkSlugLight(slug)
+    const { id } = await params
+    const chapters = await getChaptersByWorkIdLight(id)
     return Response.json(chapters)
   } catch (error) {
-    console.error("GET /api/admin/works/[slug]/chapters error:", error)
+    console.error("GET /api/admin/works/[id]/chapters error:", error)
     return Response.json({ error: "Gagal mengambil data chapter" }, { status: 500 })
   }
 }
 
-export async function POST(req: Request, { params }: { params: Promise<{ slug: string }> }) {
+export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const { slug } = await params
+    const { id } = await params
     const body = await req.json()
     const { chapterNumber, chapterSlug: chSlug, title, content, isPremium, price, status } = body
 
@@ -21,7 +21,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ slug: s
       return Response.json({ error: "Chapter number, slug, title, dan content wajib diisi" }, { status: 400 })
     }
 
-    const chapter = await createChapter(slug, {
+    const chapter = await createChapterByWorkId(id, {
       chapterNumber,
       slug: chSlug,
       title,
@@ -37,7 +37,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ slug: s
 
     return Response.json(chapter, { status: 201 })
   } catch (error) {
-    console.error("POST /api/admin/works/[slug]/chapters error:", error)
+    console.error("POST /api/admin/works/[id]/chapters error:", error)
     return Response.json({ error: "Gagal membuat chapter" }, { status: 500 })
   }
 }

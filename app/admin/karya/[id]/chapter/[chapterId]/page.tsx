@@ -25,6 +25,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import ChapterEditor from "@/components/admin/ChapterEditor"
+import { toast } from "sonner"
 import { Save, GripVertical, PlusCircle, Lock, LockOpen, ChevronRight, ChevronLeft, X, List, SlidersHorizontal, PanelLeftClose, PanelLeftOpen, PanelRightClose, PanelRightOpen, Loader2 } from "lucide-react"
 import { useAdminHeaderActions } from "@/components/admin/AdminHeader"
 import Link from "next/link"
@@ -67,9 +68,9 @@ type DraftFields = {
 export default function AdminChapterEditorPage({
   params,
 }: {
-  params: Promise<{ slug: string; chapterId: string }>
+  params: Promise<{ id: string; chapterId: string }>
 }) {
-  const { slug, chapterId } = use(params)
+  const { id, chapterId } = use(params)
   const router = useRouter()
   const queryClient = useQueryClient()
   const isNew = chapterId === "create"
@@ -92,25 +93,25 @@ export default function AdminChapterEditorPage({
   const { setActions } = useAdminHeaderActions()
 
   const { data: work } = useQuery({
-    queryKey: ["works", slug],
+    queryKey: ["works", id],
     queryFn: async () => {
-      const { data } = await api.get<WorkDetail>(`/api/admin/works/${slug}`)
+      const { data } = await api.get<WorkDetail>(`/api/admin/works/${id}`)
       return data
     },
   })
 
   const { data: chapters = [] } = useQuery({
-    queryKey: ["works", slug, "chapters"],
+    queryKey: ["works", id, "chapters"],
     queryFn: async () => {
-      const { data } = await api.get<ChapterListItem[]>(`/api/admin/works/${slug}/chapters`)
+      const { data } = await api.get<ChapterListItem[]>(`/api/admin/works/${id}/chapters`)
       return data.sort((a, b) => a.chapterNumber - b.chapterNumber)
     },
   })
 
   const { data: chapterData, isLoading: chapterLoading, isError: chapterError } = useQuery({
-    queryKey: ["works", slug, "chapters", chapterId],
+    queryKey: ["works", id, "chapters", chapterId],
     queryFn: async () => {
-      const { data } = await api.get<Chapter>(`/api/admin/works/${slug}/chapters/${chapterId}`)
+      const { data } = await api.get<Chapter>(`/api/admin/works/${id}/chapters/${chapterId}`)
       return data
     },
     enabled: !isNew,
@@ -145,7 +146,7 @@ export default function AdminChapterEditorPage({
       if (!work || !title || !content) throw new Error("Missing data")
 
       if (isNew) {
-        const { data: created } = await api.post(`/api/admin/works/${slug}/chapters`, {
+        const { data: created } = await api.post(`/api/admin/works/${id}/chapters`, {
           chapterNumber: chapters.length + 1,
           chapterSlug: chapterSlug || `chapter-${chapters.length + 1}`,
           title: title.trim(),
@@ -156,7 +157,7 @@ export default function AdminChapterEditorPage({
         })
         return { created, isNew: true as const }
       } else {
-        const { data: updated } = await api.put(`/api/admin/works/${slug}/chapters/${chapterId}`, {
+        const { data: updated } = await api.put(`/api/admin/works/${id}/chapters/${chapterId}`, {
           slug: chapterSlug || undefined,
           title: title.trim(),
           content,
@@ -168,14 +169,13 @@ export default function AdminChapterEditorPage({
       }
     },
     onSuccess: (result) => {
-      queryClient.invalidateQueries({ queryKey: ["works", slug, "chapters"] })
+      queryClient.invalidateQueries({ queryKey: ["works", id, "chapters"] })
       queryClient.invalidateQueries({ queryKey: ["works"] })
+      toast.success(result.isNew ? "Chapter berhasil dibuat" : "Chapter berhasil disimpan")
       if (result.isNew) {
-        router.replace(`/admin/karya/${slug}/chapter/${result.created.slug}`)
+        router.replace(`/admin/karya/${id}/chapter/${result.created.id}`)
       } else {
-        if (chapterSlug && chapterSlug !== chapterId) {
-          router.replace(`/admin/karya/${slug}/chapter/${result.updated.slug}`)
-        }
+        router.replace(`/admin/karya/${id}/chapter/${result.updated.id}`)
       }
     },
     onError: (err: Error) => {
@@ -185,10 +185,10 @@ export default function AdminChapterEditorPage({
 
   const reorderMutation = useMutation({
     mutationFn: async (chapterIds: string[]) => {
-      await api.put(`/api/admin/works/${slug}/chapters/reorder`, { chapterIds })
+      await api.put(`/api/admin/works/${id}/chapters/reorder`, { chapterIds })
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["works", slug, "chapters"] })
+      queryClient.invalidateQueries({ queryKey: ["works", id, "chapters"] })
       setPendingReorder(null)
       setReorderDialogOpen(false)
       setDragIndex(null)
@@ -206,7 +206,7 @@ export default function AdminChapterEditorPage({
     setActions(
       <>
         <Button variant="outline" size="sm" asChild>
-          <Link href={`/admin/karya/${work.slug}`}>
+          <Link href={`/admin/karya/${work.id}`}>
             <X className="size-4" />
             Batal
           </Link>
@@ -289,7 +289,7 @@ export default function AdminChapterEditorPage({
       <div className="flex flex-col items-center justify-center h-[calc(100vh-3.5rem)] gap-4 text-muted-foreground">
         <p>Chapter tidak ditemukan.</p>
         <Button variant="outline" asChild>
-          <Link href={`/admin/karya/${slug}`}>Kembali</Link>
+          <Link href={`/admin/karya/${id}`}>Kembali</Link>
         </Button>
       </div>
     )
@@ -326,7 +326,7 @@ export default function AdminChapterEditorPage({
               {chapters.length} Chapter
             </span>
             <Button variant="ghost" size="icon" className="size-6" asChild>
-              <Link href={`/admin/karya/${work.slug}/chapter/create`}>
+              <Link href={`/admin/karya/${work.id}/chapter/create`}>
                 <PlusCircle className="size-3.5" />
               </Link>
             </Button>
@@ -338,7 +338,7 @@ export default function AdminChapterEditorPage({
               </p>
             )}
             {chapters.map((ch, index) => {
-              const isActive = ch.slug === chapterId || (isNew && false)
+              const isActive = ch.id === chapterId
               return (
                 <div
                   key={ch.id}
@@ -359,7 +359,7 @@ export default function AdminChapterEditorPage({
                       ? "bg-primary/10 text-primary font-medium"
                       : "text-muted-foreground hover:bg-accent/50"
                   }`}
-                  onClick={() => router.push(`/admin/karya/${work.slug}/chapter/${ch.slug}`)}
+                  onClick={() => router.push(`/admin/karya/${work.id}/chapter/${ch.id}`)}
                 >
                   <span className="shrink-0 cursor-grab active:cursor-grabbing text-muted-foreground/50 group-hover:text-muted-foreground transition-colors">
                     <GripVertical className="size-3" />

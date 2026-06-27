@@ -61,8 +61,8 @@ export default function AdminWorksPage() {
   })
 
   const deleteMutation = useMutation({
-    mutationFn: async (slug: string) => {
-      await api.delete(`/api/admin/works/${slug}`)
+    mutationFn: async (id: string) => {
+      await api.delete(`/api/admin/works/${id}`)
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["works"] })
@@ -145,7 +145,7 @@ export default function AdminWorksPage() {
                         </div>
                       )}
                       <div className="min-w-0">
-                        <Link href={`/admin/karya/${work.slug}`} className="font-medium hover:text-primary transition-colors block truncate">
+                        <Link href={`/admin/karya/${work.id}`} className="font-medium hover:text-primary transition-colors block truncate">
                           {work.title}
                         </Link>
                         <p className="text-xs text-muted-foreground truncate">/{work.slug}</p>
@@ -178,13 +178,13 @@ export default function AdminWorksPage() {
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
                         <DropdownMenuItem asChild>
-                          <Link href={`/admin/karya/${work.slug}`}>
+                          <Link href={`/admin/karya/${work.id}`}>
                             <Eye className="size-4" />
                             Lihat Detail
                           </Link>
                         </DropdownMenuItem>
                         <DropdownMenuItem asChild>
-                          <Link href={`/admin/karya/${work.slug}?edit=true`}>
+                          <Link href={`/admin/karya/${work.id}?edit=true`}>
                             <Edit className="size-4" />
                             Edit
                           </Link>
@@ -218,7 +218,7 @@ export default function AdminWorksPage() {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Batal</AlertDialogCancel>
-            <AlertDialogAction onClick={() => deleteTarget && deleteMutation.mutate(deleteTarget.slug)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+            <AlertDialogAction onClick={() => deleteTarget && deleteMutation.mutate(deleteTarget.id)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
               Hapus
             </AlertDialogAction>
           </AlertDialogFooter>

@@ -70,8 +70,8 @@ type WorkDetail = {
   deletedAt: string | null
 }
 
-export default function AdminWorkDetailPage({ params }: { params: Promise<{ slug: string }> }) {
-  const { slug } = use(params)
+export default function AdminWorkDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = use(params)
   const router = useRouter()
   const queryClient = useQueryClient()
 
@@ -93,17 +93,17 @@ export default function AdminWorkDetailPage({ params }: { params: Promise<{ slug
   const { setActions } = useAdminHeaderActions()
 
   const { data: work, isLoading } = useQuery({
-    queryKey: ["works", slug],
+    queryKey: ["works", id],
     queryFn: async () => {
-      const { data } = await api.get<WorkDetail>(`/api/admin/works/${slug}`)
+      const { data } = await api.get<WorkDetail>(`/api/admin/works/${id}`)
       return data
     },
   })
 
   const { data: chapters = [] } = useQuery({
-    queryKey: ["works", slug, "chapters"],
+    queryKey: ["works", id, "chapters"],
     queryFn: async () => {
-      const { data } = await api.get<Chapter[]>(`/api/admin/works/${slug}/chapters`)
+      const { data } = await api.get<Chapter[]>(`/api/admin/works/${id}/chapters`)
       return data.sort((a, b) => a.chapterNumber - b.chapterNumber)
     },
   })
@@ -131,7 +131,7 @@ export default function AdminWorkDetailPage({ params }: { params: Promise<{ slug
         coverUrl = editCoverPreview
       }
 
-      await api.put(`/api/admin/works/${work.slug}`, {
+      await api.put(`/api/admin/works/${work.id}`, {
         title: editTitle.trim(),
         slug: newSlug,
         synopsis: editSynopsis.trim(),
@@ -139,18 +139,14 @@ export default function AdminWorkDetailPage({ params }: { params: Promise<{ slug
         genres: editGenres,
         coverUrl,
       })
-
-      return newSlug
     },
-    onSuccess: (newSlug) => {
+    onSuccess: () => {
       setIsEditing(false)
       setEditCoverPreview(null)
       setEditCoverFile(null)
-      queryClient.invalidateQueries({ queryKey: ["works", slug] })
-      queryClient.invalidateQueries({ queryKey: ["works", slug, "chapters"] })
-      if (newSlug !== slug) {
-        router.replace(`/admin/karya/${newSlug}`)
-      }
+      queryClient.invalidateQueries({ queryKey: ["works", id] })
+      queryClient.invalidateQueries({ queryKey: ["works", id, "chapters"] })
+      queryClient.invalidateQueries({ queryKey: ["works"] })
     },
     onError: (err: Error) => {
       alert((err as { response?: { data?: { error?: string } } })?.response?.data?.error || err?.message || "Gagal mengupdate karya")
@@ -160,7 +156,7 @@ export default function AdminWorkDetailPage({ params }: { params: Promise<{ slug
   const deleteWorkMutation = useMutation({
     mutationFn: async () => {
       if (!work) return
-      await api.delete(`/api/admin/works/${work.slug}`)
+      await api.delete(`/api/admin/works/${work.id}`)
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["works"] })
@@ -174,10 +170,10 @@ export default function AdminWorkDetailPage({ params }: { params: Promise<{ slug
 
   const deleteChapterMutation = useMutation({
     mutationFn: async (chapterId: string) => {
-      await api.delete(`/api/admin/works/${slug}/chapters/${chapterId}`)
+      await api.delete(`/api/admin/works/${id}/chapters/${chapterId}`)
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["works", slug, "chapters"] })
+      queryClient.invalidateQueries({ queryKey: ["works", id, "chapters"] })
       setDeleteChapterTarget(null)
     },
     onError: (err) => {
@@ -188,10 +184,10 @@ export default function AdminWorkDetailPage({ params }: { params: Promise<{ slug
 
   const reorderMutation = useMutation({
     mutationFn: async (chapterIds: string[]) => {
-      await api.put(`/api/admin/works/${slug}/chapters/reorder`, { chapterIds })
+      await api.put(`/api/admin/works/${id}/chapters/reorder`, { chapterIds })
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["works", slug, "chapters"] })
+      queryClient.invalidateQueries({ queryKey: ["works", id, "chapters"] })
       setConfirmOpen(false)
       setDragFromIndex(null)
       setDropIndex(null)
@@ -244,7 +240,7 @@ export default function AdminWorkDetailPage({ params }: { params: Promise<{ slug
             Edit Karya
           </Button>
           <Button size="sm" asChild>
-            <Link href={`/admin/karya/${work.slug}/chapter/create`}>
+            <Link href={`/admin/karya/${work.id}/chapter/create`}>
               <PlusCircle className="size-4" />
               Tambah Chapter
             </Link>
@@ -582,7 +578,7 @@ export default function AdminWorkDetailPage({ params }: { params: Promise<{ slug
                       <TableCell className="font-medium">{ch.chapterNumber}</TableCell>
                       <TableCell>
                         <div>
-                          <Link href={`/admin/karya/${work.slug}/chapter/${ch.slug}`} className="font-medium hover:text-primary transition-colors">
+                          <Link href={`/admin/karya/${work.id}/chapter/${ch.id}`} className="font-medium hover:text-primary transition-colors">
                             {ch.title}
                           </Link>
                           <p className="text-xs text-muted-foreground">/{ch.slug}</p>
@@ -617,7 +613,7 @@ export default function AdminWorkDetailPage({ params }: { params: Promise<{ slug
                               Preview
                             </DropdownMenuItem>
                             <DropdownMenuItem asChild>
-                              <Link href={`/admin/karya/${work.slug}/chapter/${ch.slug}`}>
+                              <Link href={`/admin/karya/${work.id}/chapter/${ch.id}`}>
                                 <Edit className="size-4" />
                                 Edit
                               </Link>

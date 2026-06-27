@@ -60,7 +60,7 @@ export default function AdminNewWorkPage() {
       return work
     },
     onSuccess: (work) => {
-      router.push(`/admin/karya/${work.slug}`)
+      router.push(`/admin/karya/${work.id}`)
     },
     onError: (err: Error) => {
       alert((err as { response?: { data?: { error?: string } } })?.response?.data?.error || err?.message || "Gagal membuat karya")
