@@ -34,17 +34,6 @@ export default function WorkHeader({ work }: Props) {
 
   return (
     <div className="mb-5">
-      <a
-        href="/"
-        className="inline-flex items-center gap-1.5 text-sm font-medium mb-3 transition-colors"
-        style={{ color: "var(--muted)" }}
-      >
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M19 12H5M12 19l-7-7 7-7" />
-        </svg>
-        Semua Karya
-      </a>
-
       <div className="flex flex-col gap-3">
         <div
           className="w-full aspect-[3/2] rounded-2xl flex items-center justify-center relative overflow-hidden"
@@ -137,18 +126,6 @@ export default function WorkHeader({ work }: Props) {
               </svg>
             </a>
 
-            <button
-              className="inline-flex items-center gap-1.5 text-sm font-medium px-4 py-2.5 rounded-xl transition-all hover:bg-[var(--surface)]"
-              style={{
-                color: "var(--muted)",
-                border: "1px solid var(--border)",
-              }}
-            >
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
-              </svg>
-              Bookmark
-            </button>
           </div>
         </div>
       </div>

@@ -39,17 +39,6 @@ export interface AdminComment {
   createdAt: string;
 }
 
-export interface Bookmark {
-  id: number;
-  userId: number;
-  userName: string;
-  workTitle: string;
-  workSlug: string;
-  chapterTitle: string;
-  progress: string;
-  lastRead: string;
-}
-
 export interface AdminStats {
   totalWorks: number;
   totalChapters: number;
