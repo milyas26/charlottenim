@@ -1,5 +1,6 @@
 export interface AdminUser {
   id: number;
+  userId: string;
   name: string;
   email: string;
   avatarUrl: string;

@@ -1,23 +1,26 @@
-import { adminStats } from "@/data/admin-dummy"
-import { works, chapters } from "@/data/dummy"
+import { getAdminStats, getAllWorks, getAllPurchases } from "@/lib/queries"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { BookOpen, Users, DollarSign, Eye, Crown, BookMarked } from "lucide-react"
+import { BookOpen, Users, DollarSign, Eye, BookMarked } from "lucide-react"
 import Link from "next/link"
 
-const statsCards = [
-  { title: "Total Karya", value: adminStats.totalWorks.toString(), icon: BookOpen, description: `${works.filter(w => w.status === "DRAFT").length} draft · ${works.filter(w => w.status === "ONGOING").length} ongoing · ${works.filter(w => w.status === "COMPLETED").length} selesai` },
-  { title: "Total Chapter", value: adminStats.totalChapters.toString(), icon: BookMarked, description: `${adminStats.freeChapters} gratis · ${adminStats.premiumChapters} premium` },
-  { title: "Total Pembaca", value: adminStats.totalUsers.toString(), icon: Users, description: "User terdaftar" },
-  { title: "Total Revenue", value: `Rp ${adminStats.totalRevenue.toLocaleString("id-ID")}`, icon: DollarSign, description: `${adminPurchases.filter(p => p.status === "PAID").length} transaksi sukses` },
-  { title: "Total Dibaca", value: adminStats.totalReads.toLocaleString("id-ID"), icon: Eye, description: "Kumulatif semua chapter" },
-]
+export default async function AdminDashboardPage() {
+  const [stats, works, purchases] = await Promise.all([
+    getAdminStats(),
+    getAllWorks(),
+    getAllPurchases(),
+  ])
 
-import { adminPurchases } from "@/data/admin-dummy"
+  const statsCards = [
+    { title: "Total Karya", value: stats.totalWorks.toString(), icon: BookOpen, description: `${stats.draftCount} draft · ${stats.ongoingCount} ongoing · ${stats.completedCount} selesai` },
+    { title: "Total Chapter", value: stats.totalChapters.toString(), icon: BookMarked, description: `${stats.freeChapters} gratis · ${stats.premiumChapters} premium` },
+    { title: "Total Pembaca", value: stats.totalUsers.toString(), icon: Users, description: "User terdaftar" },
+    { title: "Total Revenue", value: `Rp ${stats.totalRevenue.toLocaleString("id-ID")}`, icon: DollarSign, description: `${purchases.filter(p => p.status === "PAID").length} transaksi sukses` },
+    { title: "Total Dibaca", value: stats.totalReads.toLocaleString("id-ID"), icon: Eye, description: "Kumulatif semua chapter" },
+  ]
 
-export default function AdminDashboardPage() {
-  const recentWorks = [...works].slice(0, 5)
+  const recentWorks = works.slice(0, 5)
 
   return (
     <div className="space-y-4 p-4">
@@ -68,26 +71,22 @@ export default function AdminDashboardPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {recentWorks.map((work) => {
-                  const workChapters = chapters.filter((ch) => ch.workId === work.id)
-                  const totalReads = workChapters.reduce((sum, ch) => sum + ch.readCount, 0)
-                  return (
-                    <TableRow key={work.id}>
-                      <TableCell className="font-medium">
-                        <Link href={`/admin/karya/${work.slug}`} className="hover:text-primary transition-colors">
-                          {work.title}
-                        </Link>
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant={work.status === "DRAFT" ? "secondary" : work.status === "ONGOING" ? "default" : "outline"}>
-                          {work.status === "DRAFT" ? "Draft" : work.status === "ONGOING" ? "Ongoing" : "Selesai"}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-muted-foreground">{work.totalChapters}</TableCell>
-                      <TableCell className="text-right text-muted-foreground">{totalReads.toLocaleString("id-ID")}</TableCell>
-                    </TableRow>
-                  )
-                })}
+                {recentWorks.map((work) => (
+                  <TableRow key={work.id}>
+                    <TableCell className="font-medium">
+                      <Link href={`/admin/karya/${work.slug}`} className="hover:text-primary transition-colors">
+                        {work.title}
+                      </Link>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant={work.status === "DRAFT" ? "secondary" : work.status === "ONGOING" ? "default" : "outline"}>
+                        {work.status === "DRAFT" ? "Draft" : work.status === "ONGOING" ? "Ongoing" : "Selesai"}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">{work.totalChapters}</TableCell>
+                    <TableCell className="text-right text-muted-foreground">{(work.totalReads ?? 0).toLocaleString("id-ID")}</TableCell>
+                  </TableRow>
+                ))}
               </TableBody>
             </Table>
           </CardContent>
@@ -100,8 +99,8 @@ export default function AdminDashboardPage() {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {adminPurchases.slice(0, 5).map((purchase) => (
-                <div key={purchase.id} className="flex items-center justify-between">
+              {purchases.slice(0, 5).map((purchase, i) => (
+                <div key={`${purchase.createdAt}-${i}`} className="flex items-center justify-between">
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium truncate">{purchase.userName}</p>
                     <p className="text-xs text-muted-foreground truncate">{purchase.workTitle} — {purchase.chapterTitle}</p>

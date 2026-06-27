@@ -1,6 +1,8 @@
+"use client"
+
 import { use } from "react"
+import { useQuery } from "@tanstack/react-query"
 import Link from "next/link"
-import { adminUsers, adminPurchases } from "@/data/admin-dummy"
 import { notFound } from "next/navigation"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -8,14 +10,36 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Separator } from "@/components/ui/separator"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-import { ArrowLeft, Mail, Calendar, ShoppingBag, BookOpen } from "lucide-react"
+import { ArrowLeft, Mail, Calendar, ShoppingBag, BookOpen, Loader2 } from "lucide-react"
+import api from "@/lib/axios"
+import type { AdminUser, Purchase } from "@/data/admin-types"
+
+type UserDetail = AdminUser & { purchases: Purchase[] }
 
 export default function AdminUserDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params)
-  const user = adminUsers.find((u) => u.id === parseInt(id))
-  if (!user) notFound()
 
-  const userPurchases = adminPurchases.filter((p) => p.userId === user.id)
+  const { data: user, isLoading } = useQuery({
+    queryKey: ["admin-user", id],
+    queryFn: async () => {
+      try {
+        const { data } = await api.get<UserDetail>(`/api/admin/users/${id}`)
+        return data
+      } catch {
+        return null
+      }
+    },
+  })
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <Loader2 className="size-8 animate-spin text-muted-foreground" />
+      </div>
+    )
+  }
+
+  if (!user) notFound()
 
   const getInitials = (name: string) => {
     return name
@@ -84,10 +108,10 @@ export default function AdminUserDetailPage({ params }: { params: Promise<{ id: 
 
         <Card className="lg:col-span-2">
           <CardHeader>
-            <CardTitle>Riwayat Pembelian ({userPurchases.length})</CardTitle>
+            <CardTitle>Riwayat Pembelian ({user.purchases.length})</CardTitle>
           </CardHeader>
           <CardContent className="pt-4">
-            {userPurchases.length === 0 ? (
+            {user.purchases.length === 0 ? (
               <p className="text-center py-8 text-muted-foreground text-sm">
                 Belum ada riwayat pembelian.
               </p>
@@ -103,8 +127,8 @@ export default function AdminUserDetailPage({ params }: { params: Promise<{ id: 
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {userPurchases.map((p) => (
-                    <TableRow key={p.id}>
+                  {user.purchases.map((p) => (
+                    <TableRow key={p.createdAt + p.userId + p.workTitle}>
                       <TableCell className="font-medium">{p.workTitle}</TableCell>
                       <TableCell className="text-muted-foreground">{p.chapterTitle}</TableCell>
                       <TableCell>Rp {p.amount.toLocaleString("id-ID")}</TableCell>

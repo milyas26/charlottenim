@@ -12,7 +12,7 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { ArrowLeft, Save, X, Upload, Loader2 } from "lucide-react"
-import { allGenres } from "@/data/admin-dummy"
+import { GENRES } from "@/lib/constants"
 import { WorkStatus } from "@/data/types"
 import api from "@/lib/axios"
 
@@ -190,7 +190,7 @@ export default function AdminNewWorkPage() {
             </CardHeader>
             <CardContent>
               <div className="flex flex-wrap gap-2">
-                {allGenres.map((genre) => {
+                {GENRES.map((genre) => {
                   const isSelected = selectedGenres.includes(genre)
                   return (
                     <button

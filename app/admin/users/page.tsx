@@ -1,19 +1,29 @@
 "use client"
 
 import { useState } from "react"
+import { useQuery } from "@tanstack/react-query"
 import Link from "next/link"
-import { adminUsers } from "@/data/admin-dummy"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-import { Search, ChevronRight } from "lucide-react"
+import { Search, ChevronRight, Loader2 } from "lucide-react"
+import api from "@/lib/axios"
+import type { AdminUser } from "@/data/admin-types"
 
 export default function AdminUsersPage() {
   const [search, setSearch] = useState("")
 
-  const filtered = adminUsers.filter(
+  const { data: users = [], isLoading } = useQuery({
+    queryKey: ["admin-users"],
+    queryFn: async () => {
+      const { data } = await api.get<AdminUser[]>("/api/admin/users")
+      return data
+    },
+  })
+
+  const filtered = users.filter(
     (u) =>
       u.name.toLowerCase().includes(search.toLowerCase()) ||
       u.email.toLowerCase().includes(search.toLowerCase())
@@ -26,6 +36,14 @@ export default function AdminUsersPage() {
       .join("")
       .toUpperCase()
       .slice(0, 2)
+  }
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <Loader2 className="size-8 animate-spin text-muted-foreground" />
+      </div>
+    )
   }
 
   return (
@@ -61,7 +79,7 @@ export default function AdminUsersPage() {
               </TableRow>
             ) : (
               filtered.map((user) => (
-                <TableRow key={user.id}>
+                <TableRow key={user.userId}>
                   <TableCell>
                     <div className="flex items-center gap-3">
                       <Avatar>
@@ -104,7 +122,7 @@ export default function AdminUsersPage() {
       </div>
 
       <div className="flex items-center justify-between text-sm text-muted-foreground">
-        <p>Menampilkan {filtered.length} dari {adminUsers.length} user</p>
+        <p>Menampilkan {filtered.length} dari {users.length} user</p>
       </div>
     </div>
   )

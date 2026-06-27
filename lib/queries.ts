@@ -1,5 +1,6 @@
 import { prisma } from "./prisma"
 import type { Work, Chapter } from "@/data/types"
+import type { AdminUser, Purchase } from "@/data/admin-types"
 
 export async function getWorkBySlug(slug: string): Promise<Work | null> {
   const work = await prisma.work.findUnique({
@@ -547,4 +548,232 @@ export async function getAdjacentChapters(
     prev: currentIndex > 0 ? chapters[currentIndex - 1] : null,
     next: currentIndex < chapters.length - 1 ? chapters[currentIndex + 1] : null,
   }
+}
+
+export async function getAllUsers(): Promise<AdminUser[]> {
+  const users = await prisma.user.findMany({
+    include: {
+      purchases: {
+        where: { status: "PAID" },
+        select: { amount: true },
+      },
+      readingProgresses: {
+        orderBy: { lastReadAt: "desc" },
+        take: 1,
+        include: {
+          chapter: {
+            select: {
+              work: { select: { title: true } },
+            },
+          },
+        },
+      },
+    },
+    orderBy: { createdAt: "desc" },
+  })
+
+  return users.map((u, i) => {
+    const totalSpent = u.purchases.reduce((sum, p) => sum + p.amount, 0)
+    const lastReadWork =
+      u.readingProgresses[0]?.chapter?.work?.title ?? null
+    return {
+      id: i + 1,
+      userId: u.id,
+      name: u.name || u.email.split("@")[0],
+      email: u.email,
+      avatarUrl: u.avatarUrl || "",
+      role: u.role as AdminUser["role"],
+      joinedAt: u.createdAt.toISOString(),
+      totalPurchases: u.purchases.length,
+      totalSpent,
+      lastReadWork,
+    }
+  })
+}
+
+export async function getUserWithPurchases(
+  numericId: string
+): Promise<AdminUser & { purchases: Purchase[] } | null> {
+  const users = await prisma.user.findMany({
+    include: {
+      purchases: {
+        where: { status: "PAID" },
+        select: { amount: true },
+      },
+      readingProgresses: {
+        orderBy: { lastReadAt: "desc" },
+        take: 1,
+        include: {
+          chapter: {
+            select: {
+              work: { select: { title: true } },
+            },
+          },
+        },
+      },
+    },
+    orderBy: { createdAt: "desc" },
+  })
+
+  const idx = parseInt(numericId, 10) - 1
+  const u = !isNaN(idx) && idx >= 0 && idx < users.length ? users[idx] : null
+  if (!u) return null
+
+  const allPurchases = await prisma.purchase.findMany({
+    where: { userId: u.id },
+    include: {
+      chapter: {
+        select: {
+          title: true,
+          work: { select: { title: true } },
+        },
+      },
+      user: { select: { name: true, email: true } },
+    },
+    orderBy: { createdAt: "desc" },
+  })
+
+  const totalSpent = u.purchases.reduce((sum, p) => sum + p.amount, 0)
+  const lastReadWork =
+    u.readingProgresses[0]?.chapter?.work?.title ?? null
+
+  return {
+    id: parseInt(numericId, 10),
+    userId: u.id,
+    name: u.name || u.email.split("@")[0],
+    email: u.email,
+    avatarUrl: u.avatarUrl || "",
+    role: u.role as AdminUser["role"],
+    joinedAt: u.createdAt.toISOString(),
+    totalPurchases: u.purchases.length,
+    totalSpent,
+    lastReadWork,
+    purchases: allPurchases.map((p) => ({
+      id: 0,
+      userId: 0,
+      userName: p.user.name || p.user.email.split("@")[0],
+      chapterTitle: p.chapter.title,
+      workTitle: p.chapter.work.title,
+      amount: p.amount,
+      status: p.status as Purchase["status"],
+      xenditInvoiceUrl: p.xenditInvoiceUrl,
+      xenditPaymentChannel: p.xenditPaymentChannel,
+      xenditPaymentMethod: p.xenditPaymentMethod,
+      xenditExpiryDate: p.xenditExpiryDate?.toISOString() ?? undefined,
+      paidAt: p.paidAt?.toISOString() ?? undefined,
+      failureReason: p.failureReason,
+      createdAt: p.createdAt.toISOString(),
+    })),
+  }
+}
+
+export async function getAdminStats() {
+  const [totalWorks, totalChapters, totalUsers, purchases, chapterReads, statusCounts] =
+    await Promise.all([
+      prisma.work.count({ where: { deletedAt: null } }),
+      prisma.chapter.count({ where: { deletedAt: null } }),
+      prisma.user.count(),
+      prisma.purchase.findMany({
+        where: { status: "PAID" },
+        select: { amount: true },
+      }),
+      prisma.chapterRead.findMany({ select: { count: true } }),
+      prisma.work.groupBy({
+        by: ["status"],
+        where: { deletedAt: null },
+        _count: true,
+      }),
+    ])
+
+  const premiumChapters = await prisma.chapter.count({
+    where: { deletedAt: null, isPremium: true },
+  })
+
+  const totalRevenue = purchases.reduce((sum, p) => sum + p.amount, 0)
+  const totalReads = chapterReads.reduce((sum, cr) => sum + cr.count, 0)
+  const freeChapters = totalChapters - premiumChapters
+
+  const draftCount = statusCounts.find((s) => s.status === "DRAFT")?._count ?? 0
+  const ongoingCount = statusCounts.find((s) => s.status === "ONGOING")?._count ?? 0
+  const completedCount = statusCounts.find((s) => s.status === "COMPLETED")?._count ?? 0
+
+  return {
+    totalWorks,
+    totalChapters,
+    totalUsers,
+    totalRevenue,
+    totalReads,
+    premiumChapters,
+    freeChapters,
+    draftCount,
+    ongoingCount,
+    completedCount,
+  }
+}
+
+export async function getAllPurchases(): Promise<Purchase[]> {
+  const purchases = await prisma.purchase.findMany({
+    include: {
+      chapter: {
+        select: {
+          title: true,
+          work: { select: { title: true } },
+        },
+      },
+      user: {
+        select: { name: true, email: true },
+      },
+    },
+    orderBy: { createdAt: "desc" },
+  })
+
+  return purchases.map((p) => ({
+    id: 0,
+    userId: 0,
+    userName: p.user.name || p.user.email.split("@")[0],
+    chapterTitle: p.chapter.title,
+    workTitle: p.chapter.work.title,
+    amount: p.amount,
+    status: p.status as Purchase["status"],
+    xenditInvoiceUrl: p.xenditInvoiceUrl,
+    xenditPaymentChannel: p.xenditPaymentChannel,
+    xenditPaymentMethod: p.xenditPaymentMethod,
+    xenditExpiryDate: p.xenditExpiryDate?.toISOString() ?? undefined,
+    paidAt: p.paidAt?.toISOString() ?? undefined,
+    failureReason: p.failureReason,
+    createdAt: p.createdAt.toISOString(),
+  }))
+}
+
+export async function getUserPurchasedChapters(userId: string) {
+  const purchases = await prisma.purchase.findMany({
+    where: { userId, status: "PAID" },
+    include: {
+      chapter: {
+        select: {
+          id: true,
+          title: true,
+          slug: true,
+          chapterNumber: true,
+          isPremium: true,
+          price: true,
+          work: { select: { id: true, slug: true, title: true } },
+        },
+      },
+    },
+    orderBy: { createdAt: "desc" },
+  })
+
+  return purchases.map((p) => ({
+    chapterId: p.chapter.id,
+    chapterTitle: p.chapter.title,
+    chapterSlug: p.chapter.slug,
+    chapterNumber: p.chapter.chapterNumber,
+    isPremium: p.chapter.isPremium,
+    price: p.chapter.price,
+    workId: p.chapter.work.id,
+    workSlug: p.chapter.work.slug,
+    workTitle: p.chapter.work.title,
+    purchaseStatus: p.status as string,
+  }))
 }

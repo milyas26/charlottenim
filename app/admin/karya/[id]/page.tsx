@@ -55,7 +55,7 @@ import {
   Upload,
   Loader2,
 } from "lucide-react"
-import { allGenres } from "@/data/admin-dummy"
+import { GENRES } from "@/lib/constants"
 import api from "@/lib/axios"
 
 type WorkDetail = {
@@ -453,7 +453,7 @@ export default function AdminWorkDetailPage({ params }: { params: Promise<{ id: 
                 <div className="space-y-2">
                   <Label>Genre (maks. 5)</Label>
                   <div className="flex flex-wrap gap-2">
-                    {allGenres.map((genre) => {
+                    {GENRES.map((genre) => {
                       const isSelected = editGenres.includes(genre)
                       return (
                         <button

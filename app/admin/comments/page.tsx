@@ -1,16 +1,26 @@
 "use client"
 
 import { useState } from "react"
-import { adminComments } from "@/data/admin-dummy"
+import { useQuery } from "@tanstack/react-query"
 import { Input } from "@/components/ui/input"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-import { Search } from "lucide-react"
+import { Search, Loader2 } from "lucide-react"
+import api from "@/lib/axios"
+import type { AdminComment } from "@/data/admin-types"
 
 export default function AdminCommentsPage() {
   const [search, setSearch] = useState("")
 
-  const filtered = adminComments.filter((c) =>
+  const { data: comments = [], isLoading } = useQuery({
+    queryKey: ["admin-comments"],
+    queryFn: async () => {
+      const { data } = await api.get<AdminComment[]>("/api/admin/comments")
+      return data
+    },
+  })
+
+  const filtered = comments.filter((c) =>
     c.userName.toLowerCase().includes(search.toLowerCase()) ||
     c.workTitle.toLowerCase().includes(search.toLowerCase()) ||
     c.content.toLowerCase().includes(search.toLowerCase())
@@ -18,6 +28,14 @@ export default function AdminCommentsPage() {
 
   const getInitials = (name: string) =>
     name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2)
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <Loader2 className="size-8 animate-spin text-muted-foreground" />
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-4 p-4">
@@ -77,7 +95,7 @@ export default function AdminCommentsPage() {
       </div>
 
       <div className="flex items-center justify-between text-sm text-muted-foreground">
-        <p>Menampilkan {filtered.length} dari {adminComments.length} komentar</p>
+        <p>Menampilkan {filtered.length} dari {comments.length} komentar</p>
       </div>
     </div>
   )

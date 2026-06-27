@@ -1,14 +1,37 @@
 "use client";
 
 import { useAuth } from "@/contexts/AuthContext";
+import { useQuery } from "@tanstack/react-query";
 import LoginDialog from "@/components/LoginDialog";
 import BottomNav from "@/components/layout/BottomNav";
-import { chapters, works } from "@/data/dummy";
+import api from "@/lib/axios";
+
+type PurchasedChapter = {
+  chapterId: string
+  chapterTitle: string
+  chapterSlug: string
+  chapterNumber: number
+  isPremium: boolean
+  price: number
+  workId: string
+  workSlug: string
+  workTitle: string
+  purchaseStatus: string
+}
 
 export default function UserProfilePage() {
   const { user, loading, logout } = useAuth();
 
-  if (loading) {
+  const { data: purchasedChapters = [], isLoading: chaptersLoading } = useQuery({
+    queryKey: ["user-purchases"],
+    queryFn: async () => {
+      const { data } = await api.get<PurchasedChapter[]>("/api/user/purchases")
+      return data
+    },
+    enabled: !!user,
+  })
+
+  if (loading || chaptersLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="w-6 h-6 rounded-full border-2 border-[var(--border)] border-t-[var(--accent)] animate-spin" />
@@ -43,8 +66,6 @@ export default function UserProfilePage() {
       </div>
     );
   }
-
-  const purchasedChapters = chapters.filter((c) => c.isPremium);
 
   return (
     <div className="min-h-screen px-5 pb-28">
@@ -86,50 +107,47 @@ export default function UserProfilePage() {
             </div>
           ) : (
             <div className="flex flex-col">
-              {purchasedChapters.map((ch, i) => {
-                const work = works.find((w) => w.id === ch.workId);
-                return (
-                  <a
-                    key={ch.id}
-                    href={`/baca/${ch.workSlug}/${ch.slug}`}
-                    className="flex items-center gap-2.5 py-2.5 transition-colors hover:bg-[var(--surface)] active:bg-[var(--surface)] -mx-5 px-5"
+              {purchasedChapters.map((ch, i) => (
+                <a
+                  key={ch.chapterId}
+                  href={`/baca/${ch.workSlug}/${ch.chapterSlug}`}
+                  className="flex items-center gap-2.5 py-2.5 transition-colors hover:bg-[var(--surface)] active:bg-[var(--surface)] -mx-5 px-5"
+                  style={{
+                    borderBottom: i < purchasedChapters.length - 1 ? "1px solid var(--border)" : undefined,
+                  }}
+                >
+                  <div
+                    className="size-8 rounded-md shrink-0 flex items-center justify-center text-[11px] font-bold font-[family-name:var(--font-display)]"
                     style={{
-                      borderBottom: i < purchasedChapters.length - 1 ? "1px solid var(--border)" : undefined,
+                      backgroundColor: "color-mix(in srgb, var(--accent) 12%, transparent)",
+                      color: "var(--accent)",
                     }}
                   >
-                    <div
-                      className="size-8 rounded-md shrink-0 flex items-center justify-center text-[11px] font-bold font-[family-name:var(--font-display)]"
-                      style={{
-                        backgroundColor: "color-mix(in srgb, var(--accent) 12%, transparent)",
-                        color: "var(--accent)",
-                      }}
-                    >
-                      {ch.chapterNumber}
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <p className="text-sm leading-tight truncate font-medium">
-                        {ch.title}
-                      </p>
-                      <p className="text-[11px] mt-px" style={{ color: "var(--muted)" }}>
-                        {work?.title || ch.workSlug}
-                      </p>
-                    </div>
-                    <svg
-                      width="12"
-                      height="12"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      style={{ color: "var(--muted)", opacity: 0.4, flexShrink: 0 }}
-                    >
-                      <path d="M9 18l6-6-6-6" />
-                    </svg>
-                  </a>
-                );
-              })}
+                    {ch.chapterNumber}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm leading-tight truncate font-medium">
+                      {ch.chapterTitle}
+                    </p>
+                    <p className="text-[11px] mt-px" style={{ color: "var(--muted)" }}>
+                      {ch.workTitle}
+                    </p>
+                  </div>
+                  <svg
+                    width="12"
+                    height="12"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    style={{ color: "var(--muted)", opacity: 0.4, flexShrink: 0 }}
+                  >
+                    <path d="M9 18l6-6-6-6" />
+                  </svg>
+                </a>
+              ))}
             </div>
           )}
         </section>

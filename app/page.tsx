@@ -1,6 +1,7 @@
-import { works } from "@/data/dummy";
-import LandingPage from "./LandingPage";
+import { getAllWorks } from "@/lib/queries"
+import LandingPage from "./LandingPage"
 
-export default function HomePage() {
-  return <LandingPage works={works} />;
+export default async function HomePage() {
+  const works = await getAllWorks()
+  return <LandingPage works={works} />
 }
