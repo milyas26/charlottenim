@@ -25,7 +25,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import ChapterEditor from "@/components/admin/ChapterEditor"
-import { Save, GripVertical, PlusCircle, Lock, LockOpen, ChevronRight, X } from "lucide-react"
+import { Save, GripVertical, PlusCircle, Lock, LockOpen, ChevronRight, ChevronLeft, X, List, SlidersHorizontal } from "lucide-react"
 import { useAdminHeaderActions } from "@/components/admin/AdminHeader"
 import Link from "next/link"
 
@@ -177,7 +177,7 @@ export default function AdminChapterEditorPage({
 
   return (
     <div className="flex h-[calc(100vh-3.5rem)] gap-0">
-      <aside className="w-64 shrink-0 border-r bg-muted/30 flex flex-col">
+      <aside className="w-72 shrink-0 border-r bg-muted/30 flex flex-col">
         <div className="flex items-center justify-between px-3 h-10 border-b shrink-0">
           <span className="text-xs font-medium text-muted-foreground">
             {orderedChapters.length} Chapter
@@ -255,7 +255,7 @@ export default function AdminChapterEditorPage({
         </div>
       </div>
 
-      <aside className="w-52 shrink-0 border-l border-border/50 flex flex-col p-4 gap-4 overflow-y-auto">
+      <aside className="w-72 shrink-0 border-l border-border/50 flex flex-col p-4 gap-4 overflow-y-auto">
         <div className="space-y-1.5">
           <Label className="text-xs text-muted-foreground uppercase tracking-wider">Status</Label>
           <Select value={status} onValueChange={(v) => setStatus(v as ChapterStatus)}>
@@ -331,6 +331,48 @@ export default function AdminChapterEditorPage({
                 <span className="tabular-nums">{existingChapter.readCount}x</span>
               </div>
             )}
+          </div>
+        </div>
+
+        <div className="shrink-0 space-y-2">
+          <Label className="text-xs text-muted-foreground uppercase tracking-wider">Preview</Label>
+          <div className="flex justify-center">
+            <div className="w-full rounded-xl border-2 border-foreground/20 bg-background overflow-hidden shadow-lg">
+              <div className="bg-foreground/10 px-3 py-1.5 flex items-center justify-between border-b border-foreground/5">
+                <span className="text-[9px] font-medium text-foreground/60 truncate max-w-[120px]">
+                  {work.title}
+                </span>
+              </div>
+              <div className="h-[420px] overflow-y-auto">
+                {title ? (
+                  <div className="p-3">
+                    <h3 className="text-[11px] font-semibold leading-tight mb-2">{title}</h3>
+                    <div
+                      className="text-[10px] leading-relaxed text-muted-foreground prose prose-sm max-w-none"
+                      dangerouslySetInnerHTML={{ __html: content || "<p class='text-muted-foreground/50 italic'>Mulai menulis...</p>" }}
+                    />
+                  </div>
+                ) : (
+                  <div className="p-3 text-[10px] text-muted-foreground/50 italic text-center py-16">
+                    Tulis judul & konten...
+                  </div>
+                )}
+              </div>
+              <div className="bg-foreground/[0.03] border-t border-foreground/5 px-1.5 py-1 flex items-center justify-between">
+                <div className="flex items-center gap-1 text-muted-foreground/40">
+                  <ChevronLeft className="size-3.5" />
+                  <span className="text-[8px] font-medium">Prev</span>
+                </div>
+                <div className="flex items-center gap-0.5">
+                  <List className="size-3 text-muted-foreground/40" />
+                </div>
+                <SlidersHorizontal className="size-3 text-muted-foreground/40" />
+                <div className="flex items-center gap-1 text-muted-foreground/40">
+                  <span className="text-[8px] font-medium">Next</span>
+                  <ChevronRight className="size-3.5" />
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </aside>
