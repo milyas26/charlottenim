@@ -1,5 +1,7 @@
 export type WorkStatus = "DRAFT" | "ONGOING" | "COMPLETED";
 
+export type ChapterStatus = "DRAFT" | "PUBLISHED" | "DELETED";
+
 export interface Work {
   id: number;
   title: string;
@@ -22,6 +24,7 @@ export interface Chapter {
   isPremium: boolean;
   price: number;
   readCount: number;
+  status: ChapterStatus;
 }
 
 export interface ReaderSettings {

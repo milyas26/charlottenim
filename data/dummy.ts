@@ -118,6 +118,7 @@ export const chapters: Chapter[] = [
     isPremium: false,
     price: 0,
     readCount: 1250,
+    status: "PUBLISHED",
   },
   {
     id: 2,
@@ -153,6 +154,7 @@ export const chapters: Chapter[] = [
     isPremium: false,
     price: 0,
     readCount: 980,
+    status: "PUBLISHED",
   },
   {
     id: 3,
@@ -191,6 +193,7 @@ export const chapters: Chapter[] = [
     isPremium: true,
     price: 5000,
     readCount: 650,
+    status: "PUBLISHED",
   },
   {
     id: 4,
@@ -230,6 +233,7 @@ export const chapters: Chapter[] = [
     isPremium: false,
     price: 0,
     readCount: 2100,
+    status: "PUBLISHED",
   },
   {
     id: 5,
@@ -272,6 +276,7 @@ export const chapters: Chapter[] = [
     isPremium: false,
     price: 0,
     readCount: 1780,
+    status: "PUBLISHED",
   },
   {
     id: 6,
@@ -316,6 +321,7 @@ export const chapters: Chapter[] = [
     isPremium: true,
     price: 5000,
     readCount: 420,
+    status: "PUBLISHED",
   },
   {
     id: 7,
@@ -351,6 +357,7 @@ export const chapters: Chapter[] = [
     isPremium: false,
     price: 0,
     readCount: 890,
+    status: "PUBLISHED",
   },
   {
     id: 8,
@@ -394,6 +401,7 @@ export const chapters: Chapter[] = [
     isPremium: false,
     price: 0,
     readCount: 720,
+    status: "PUBLISHED",
   },
   {
     id: 9,
@@ -439,6 +447,7 @@ export const chapters: Chapter[] = [
     isPremium: true,
     price: 5000,
     readCount: 310,
+    status: "PUBLISHED",
   },
   {
     id: 10,
@@ -472,6 +481,7 @@ export const chapters: Chapter[] = [
     isPremium: false,
     price: 0,
     readCount: 1560,
+    status: "PUBLISHED",
   },
   {
     id: 11,
@@ -516,6 +526,7 @@ export const chapters: Chapter[] = [
     isPremium: false,
     price: 0,
     readCount: 1340,
+    status: "PUBLISHED",
   },
   {
     id: 12,
@@ -576,6 +587,7 @@ export const chapters: Chapter[] = [
     isPremium: true,
     price: 5000,
     readCount: 680,
+    status: "PUBLISHED",
   },
   {
     id: 13,
@@ -611,6 +623,7 @@ export const chapters: Chapter[] = [
     isPremium: false,
     price: 0,
     readCount: 970,
+    status: "PUBLISHED",
   },
   {
     id: 14,
@@ -659,6 +672,7 @@ export const chapters: Chapter[] = [
     isPremium: false,
     price: 0,
     readCount: 830,
+    status: "PUBLISHED",
   },
   {
     id: 15,
@@ -722,6 +736,7 @@ export const chapters: Chapter[] = [
     isPremium: true,
     price: 5000,
     readCount: 390,
+    status: "PUBLISHED",
   },
   {
     id: 16,
@@ -737,6 +752,7 @@ export const chapters: Chapter[] = [
     isPremium: false,
     price: 0,
     readCount: 1200,
+    status: "PUBLISHED",
   },
   {
     id: 17,
@@ -752,6 +768,7 @@ export const chapters: Chapter[] = [
     isPremium: false,
     price: 0,
     readCount: 980,
+    status: "PUBLISHED",
   },
   {
     id: 18,
@@ -768,6 +785,7 @@ export const chapters: Chapter[] = [
     isPremium: true,
     price: 5000,
     readCount: 620,
+    status: "PUBLISHED",
   },
   {
     id: 19,
@@ -783,6 +801,7 @@ export const chapters: Chapter[] = [
     isPremium: false,
     price: 0,
     readCount: 1800,
+    status: "PUBLISHED",
   },
   {
     id: 20,
@@ -798,6 +817,7 @@ export const chapters: Chapter[] = [
     isPremium: false,
     price: 0,
     readCount: 1450,
+    status: "PUBLISHED",
   },
   {
     id: 21,
@@ -814,6 +834,7 @@ export const chapters: Chapter[] = [
     isPremium: true,
     price: 5000,
     readCount: 780,
+    status: "PUBLISHED",
   },
   {
     id: 22,
@@ -829,6 +850,7 @@ export const chapters: Chapter[] = [
     isPremium: false,
     price: 0,
     readCount: 2100,
+    status: "PUBLISHED",
   },
   {
     id: 23,
@@ -844,6 +866,7 @@ export const chapters: Chapter[] = [
     isPremium: false,
     price: 0,
     readCount: 1680,
+    status: "PUBLISHED",
   },
   {
     id: 24,
@@ -861,6 +884,7 @@ export const chapters: Chapter[] = [
     isPremium: true,
     price: 5000,
     readCount: 920,
+    status: "PUBLISHED",
   },
 ];
 

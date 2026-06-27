@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { useAdminHeaderActions } from "@/components/admin/AdminHeader"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
@@ -18,6 +18,9 @@ export default function AdminNewWorkPage() {
   const [synopsis, setSynopsis] = useState("")
   const [selectedGenres, setSelectedGenres] = useState<string[]>([])
   const [status, setStatus] = useState<WorkStatus>("DRAFT")
+
+  const [coverPreview, setCoverPreview] = useState<string | null>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   const { setActions } = useAdminHeaderActions()
 
@@ -50,6 +53,18 @@ export default function AdminNewWorkPage() {
     .replace(/\s+/g, "-")
     .replace(/-+/g, "-")
     .trim()
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    if (file.size > 2048 * 1024) {
+      alert("Ukuran file maksimal 2MB.")
+      return
+    }
+    const reader = new FileReader()
+    reader.onload = () => setCoverPreview(reader.result as string)
+    reader.readAsDataURL(file)
+  }
 
   return (
     <div className="space-y-6 p-4">
@@ -130,7 +145,19 @@ export default function AdminNewWorkPage() {
               <div className="flex flex-wrap gap-2">
                 {allGenres.map((genre) => {
                   const isSelected = selectedGenres.includes(genre)
-                  return (
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    if (file.size > 100 * 1024) {
+      alert("Ukuran file maksimal 100KB.")
+      return
+    }
+    const reader = new FileReader()
+    reader.onload = () => setCoverPreview(reader.result as string)
+    reader.readAsDataURL(file)
+  }
+
+  return (
                     <button
                       key={genre}
                       type="button"
@@ -163,15 +190,34 @@ export default function AdminNewWorkPage() {
             </CardHeader>
             <CardContent>
               <div className="flex items-center justify-center w-full">
-                <label className="flex flex-col items-center justify-center w-full aspect-[3/4] border-2 border-dashed rounded-lg cursor-pointer border-input hover:border-primary/50 hover:bg-accent/5 transition-colors">
-                  <div className="flex flex-col items-center justify-center px-4">
-                    <Upload className="size-10 text-muted-foreground mb-3" />
-                    <p className="text-sm text-muted-foreground text-center">
-                      <span className="font-medium text-primary">Klik untuk upload</span> atau drag & drop
-                    </p>
-                    <p className="text-xs text-muted-foreground mt-1">JPG, PNG (Max. 100KB)</p>
-                  </div>
-                  <input type="file" className="hidden" accept="image/jpeg,image/png" />
+                <label className="relative flex flex-col items-center justify-center w-full aspect-[3/4] border-2 border-dashed rounded-lg cursor-pointer border-input hover:border-primary/50 hover:bg-accent/5 transition-colors overflow-hidden">
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    className="hidden"
+                    accept="image/jpeg,image/png"
+                    onChange={handleFileChange}
+                  />
+                  {coverPreview ? (
+                    <>
+                      <img
+                        src={coverPreview}
+                        alt="Cover preview"
+                        className="absolute inset-0 w-full h-full object-cover"
+                      />
+                      <div className="absolute inset-0 bg-black/40 opacity-0 hover:opacity-100 transition-opacity flex items-center justify-center">
+                        <p className="text-white text-xs font-medium">Klik untuk ganti cover</p>
+                      </div>
+                    </>
+                  ) : (
+                    <div className="flex flex-col items-center justify-center px-4">
+                      <Upload className="size-10 text-muted-foreground mb-3" />
+                      <p className="text-sm text-muted-foreground text-center">
+                        <span className="font-medium text-primary">Klik untuk upload</span> atau drag & drop
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-1">JPG, PNG (Max. 100KB)</p>
+                    </div>
+                  )}
                 </label>
               </div>
             </CardContent>

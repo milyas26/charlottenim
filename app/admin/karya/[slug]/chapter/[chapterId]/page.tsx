@@ -2,14 +2,30 @@
 
 import { use, useState, useCallback, useRef, useEffect } from "react"
 import { works, chapters as allChapters, getChaptersByWorkSlug } from "@/data/dummy"
-import type { Chapter } from "@/data/types"
+import type { Chapter, ChapterStatus } from "@/data/types"
 import { notFound, useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Checkbox } from "@/components/ui/checkbox"
+import { Badge } from "@/components/ui/badge"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 import ChapterEditor from "@/components/admin/ChapterEditor"
-import { ArrowLeft, Save, GripVertical, PlusCircle, Lock, LockOpen, ChevronRight, X } from "lucide-react"
+import { Save, GripVertical, PlusCircle, Lock, LockOpen, ChevronRight, X } from "lucide-react"
 import { useAdminHeaderActions } from "@/components/admin/AdminHeader"
 import Link from "next/link"
 
@@ -35,13 +51,42 @@ export default function AdminChapterEditorPage({
   const [dragIndex, setDragIndex] = useState<number | null>(null)
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null)
   const dragItem = useRef<number | null>(null)
+  const [reorderDialogOpen, setReorderDialogOpen] = useState(false)
+  const [pendingReorder, setPendingReorder] = useState<{
+    from: number
+    to: number
+    result: Chapter[]
+  } | null>(null)
 
-  const [title, setTitle] = useState(existingChapter?.title ?? "")
+  const [title, setTitle] = useState(existingChapter?.title ?? (isNew ? "Untitled" : ""))
   const [content, setContent] = useState(existingChapter?.content ?? "")
   const [isPremium, setIsPremium] = useState(existingChapter?.isPremium ?? false)
   const [price, setPrice] = useState(String(existingChapter?.price ?? 5000))
+  const [status, setStatus] = useState<ChapterStatus>(existingChapter?.status ?? "PUBLISHED")
 
   const isEditing = !!existingChapter
+
+  useEffect(() => {
+    if (isNew) {
+      setOrderedChapters((prev) => {
+        if (prev.some((ch) => ch.slug === "create")) return prev
+        const dummyChapter: Chapter = {
+          id: -1,
+          workId: work.id,
+          workSlug: work.slug,
+          chapterNumber: prev.length + 1,
+          slug: "create",
+          title: "Untitled",
+          content: "",
+          isPremium: false,
+          price: 0,
+          readCount: 0,
+          status: "DRAFT",
+        }
+        return [...prev, dummyChapter]
+      })
+    }
+  }, [isNew, work.id, work.slug])
 
   const { setActions } = useAdminHeaderActions()
 
@@ -101,17 +146,33 @@ export default function AdminChapterEditorPage({
     if (from === null || from === index) {
       setDragIndex(null)
       setDragOverIndex(null)
+      dragItem.current = null
       return
     }
     const reordered = [...orderedChapters]
     const [moved] = reordered.splice(from, 1)
     reordered.splice(index, 0, moved)
     const updated = reordered.map((ch, i) => ({ ...ch, chapterNumber: i + 1 }))
-    setOrderedChapters(updated)
-    setDragIndex(null)
-    setDragOverIndex(null)
+    setPendingReorder({ from, to: index, result: updated })
+    setReorderDialogOpen(true)
     dragItem.current = null
   }, [orderedChapters])
+
+  const handleConfirmReorder = useCallback(() => {
+    if (!pendingReorder) return
+    setOrderedChapters(pendingReorder.result)
+    setPendingReorder(null)
+    setReorderDialogOpen(false)
+    setDragIndex(null)
+    setDragOverIndex(null)
+  }, [pendingReorder])
+
+  const handleCancelReorder = useCallback(() => {
+    setPendingReorder(null)
+    setReorderDialogOpen(false)
+    setDragIndex(null)
+    setDragOverIndex(null)
+  }, [])
 
   return (
     <div className="flex h-[calc(100vh-3.5rem)] gap-0">
@@ -174,47 +235,14 @@ export default function AdminChapterEditorPage({
       </aside>
 
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-        <div className="shrink-0 p-6 pb-0 space-y-2">
-          <div className="flex items-center gap-4 flex-wrap">
-            <div className="flex-1 min-w-[160px]">
-              <Input
-                id="title"
-                placeholder="Judul chapter..."
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                className="h-7 text-sm border-0 border-b border-input rounded-none focus-visible:ring-0 focus-visible:border-primary px-0 font-bold"
-              />
-            </div>
-            <div className="flex items-center gap-2">
-              <Checkbox
-                id="isPremium"
-                checked={isPremium}
-                onCheckedChange={(checked) => setIsPremium(checked === true)}
-              />
-              <Label htmlFor="isPremium" className="cursor-pointer text-xs">
-                Premium
-              </Label>
-            </div>
-            {isPremium && (
-              <div className="relative">
-                <span className="absolute left-2 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">Rp</span>
-                <Input
-                  id="price"
-                  type="number"
-                  value={price}
-                  onChange={(e) => setPrice(e.target.value)}
-                  className="w-24 pl-6 h-7 text-sm"
-                  min={1000}
-                  step={500}
-                />
-              </div>
-            )}
-          </div>
-          {title && (
-            <p className="text-xs text-muted-foreground">
-              Slug: <code className="text-accent">/{chapterSlug}</code>
-            </p>
-          )}
+        <div className="shrink-0 p-6 pb-0">
+          <Input
+            id="title"
+            placeholder="Judul chapter..."
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            className="h-7 text-sm border-0 border-b border-input rounded-none focus-visible:ring-0 focus-visible:border-primary px-0 font-bold"
+          />
         </div>
 
         <div className="flex-1 min-h-0 p-6 pt-4">
@@ -225,6 +253,125 @@ export default function AdminChapterEditorPage({
           />
         </div>
       </div>
+
+      <aside className="w-52 shrink-0 border-l border-border/50 flex flex-col p-4 gap-5 overflow-y-auto">
+        <div className="space-y-1.5">
+          <Label className="text-xs text-muted-foreground uppercase tracking-wider">Status</Label>
+          <Select value={status} onValueChange={(v) => setStatus(v as ChapterStatus)}>
+            <SelectTrigger className="h-8 text-xs">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="DRAFT">
+                <span className="flex items-center gap-2">
+                  <Badge variant="secondary" className="text-[10px] px-1.5 py-0">Draft</Badge>
+                </span>
+              </SelectItem>
+              <SelectItem value="PUBLISHED">
+                <span className="flex items-center gap-2">
+                  <Badge variant="default" className="text-[10px] px-1.5 py-0">Published</Badge>
+                </span>
+              </SelectItem>
+              <SelectItem value="DELETED">
+                <span className="flex items-center gap-2">
+                  <Badge variant="destructive" className="text-[10px] px-1.5 py-0">Deleted</Badge>
+                </span>
+              </SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="space-y-3">
+          <Label className="text-xs text-muted-foreground uppercase tracking-wider">Akses</Label>
+          <div className="flex items-center gap-2">
+            <Checkbox
+              id="isPremiumPanel"
+              checked={isPremium}
+              onCheckedChange={(checked) => setIsPremium(checked === true)}
+            />
+            <Label htmlFor="isPremiumPanel" className="cursor-pointer text-xs">
+              Premium
+            </Label>
+          </div>
+          {isPremium && (
+            <div>
+              <Label htmlFor="pricePanel" className="text-[11px] text-muted-foreground">
+                Harga (Rp)
+              </Label>
+              <Input
+                id="pricePanel"
+                type="number"
+                value={price}
+                onChange={(e) => setPrice(e.target.value)}
+                className="h-7 text-sm mt-1"
+                min={1000}
+                step={500}
+              />
+            </div>
+          )}
+        </div>
+
+        <div className="space-y-1.5">
+          <Label className="text-xs text-muted-foreground uppercase tracking-wider">Info</Label>
+          <div className="text-xs space-y-1">
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Chapter</span>
+              <span className="tabular-nums">#{chapterNumber}</span>
+            </div>
+            {title && (
+              <div>
+                <span className="text-muted-foreground">Slug</span>
+                <code className="block text-[11px] mt-0.5 text-accent break-all">/{chapterSlug}</code>
+              </div>
+            )}
+            {existingChapter && (
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Dibaca</span>
+                <span className="tabular-nums">{existingChapter.readCount}x</span>
+              </div>
+            )}
+          </div>
+        </div>
+      </aside>
+
+      <Dialog open={reorderDialogOpen} onOpenChange={setReorderDialogOpen}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Sortir Chapter?</DialogTitle>
+            <DialogDescription>
+              Urutan chapter akan diubah. Lanjutkan?
+            </DialogDescription>
+          </DialogHeader>
+          {pendingReorder && (
+            <div className="text-xs text-muted-foreground space-y-1">
+              <p>
+                Pindah <strong className="text-foreground">#{pendingReorder.from + 1}</strong> ke posisi{" "}
+                <strong className="text-foreground">#{pendingReorder.to + 1}</strong>
+              </p>
+              <div className="flex flex-wrap gap-1 mt-1">
+                {pendingReorder.result.slice(0, 6).map((ch) => (
+                  <span key={ch.id} className="px-1.5 py-0.5 rounded bg-muted text-[11px]">
+                    {ch.chapterNumber}. {ch.title.slice(0, 12)}{ch.title.length > 12 ? "…" : ""}
+                  </span>
+                ))}
+                {pendingReorder.result.length > 6 && (
+                  <span className="text-[11px] text-muted-foreground">
+                    +{pendingReorder.result.length - 6} lainnya
+                  </span>
+                )}
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" size="sm" onClick={handleCancelReorder}>
+              Batal
+            </Button>
+            <Button size="sm" onClick={handleConfirmReorder}>
+              Ya, Sortir
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
