@@ -32,7 +32,7 @@ export default function Navbar() {
       style={{ borderBottom: "1px solid transparent" }}
     >
       <div className="max-w-[480px] mx-auto px-5 h-14 flex items-center justify-between">
-        <a href="/" className="group inline-flex items-center gap-0">
+        <a href="/" className="group inline-flex items-center">
           <span
             aria-hidden="true"
             className="text-[16px] leading-none opacity-30 transition-all duration-700 ease-out group-hover:opacity-80 group-hover:rotate-[16deg] group-hover:scale-110"
