@@ -201,6 +201,14 @@ body::before {
   font-style: italic;
 }
 
+.reader-content img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 0.5rem;
+  margin: 1.5rem 0;
+  display: block;
+}
+
 .gold-rule {
   height: 1px;
   background: linear-gradient(

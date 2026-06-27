@@ -205,7 +205,7 @@ export default function AdminWorkDetailPage({ params }: { params: Promise<{ slug
   }, [])
 
   return (
-    <div className="space-y-6 p-4">
+    <div className="space-y-4 p-4">
       <div className="flex items-center gap-3">
         <Button variant="ghost" size="icon" asChild>
           <Link href="/admin/karya">
@@ -214,11 +214,10 @@ export default function AdminWorkDetailPage({ params }: { params: Promise<{ slug
         </Button>
         <div className="flex-1">
           <h1 className="text-2xl font-bold tracking-tight">{work.title}</h1>
-          <p className="text-muted-foreground mt-1">/{work.slug}</p>
         </div>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-3">
+      <div className="grid gap-4 lg:grid-cols-3">
         <Card className="lg:col-span-1">
           <CardHeader>
             <CardTitle>Info Karya</CardTitle>
@@ -439,7 +438,7 @@ export default function AdminWorkDetailPage({ params }: { params: Promise<{ slug
                       <TableCell className="font-medium">{ch.chapterNumber}</TableCell>
                       <TableCell>
                         <div>
-                          <Link href={`/baca/${ch.workSlug}/${ch.slug}`} className="font-medium hover:text-primary transition-colors">
+                          <Link href={`/admin/karya/${work.slug}/chapter/${ch.slug}`} className="font-medium hover:text-primary transition-colors">
                             {ch.title}
                           </Link>
                           <p className="text-xs text-muted-foreground">/{ch.slug}</p>
