@@ -1,12 +1,10 @@
 "use client"
 
-import { use, useState, useCallback, useRef, useEffect } from "react"
+import { use, useState, useCallback, useEffect } from "react"
 import { useAdminHeaderActions } from "@/components/admin/AdminHeader"
-import type { WorkStatus } from "@/data/types"
+import type { WorkStatus, Chapter } from "@/data/types"
 import Link from "next/link"
-import { works, chapters } from "@/data/dummy"
-import { Chapter } from "@/data/types"
-import { notFound } from "next/navigation"
+import { useRouter } from "next/navigation"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -32,6 +30,16 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
+import {
   ArrowLeft,
   PlusCircle,
   MoreHorizontal,
@@ -44,53 +52,97 @@ import {
   Save,
   X,
   Upload,
+  Loader2,
 } from "lucide-react"
 import { allGenres } from "@/data/admin-dummy"
 
+type WorkDetail = {
+  id: string
+  title: string
+  slug: string
+  synopsis: string
+  coverUrl: string
+  genres: string[]
+  status: WorkStatus
+  totalChapters: number
+  deletedAt: string | null
+}
+
 export default function AdminWorkDetailPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = use(params)
-  const work = works.find((w) => w.slug === slug)
-  if (!work) notFound()
+  const router = useRouter()
 
-  const initialChapters = chapters
-    .filter((ch) => ch.workId === work.id)
-    .sort((a, b) => a.chapterNumber - b.chapterNumber)
+  const [work, setWork] = useState<WorkDetail | null>(null)
+  const [chapters, setChapters] = useState<Chapter[]>([])
+  const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
 
-  const [orderedChapters, setOrderedChapters] = useState<Chapter[]>(initialChapters)
-  const [dragIndex, setDragIndex] = useState<number | null>(null)
-  const [dropIndex, setDropIndex] = useState<number | null>(null)
-  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null)
-  const [confirmOpen, setConfirmOpen] = useState(false)
   const [isEditing, setIsEditing] = useState(false)
-  const [editTitle, setEditTitle] = useState(work.title)
-  const [editSynopsis, setEditSynopsis] = useState(work.synopsis)
-  const [editStatus, setEditStatus] = useState<WorkStatus>(work.status)
-  const [editGenres, setEditGenres] = useState<string[]>(work.genres)
+  const [editTitle, setEditTitle] = useState("")
+  const [editSynopsis, setEditSynopsis] = useState("")
+  const [editStatus, setEditStatus] = useState<WorkStatus>("DRAFT")
+  const [editGenres, setEditGenres] = useState<string[]>([])
   const [editCoverPreview, setEditCoverPreview] = useState<string | null>(null)
-  const dragItem = useRef<number | null>(null)
+  const [editCoverFile, setEditCoverFile] = useState<File | null>(null)
 
+  const [confirmOpen, setConfirmOpen] = useState(false)
+  const [dragIndex, setDragIndex] = useState<number | null>(null)
+  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null)
+  const [dragFromIndex, setDragFromIndex] = useState<number | null>(null)
+  const [dropIndex, setDropIndex] = useState<number | null>(null)
+  const [deleteChapterTarget, setDeleteChapterTarget] = useState<Chapter | null>(null)
+  const [deleteWorkOpen, setDeleteWorkOpen] = useState(false)
   const { setActions } = useAdminHeaderActions()
 
+  const fetchData = useCallback(async () => {
+    setLoading(true)
+    try {
+      const [workRes, chaptersRes] = await Promise.all([
+        fetch(`/api/admin/works/${slug}`),
+        fetch(`/api/admin/works/${slug}/chapters`),
+      ])
+      if (!workRes.ok) throw new Error("Karya tidak ditemukan")
+      const workData = await workRes.json()
+      const chaptersData = chaptersRes.ok ? await chaptersRes.json() : []
+
+      const sorted = chaptersData.sort((a: Chapter, b: Chapter) => a.chapterNumber - b.chapterNumber)
+      setWork(workData)
+      setChapters(sorted)
+      setEditTitle(workData.title)
+      setEditSynopsis(workData.synopsis)
+      setEditStatus(workData.status)
+      setEditGenres(workData.genres)
+      setEditCoverPreview(null)
+      setEditCoverFile(null)
+    } catch {
+      router.push("/admin/karya")
+    } finally {
+      setLoading(false)
+    }
+  }, [slug, router])
+
+  console.log('chapters', chapters)
+
   useEffect(() => {
+    fetchData()
+  }, [fetchData])
+
+  useEffect(() => {
+    if (!work) return
+
     if (isEditing) {
       setActions(
         <>
           <Button variant="outline" size="sm" onClick={() => {
             setIsEditing(false)
             setEditCoverPreview(null)
+            setEditCoverFile(null)
           }}>
             <X className="size-4" />
             Batal
           </Button>
-          <Button size="sm" disabled={!editTitle || !editSynopsis} onClick={() => {
-            work.title = editTitle
-            work.synopsis = editSynopsis
-            work.status = editStatus
-            work.genres = editGenres
-            setIsEditing(false)
-            alert("Karya berhasil diedit!")
-          }}>
-            <Save className="size-4" />
+          <Button size="sm" disabled={!editTitle || !editSynopsis || saving} onClick={handleSaveEdit}>
+            {saving ? <Loader2 className="size-4 animate-spin" /> : <Save className="size-4" />}
             Simpan Perubahan
           </Button>
         </>
@@ -99,11 +151,13 @@ export default function AdminWorkDetailPage({ params }: { params: Promise<{ slug
       setActions(
         <>
           <Button variant="outline" size="sm" onClick={() => {
+            if (!work) return
             setEditTitle(work.title)
             setEditSynopsis(work.synopsis)
             setEditStatus(work.status)
             setEditGenres(work.genres)
             setEditCoverPreview(null)
+            setEditCoverFile(null)
             setIsEditing(true)
           }}>
             <Edit className="size-4" />
@@ -119,22 +173,105 @@ export default function AdminWorkDetailPage({ params }: { params: Promise<{ slug
       )
     }
     return () => setActions(null)
-  }, [setActions, isEditing, editTitle, editSynopsis, editStatus, editGenres, work.slug])
+  }, [setActions, isEditing, editTitle, editSynopsis, editStatus, editGenres, saving, work])
 
-  const totalReads = orderedChapters.reduce((sum, ch) => sum + ch.readCount, 0)
+  const handleSaveEdit = useCallback(async () => {
+    if (!work) return
+
+    const newSlug = editTitle
+      .toLowerCase()
+      .replace(/[^a-z0-9\s-]/g, "")
+      .replace(/\s+/g, "-")
+      .replace(/-+/g, "-")
+      .trim()
+
+    setSaving(true)
+    try {
+      let coverUrl = work.coverUrl
+      if (editCoverFile) {
+        const formData = new FormData()
+        formData.append("file", editCoverFile)
+        const uploadRes = await fetch("/api/admin/upload", { method: "POST", body: formData })
+        if (!uploadRes.ok) throw new Error("Gagal upload cover")
+        const uploadData = await uploadRes.json()
+        coverUrl = uploadData.url
+      } else if (editCoverPreview) {
+        coverUrl = editCoverPreview
+      }
+
+      const res = await fetch(`/api/admin/works/${work.slug}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: editTitle.trim(),
+          slug: newSlug,
+          synopsis: editSynopsis.trim(),
+          status: editStatus,
+          genres: editGenres,
+          coverUrl,
+        }),
+      })
+
+      if (!res.ok) {
+        const errData = await res.json()
+        throw new Error(errData.error || "Gagal mengupdate karya")
+      }
+
+      setIsEditing(false)
+      setEditCoverPreview(null)
+      setEditCoverFile(null)
+      await fetchData()
+
+      if (newSlug !== work.slug) {
+        router.replace(`/admin/karya/${newSlug}`)
+      }
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Gagal mengupdate karya")
+    } finally {
+      setSaving(false)
+    }
+  }, [work, editTitle, editSynopsis, editStatus, editGenres, editCoverFile, editCoverPreview, fetchData, router])
+
+  const handleDeleteWork = async () => {
+    if (!work) return
+    try {
+      const res = await fetch(`/api/admin/works/${work.slug}`, { method: "DELETE" })
+      if (!res.ok) throw new Error("Gagal menghapus")
+      router.push("/admin/karya")
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Gagal menghapus karya")
+    } finally {
+      setDeleteWorkOpen(false)
+    }
+  }
+
+  const handleDeleteChapter = async () => {
+    if (!deleteChapterTarget) return
+    try {
+      const res = await fetch(`/api/admin/works/${slug}/chapters/${deleteChapterTarget.id}`, { method: "DELETE" })
+      if (!res.ok) throw new Error("Gagal menghapus")
+      setChapters((prev) => prev.filter((c) => c.id !== deleteChapterTarget.id))
+    } catch (err) {
+      console.error(err)
+    } finally {
+      setDeleteChapterTarget(null)
+    }
+  }
+
+  const totalReads = chapters.reduce((sum, ch) => sum + ch.readCount, 0)
 
   const handleDragStart = useCallback((index: number) => {
-    dragItem.current = index
+    setDragFromIndex(index)
     setDragIndex(index)
   }, [])
 
   const handleDragOver = useCallback((e: React.DragEvent, index: number) => {
     e.preventDefault()
     e.dataTransfer.dropEffect = "move"
-    if (dragItem.current !== index) {
+    if (dragFromIndex !== index) {
       setDragOverIndex(index)
     }
-  }, [])
+  }, [dragFromIndex])
 
   const handleDragLeave = useCallback(() => {
     setDragOverIndex(null)
@@ -143,13 +280,11 @@ export default function AdminWorkDetailPage({ params }: { params: Promise<{ slug
   const handleDragEnd = useCallback(() => {
     setDragIndex(null)
     setDragOverIndex(null)
-    dragItem.current = null
   }, [])
 
   const handleDrop = useCallback((e: React.DragEvent, index: number) => {
     e.preventDefault()
-    const from = dragItem.current
-    if (from === null || from === index) {
+    if (dragFromIndex === null || dragFromIndex === index) {
       setDragIndex(null)
       setDragOverIndex(null)
       return
@@ -158,30 +293,36 @@ export default function AdminWorkDetailPage({ params }: { params: Promise<{ slug
     setDragIndex(null)
     setDragOverIndex(null)
     setConfirmOpen(true)
-  }, [])
+  }, [dragFromIndex])
 
-  const confirmReorder = useCallback(() => {
-    if (dragItem.current === null || dropIndex === null) return
+  const confirmReorder = useCallback(async () => {
+    if (dragFromIndex === null || dropIndex === null) return
+    if (!work) return
 
-    const from = dragItem.current
+    const from = dragFromIndex
     const to = dropIndex
-
-    const reordered = [...orderedChapters]
+    const reordered = [...chapters]
     const [moved] = reordered.splice(from, 1)
     reordered.splice(to, 0, moved)
+    const updated = reordered.map((ch, i) => ({ ...ch, chapterNumber: i + 1 }))
+    const chapterIds = updated.map((ch) => ch.id)
 
-    const updated = reordered.map((ch, i) => ({
-      ...ch,
-      chapterNumber: i + 1,
-    }))
-
-    setOrderedChapters(updated)
-    setConfirmOpen(false)
-    dragItem.current = null
-    setDropIndex(null)
-
-    alert("Urutan chapter berhasil diubah!")
-  }, [orderedChapters, dropIndex])
+    try {
+      const res = await fetch(`/api/admin/works/${slug}/chapters/reorder`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ chapterIds }),
+      })
+      if (!res.ok) throw new Error("Gagal mengurutkan")
+      setChapters(updated)
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Gagal mengurutkan chapter")
+    } finally {
+      setConfirmOpen(false)
+      setDragFromIndex(null)
+      setDropIndex(null)
+    }
+  }, [chapters, slug, dragFromIndex, dropIndex, work])
 
   const toggleGenre = (genre: string) => {
     if (editGenres.includes(genre)) {
@@ -200,9 +341,23 @@ export default function AdminWorkDetailPage({ params }: { params: Promise<{ slug
 
   const cancelReorder = useCallback(() => {
     setConfirmOpen(false)
-    dragItem.current = null
+    setDragFromIndex(null)
     setDropIndex(null)
   }, [])
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <Loader2 className="size-8 animate-spin text-muted-foreground" />
+      </div>
+    )
+  }
+
+  if (!work) {
+    return (
+      <div className="p-4 text-center text-muted-foreground">Karya tidak ditemukan.</div>
+    )
+  }
 
   return (
     <div className="space-y-4 p-4">
@@ -215,6 +370,10 @@ export default function AdminWorkDetailPage({ params }: { params: Promise<{ slug
         <div className="flex-1">
           <h1 className="text-2xl font-bold tracking-tight">{work.title}</h1>
         </div>
+        <Button variant="outline" size="sm" onClick={() => setDeleteWorkOpen(true)}>
+          <Trash2 className="size-4" />
+          Hapus
+        </Button>
       </div>
 
       <div className="grid gap-4 lg:grid-cols-3">
@@ -233,7 +392,7 @@ export default function AdminWorkDetailPage({ params }: { params: Promise<{ slug
                         alt={editTitle || work.title}
                         className="absolute inset-0 w-full h-full object-cover"
                       />
-                    ) : work.coverUrl.startsWith("http") ? (
+                    ) : (work.coverUrl.startsWith("http") || work.coverUrl.startsWith("data:")) ? (
                       <img
                         src={work.coverUrl}
                         alt={work.title}
@@ -245,7 +404,7 @@ export default function AdminWorkDetailPage({ params }: { params: Promise<{ slug
                         <p className="text-sm text-muted-foreground text-center">
                           <span className="font-medium text-primary">Klik untuk upload</span> atau drag & drop
                         </p>
-                        <p className="text-xs text-muted-foreground mt-1">JPG, PNG (Max. 100KB)</p>
+                        <p className="text-xs text-muted-foreground mt-1">JPG, PNG (Max. 2MB)</p>
                       </div>
                     )}
                     <input
@@ -254,11 +413,15 @@ export default function AdminWorkDetailPage({ params }: { params: Promise<{ slug
                       accept="image/jpeg,image/png"
                       onChange={(e) => {
                         const file = e.target.files?.[0]
-                        if (file) {
-                          const reader = new FileReader()
-                          reader.onload = () => setEditCoverPreview(reader.result as string)
-                          reader.readAsDataURL(file)
+                        if (!file) return
+                        if (file.size > 2 * 1024 * 1024) {
+                          alert("Ukuran file maksimal 2MB.")
+                          return
                         }
+                        setEditCoverFile(file)
+                        const reader = new FileReader()
+                        reader.onload = () => setEditCoverPreview(reader.result as string)
+                        reader.readAsDataURL(file)
                       }}
                     />
                   </label>
@@ -341,7 +504,7 @@ export default function AdminWorkDetailPage({ params }: { params: Promise<{ slug
               </>
             ) : (
               <>
-                {work.coverUrl.startsWith("http") ? (
+                {(work.coverUrl.startsWith("http") || work.coverUrl.startsWith("data:")) ? (
                   <img src={work.coverUrl} alt={work.title} className="w-full aspect-[3/4] rounded-lg object-cover" />
                 ) : (
                   <div className="w-full aspect-[3/4] rounded-lg bg-gradient-to-br from-accent/40 to-accent/10 flex items-center justify-center">
@@ -359,7 +522,7 @@ export default function AdminWorkDetailPage({ params }: { params: Promise<{ slug
                   <Separator />
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-muted-foreground">Chapter</span>
-                    <span className="text-sm font-medium">{orderedChapters.length}</span>
+                    <span className="text-sm font-medium">{chapters.length}</span>
                   </div>
                   <Separator />
                   <div className="flex items-center justify-between">
@@ -390,7 +553,7 @@ export default function AdminWorkDetailPage({ params }: { params: Promise<{ slug
           <CardHeader className="flex flex-row items-center justify-between">
             <div>
               <CardTitle>Daftar Chapter</CardTitle>
-              <CardDescription>{orderedChapters.length} chapter · Geser handle untuk mengurutkan.</CardDescription>
+              <CardDescription>{chapters.length} chapter · Geser handle untuk mengurutkan.</CardDescription>
             </div>
           </CardHeader>
           <CardContent>
@@ -406,14 +569,14 @@ export default function AdminWorkDetailPage({ params }: { params: Promise<{ slug
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {orderedChapters.length === 0 ? (
+                {chapters.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
                       Belum ada chapter. Tambah chapter pertama.
                     </TableCell>
                   </TableRow>
                 ) : (
-                  orderedChapters.map((ch, index) => (
+                  chapters.map((ch, index) => (
                     <TableRow
                       key={ch.id}
                       draggable
@@ -479,7 +642,7 @@ export default function AdminWorkDetailPage({ params }: { params: Promise<{ slug
                               </Link>
                             </DropdownMenuItem>
                             <DropdownMenuSeparator />
-                            <DropdownMenuItem variant="destructive">
+                            <DropdownMenuItem variant="destructive" onClick={() => setDeleteChapterTarget(ch)}>
                               <Trash2 className="size-4" />
                               Hapus
                             </DropdownMenuItem>
@@ -513,6 +676,40 @@ export default function AdminWorkDetailPage({ params }: { params: Promise<{ slug
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <AlertDialog open={!!deleteChapterTarget} onOpenChange={(open) => !open && setDeleteChapterTarget(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Hapus Chapter</AlertDialogTitle>
+            <AlertDialogDescription>
+              Yakin ingin menghapus chapter &ldquo;{deleteChapterTarget?.title}&rdquo;?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Batal</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteChapter} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Hapus
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={deleteWorkOpen} onOpenChange={setDeleteWorkOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Hapus Karya</AlertDialogTitle>
+            <AlertDialogDescription>
+              Yakin ingin menghapus &ldquo;{work.title}&rdquo; beserta semua chapternya?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Batal</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteWork} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Hapus
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }

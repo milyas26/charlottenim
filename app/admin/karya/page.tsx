@@ -1,9 +1,8 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { useAdminHeaderActions } from "@/components/admin/AdminHeader"
 import Link from "next/link"
-import { works, chapters } from "@/data/dummy"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -16,8 +15,20 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { PlusCircle, Search, MoreHorizontal, Edit, Eye, BarChart3, Trash2 } from "lucide-react"
-import { WorkStatus } from "@/data/types"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
+import { PlusCircle, Search, MoreHorizontal, Edit, Eye, BarChart3, Trash2, Loader2 } from "lucide-react"
+import type { WorkStatus, Work } from "@/data/types"
+
+type WorkWithReads = Work & { totalReads: number }
 
 export default function AdminWorksPage() {
   const { setActions } = useAdminHeaderActions()
@@ -34,14 +45,56 @@ export default function AdminWorksPage() {
     return () => setActions(null)
   }, [setActions])
 
+  const [works, setWorks] = useState<WorkWithReads[]>([])
+  const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState("")
   const [statusFilter, setStatusFilter] = useState<WorkStatus | "ALL">("ALL")
+  const [deleteTarget, setDeleteTarget] = useState<WorkWithReads | null>(null)
+
+  const fetchWorks = useCallback(async () => {
+    setLoading(true)
+    try {
+      const res = await fetch("/api/admin/works")
+      if (!res.ok) throw new Error("Gagal mengambil data")
+      const data = await res.json()
+      setWorks(data)
+    } catch (err) {
+      console.error(err)
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    fetchWorks()
+  }, [fetchWorks])
+
+  const handleDelete = async () => {
+    if (!deleteTarget) return
+    try {
+      const res = await fetch(`/api/admin/works/${deleteTarget.slug}`, { method: "DELETE" })
+      if (!res.ok) throw new Error("Gagal menghapus")
+      setWorks((prev) => prev.filter((w) => w.id !== deleteTarget.id))
+    } catch (err) {
+      console.error(err)
+    } finally {
+      setDeleteTarget(null)
+    }
+  }
 
   const filtered = works.filter((w) => {
     const matchSearch = w.title.toLowerCase().includes(search.toLowerCase())
     const matchStatus = statusFilter === "ALL" || w.status === statusFilter
     return matchSearch && matchStatus
   })
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <Loader2 className="size-8 animate-spin text-muted-foreground" />
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-4 p-4">
@@ -88,76 +141,72 @@ export default function AdminWorksPage() {
                 </TableCell>
               </TableRow>
             ) : (
-              filtered.map((work) => {
-                const workChapters = chapters.filter((ch) => ch.workId === work.id)
-                const totalReads = workChapters.reduce((sum, ch) => sum + ch.readCount, 0)
-                return (
-                  <TableRow key={work.id}>
-                    <TableCell>
-                      <div className="flex items-center gap-3">
-                        {work.coverUrl.startsWith("http") ? (
-                          <img src={work.coverUrl} alt={work.title} className="w-10 h-14 rounded object-cover shrink-0" />
-                        ) : (
-                          <div className="w-10 h-14 rounded bg-gradient-to-br from-accent/40 to-accent/10 flex items-center justify-center text-[10px] font-medium text-accent shrink-0">
-                            {work.title.charAt(0)}
-                          </div>
-                        )}
-                        <div className="min-w-0">
-                          <Link href={`/admin/karya/${work.slug}`} className="font-medium hover:text-primary transition-colors block truncate">
-                            {work.title}
-                          </Link>
-                          <p className="text-xs text-muted-foreground truncate">/{work.slug}</p>
+              filtered.map((work) => (
+                <TableRow key={work.id}>
+                  <TableCell>
+                    <div className="flex items-center gap-3">
+                      {work.coverUrl.startsWith("http") || work.coverUrl.startsWith("data:") ? (
+                        <img src={work.coverUrl} alt={work.title} className="w-10 h-14 rounded object-cover shrink-0" />
+                      ) : (
+                        <div className="w-10 h-14 rounded bg-gradient-to-br from-accent/40 to-accent/10 flex items-center justify-center text-[10px] font-medium text-accent shrink-0">
+                          {work.title.charAt(0)}
                         </div>
+                      )}
+                      <div className="min-w-0">
+                        <Link href={`/admin/karya/${work.slug}`} className="font-medium hover:text-primary transition-colors block truncate">
+                          {work.title}
+                        </Link>
+                        <p className="text-xs text-muted-foreground truncate">/{work.slug}</p>
                       </div>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant={work.status === "DRAFT" ? "secondary" : work.status === "ONGOING" ? "default" : "outline"}>
-                        {work.status === "DRAFT" ? "Draft" : work.status === "ONGOING" ? "Ongoing" : "Selesai"}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex flex-wrap gap-1">
-                        {work.genres.slice(0, 2).map((g) => (
-                          <Badge key={g} variant="secondary" className="text-[10px]">{g}</Badge>
-                        ))}
-                        {work.genres.length > 2 && (
-                          <Badge variant="secondary" className="text-[10px]">+{work.genres.length - 2}</Badge>
-                        )}
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-center">{work.totalChapters}</TableCell>
-                    <TableCell className="text-right text-muted-foreground">{totalReads.toLocaleString("id-ID")}</TableCell>
-                    <TableCell>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon" className="size-8">
-                            <MoreHorizontal className="size-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem asChild>
-                            <Link href={`/admin/karya/${work.slug}`}>
-                              <Eye className="size-4" />
-                              Lihat Detail
-                            </Link>
-                          </DropdownMenuItem>
-                          <DropdownMenuItem asChild>
-                            <Link href={`/admin/karya/${work.slug}?edit=true`}>
-                              <Edit className="size-4" />
-                              Edit
-                            </Link>
-                          </DropdownMenuItem>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem variant="destructive">
-                            <Trash2 className="size-4" />
-                            Hapus
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </TableCell>
-                  </TableRow>
-                )
-              })
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant={work.status === "DRAFT" ? "secondary" : work.status === "ONGOING" ? "default" : "outline"}>
+                      {work.status === "DRAFT" ? "Draft" : work.status === "ONGOING" ? "Ongoing" : "Selesai"}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex flex-wrap gap-1">
+                      {work.genres.slice(0, 2).map((g) => (
+                        <Badge key={g} variant="secondary" className="text-[10px]">{g}</Badge>
+                      ))}
+                      {work.genres.length > 2 && (
+                        <Badge variant="secondary" className="text-[10px]">+{work.genres.length - 2}</Badge>
+                      )}
+                    </div>
+                  </TableCell>
+                  <TableCell className="text-center">{work.totalChapters}</TableCell>
+                  <TableCell className="text-right text-muted-foreground">{(work.totalReads ?? 0).toLocaleString("id-ID")}</TableCell>
+                  <TableCell>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon" className="size-8">
+                          <MoreHorizontal className="size-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem asChild>
+                          <Link href={`/admin/karya/${work.slug}`}>
+                            <Eye className="size-4" />
+                            Lihat Detail
+                          </Link>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem asChild>
+                          <Link href={`/admin/karya/${work.slug}?edit=true`}>
+                            <Edit className="size-4" />
+                            Edit
+                          </Link>
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem variant="destructive" onClick={() => setDeleteTarget(work)}>
+                          <Trash2 className="size-4" />
+                          Hapus
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </TableCell>
+                </TableRow>
+              ))
             )}
           </TableBody>
         </Table>
@@ -166,6 +215,23 @@ export default function AdminWorksPage() {
       <div className="flex items-center justify-between text-sm text-muted-foreground">
         <p>Menampilkan {filtered.length} dari {works.length} karya</p>
       </div>
+
+      <AlertDialog open={!!deleteTarget} onOpenChange={(open) => !open && setDeleteTarget(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Hapus Karya</AlertDialogTitle>
+            <AlertDialogDescription>
+              Yakin ingin menghapus &ldquo;{deleteTarget?.title}&rdquo;? Karya akan di-soft delete dan bisa dipulihkan.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Batal</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Hapus
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }

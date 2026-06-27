@@ -1,7 +1,8 @@
 "use client"
 
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect, useRef, useCallback } from "react"
 import { useAdminHeaderActions } from "@/components/admin/AdminHeader"
+import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -9,20 +10,73 @@ import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { ArrowLeft, Plus, Save, X, Upload } from "lucide-react"
+import { ArrowLeft, Save, X, Upload, Loader2 } from "lucide-react"
 import { allGenres } from "@/data/admin-dummy"
 import { WorkStatus } from "@/data/types"
 
 export default function AdminNewWorkPage() {
+  const router = useRouter()
+
   const [title, setTitle] = useState("")
   const [synopsis, setSynopsis] = useState("")
   const [selectedGenres, setSelectedGenres] = useState<string[]>([])
   const [status, setStatus] = useState<WorkStatus>("DRAFT")
 
   const [coverPreview, setCoverPreview] = useState<string | null>(null)
+  const [coverFile, setCoverFile] = useState<File | null>(null)
+  const [saving, setSaving] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const { setActions } = useAdminHeaderActions()
+
+  const handleSave = useCallback(async () => {
+    if (!title || !synopsis) return
+
+    const slug = title
+      .toLowerCase()
+      .replace(/[^a-z0-9\s-]/g, "")
+      .replace(/\s+/g, "-")
+      .replace(/-+/g, "-")
+      .trim()
+
+    setSaving(true)
+    try {
+      let coverUrl = ""
+      if (coverFile) {
+        const formData = new FormData()
+        formData.append("file", coverFile)
+        const uploadRes = await fetch("/api/admin/upload", { method: "POST", body: formData })
+        if (!uploadRes.ok) throw new Error("Gagal upload cover")
+        const uploadData = await uploadRes.json()
+        coverUrl = uploadData.url
+      }
+
+      const res = await fetch("/api/admin/works", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: title.trim(),
+          slug,
+          synopsis: synopsis.trim(),
+          coverUrl: coverUrl || undefined,
+          genres: selectedGenres,
+          status,
+        }),
+      })
+
+      if (!res.ok) {
+        const errData = await res.json()
+        throw new Error(errData.error || "Gagal membuat karya")
+      }
+
+      const work = await res.json()
+      router.push(`/admin/karya/${work.slug}`)
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Gagal membuat karya")
+    } finally {
+      setSaving(false)
+    }
+  }, [title, synopsis, selectedGenres, status, coverFile, router])
 
   useEffect(() => {
     setActions(
@@ -30,14 +84,13 @@ export default function AdminNewWorkPage() {
         <Button variant="outline" asChild>
           <Link href="/admin/karya">Batal</Link>
         </Button>
-        <Button disabled={!title || !synopsis}>
-          <Save className="size-4" />
+        <Button disabled={!title || !synopsis || saving} onClick={handleSave}>
+          {saving ? <Loader2 className="size-4 animate-spin" /> : <Save className="size-4" />}
           Simpan Karya
         </Button>
       </>
     )
-    return () => setActions(null)
-  }, [setActions, title, synopsis])
+  }, [setActions, title, synopsis, saving, handleSave])
 
   const toggleGenre = (genre: string) => {
     if (selectedGenres.includes(genre)) {
@@ -57,10 +110,11 @@ export default function AdminNewWorkPage() {
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
-    if (file.size > 2048 * 1024) {
+    if (file.size > 2 * 1024 * 1024) {
       alert("Ukuran file maksimal 2MB.")
       return
     }
+    setCoverFile(file)
     const reader = new FileReader()
     reader.onload = () => setCoverPreview(reader.result as string)
     reader.readAsDataURL(file)
@@ -144,19 +198,7 @@ export default function AdminNewWorkPage() {
               <div className="flex flex-wrap gap-2">
                 {allGenres.map((genre) => {
                   const isSelected = selectedGenres.includes(genre)
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
-    if (file.size > 100 * 1024) {
-      alert("Ukuran file maksimal 100KB.")
-      return
-    }
-    const reader = new FileReader()
-    reader.onload = () => setCoverPreview(reader.result as string)
-    reader.readAsDataURL(file)
-  }
-
-  return (
+                  return (
                     <button
                       key={genre}
                       type="button"
@@ -185,7 +227,7 @@ export default function AdminNewWorkPage() {
           <Card className="sticky top-[72px]">
             <CardHeader>
               <CardTitle>Cover Karya</CardTitle>
-              <CardDescription>Upload cover JPG/PNG, maks 100KB.</CardDescription>
+              <CardDescription>Upload cover JPG/PNG, maks 2MB.</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="flex items-center justify-center w-full">
@@ -214,7 +256,7 @@ export default function AdminNewWorkPage() {
                       <p className="text-sm text-muted-foreground text-center">
                         <span className="font-medium text-primary">Klik untuk upload</span> atau drag & drop
                       </p>
-                      <p className="text-xs text-muted-foreground mt-1">JPG, PNG (Max. 100KB)</p>
+                      <p className="text-xs text-muted-foreground mt-1">JPG, PNG (Max. 2MB)</p>
                     </div>
                   )}
                 </label>
