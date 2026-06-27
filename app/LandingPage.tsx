@@ -3,6 +3,7 @@
 import { useState, useMemo } from "react";
 import { Work } from "@/data/types";
 import Navbar from "@/components/landing/Navbar";
+import BottomNav from "@/components/layout/BottomNav";
 import HeroSection from "@/components/landing/HeroSection";
 import WorkCard from "@/components/landing/WorkCard";
 import SearchBar from "@/components/landing/SearchBar";
@@ -30,7 +31,7 @@ export default function LandingPage({ works }: Props) {
     <div className="min-h-screen bg-[var(--background)] relative">
       <Navbar />
 
-      <main className="max-w-[480px] mx-auto px-4 pt-2 pb-6 relative z-[1]">
+      <main className="max-w-[480px] mx-auto px-4 pt-2 pb-28 relative z-[1]">
         {heroWork && <HeroSection work={heroWork} />}
 
         <div className="section-ornament mt-1.5">
@@ -94,7 +95,9 @@ export default function LandingPage({ works }: Props) {
         )}
       </main>
 
-      <footer className="text-center py-6 relative z-[1]">
+      <BottomNav />
+
+      <footer className="text-center py-6 pb-20 relative z-[1]">
         <div className="gold-rule max-w-[120px] mx-auto mb-3" />
         <p
           className="text-[11px] tracking-[0.35em] uppercase font-medium"

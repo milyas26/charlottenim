@@ -888,6 +888,24 @@ export const chapters: Chapter[] = [
   },
 ];
 
+export interface Bookmark {
+  id: string;
+  workId: string;
+  workSlug: string;
+  workTitle: string;
+  chapterTitle: string;
+  chapterSlug: string;
+  chapterNumber: number;
+  progress: number;
+  lastRead: string;
+}
+
+export const bookmarks: Bookmark[] = [
+  { id: "bm1", workId: "1", workSlug: "senja-di-ujung-maret", workTitle: "Senja di Ujung Maret", chapterTitle: "Hujan dan Kopi", chapterSlug: "hujan-dan-kopi", chapterNumber: 2, progress: 65, lastRead: "2026-06-25" },
+  { id: "bm2", workId: "3", workSlug: "hujan-terakhir-di-bulan-juni", workTitle: "Hujan Terakhir di Bulan Juni", chapterTitle: "Janji Hujan", chapterSlug: "janji-hujan", chapterNumber: 1, progress: 30, lastRead: "2026-06-24" },
+  { id: "bm3", workId: "7", workSlug: "stasiun-terakhir", workTitle: "Stasiun Terakhir", chapterTitle: "Hujan dan Payung", chapterSlug: "hujan-dan-payung", chapterNumber: 2, progress: 80, lastRead: "2026-06-22" },
+];
+
 export function getWorkBySlug(slug: string): Work | undefined {
   return works.find((w) => w.slug === slug);
 }

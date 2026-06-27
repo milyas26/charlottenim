@@ -3,17 +3,10 @@
 import { useEffect, useRef } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import LoginDialog from "@/components/LoginDialog";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 
 export default function Navbar() {
   const headerRef = useRef<HTMLElement>(null);
-  const { user, loading, logout } = useAuth();
+  const { user, loading } = useAuth();
 
   useEffect(() => {
     const el = headerRef.current;
@@ -50,33 +43,7 @@ export default function Navbar() {
 
         {loading ? (
           <div className="w-20 h-8 rounded-full bg-[var(--surface)] animate-pulse" />
-        ) : user ? (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <button className="size-8 rounded-full overflow-hidden ring-2 ring-transparent transition-all hover:ring-[var(--accent)] focus:outline-none">
-                <Avatar className="size-full">
-                  <AvatarImage src={user.photoURL ?? undefined} />
-                  <AvatarFallback className="text-xs font-semibold bg-[var(--surface)]">
-                    {(user.displayName || user.email || "U")[0].toUpperCase()}
-                  </AvatarFallback>
-                </Avatar>
-              </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-44">
-              <DropdownMenuItem asChild>
-                <a href="/user" className="cursor-pointer">Profil</a>
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                className="text-[var(--destructive)]"
-                onClick={async () => {
-                  await logout();
-                }}
-              >
-                Keluar
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        ) : (
+        ) : user ? null : (
           <LoginDialog>
             <button
               className="inline-flex items-center gap-2 text-xs font-semibold px-4 py-2 rounded-full transition-all duration-200 hover:bg-[var(--surface)] active:scale-[0.97] tracking-wide no-underline"

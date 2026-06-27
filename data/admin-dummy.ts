@@ -172,6 +172,17 @@ export const adminComments: AdminComment[] = [
   { id: 10, userId: 5, userName: "Dimas Nugroho", userAvatar: "", workTitle: "Stasiun Terakhir", workSlug: "stasiun-terakhir", chapterTitle: "Keberangkatan", content: "Ini cerita favoritku. Udah baca ulang 3x tapi tetep aja nangis.", createdAt: "2025-06-10" },
 ];
 
+export const adminBookmarks = [
+  { id: 1, userId: 2, userName: "Alya Putri", workTitle: "Senja di Ujung Maret", workSlug: "senja-di-ujung-maret", chapterTitle: "Maret Belum Berakhir", progress: "45%", lastRead: "2025-06-10" },
+  { id: 2, userId: 2, userName: "Alya Putri", workTitle: "Dua Detik Sebelum Kamu", workSlug: "dua-detik-sebelum-kamu", chapterTitle: "Pengakuan di Atas Genteng", progress: "78%", lastRead: "2025-06-08" },
+  { id: 3, userId: 3, userName: "Bima Aditya", workTitle: "Senja di Ujung Maret", workSlug: "senja-di-ujung-maret", chapterTitle: "Kopi Pahit di Pagi Hari", progress: "32%", lastRead: "2025-06-05" },
+  { id: 4, userId: 4, userName: "Citra Dewi", workTitle: "Hujan Terakhir di Bulan Juni", workSlug: "hujan-terakhir-di-bulan-juni", chapterTitle: "Hujan Tak Lagi Turun", progress: "90%", lastRead: "2025-06-11" },
+  { id: 5, userId: 4, userName: "Citra Dewi", workTitle: "Surat Kecil untuk Bintang", workSlug: "surat-kecil-untuk-bintang", chapterTitle: "Perjalanan ke Utara", progress: "15%", lastRead: "2025-06-07" },
+  { id: 6, userId: 5, userName: "Dimas Nugroho", workTitle: "Senja di Ujung Maret", workSlug: "senja-di-ujung-maret", chapterTitle: "Maret Belum Berakhir", progress: "60%", lastRead: "2025-06-09" },
+  { id: 7, userId: 8, userName: "Gina Olivia", workTitle: "Stasiun Terakhir", workSlug: "stasiun-terakhir", chapterTitle: "Keberangkatan", progress: "100%", lastRead: "2025-06-10" },
+  { id: 8, userId: 8, userName: "Gina Olivia", workTitle: "Senja di Ujung Maret", workSlug: "senja-di-ujung-maret", chapterTitle: "Kopi Pahit di Pagi Hari", progress: "25%", lastRead: "2025-06-06" },
+];
+
 export const allGenres = [
   "Romance", "Slice of Life", "Campus", "Fantasy", "Mystery",
   "Drama", "Coming of Age", "Adventure", "Family", "AU", "Comedy",
