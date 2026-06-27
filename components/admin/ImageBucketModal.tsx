@@ -1,21 +1,6 @@
 "use client"
 
-import { useCallback, useEffect, useRef, useState } from "react"
-import {
-  DndContext,
-  closestCenter,
-  PointerSensor,
-  useSensor,
-  useSensors,
-  type DragEndEvent,
-} from "@dnd-kit/core"
-import {
-  SortableContext,
-  useSortable,
-  verticalListSortingStrategy,
-  arrayMove,
-} from "@dnd-kit/sortable"
-import { CSS } from "@dnd-kit/utilities"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import {
   Dialog,
   DialogContent,
@@ -23,7 +8,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import api from "@/lib/axios"
-import { Check, Loader2, Plus, Trash2, GripVertical } from "lucide-react"
+import { Check, Loader2, Plus, Trash2 } from "lucide-react"
 import { toast } from "sonner"
 
 interface ImageData {
@@ -37,13 +22,15 @@ interface ImageBucketModalProps {
   onOpenChange: (open: boolean) => void
   workId: string
   chapterId?: string
+  existingImageUrls?: string[]
   onInsertImage: (url: string) => void
 }
 
-function SortableImage({
+function GalleryImage({
   image,
   index,
   selected,
+  alreadyUsed,
   onToggle,
   onDelete,
   deleting,
@@ -51,26 +38,13 @@ function SortableImage({
   image: ImageData
   index: number
   selected: boolean
+  alreadyUsed: boolean
   onToggle: () => void
   onDelete: (id: string) => void
   deleting: string | null
 }) {
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
-    useSortable({ id: image.id })
-
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-    opacity: isDragging ? 0.5 : 1,
-    zIndex: isDragging ? 50 : undefined,
-  }
-
   return (
-    <div
-      ref={setNodeRef}
-      style={style}
-      className="relative group rounded-lg border border-border bg-muted/30 overflow-hidden"
-    >
+    <div className="relative group rounded-lg border border-border bg-muted/30 overflow-hidden">
       <div className="absolute top-1.5 left-1.5 z-10 flex items-center gap-1">
         <span className="bg-background/80 text-xs font-mono px-1.5 py-0.5 rounded shadow select-none">
           {index + 1}
@@ -92,32 +66,37 @@ function SortableImage({
             <Trash2 className="size-3.5" />
           )}
         </button>
-        <button
-          {...attributes}
-          {...listeners}
-          className="p-1 rounded bg-background/80 hover:bg-accent cursor-grab active:cursor-grabbing"
-          title="Geser untuk urutkan"
-        >
-          <GripVertical className="size-3.5" />
-        </button>
       </div>
       <button
         onClick={onToggle}
-        className={`
-          block w-full aspect-square cursor-pointer relative
-          ${selected ? "ring-2 ring-primary ring-inset" : ""}
-        `}
+        className={`block w-full aspect-square cursor-pointer relative transition-all ${
+          selected
+            ? "ring-2 ring-offset-1 ring-offset-background ring-emerald-500"
+            : alreadyUsed
+              ? "ring-2 ring-offset-1 ring-offset-background ring-sky-400"
+              : "ring-1 ring-transparent"
+        }`}
         title="Klik untuk pilih"
       >
         <img
           src={image.url}
           alt={`Gambar ${index + 1}`}
-          className="w-full h-full object-contain p-2"
+          className={`w-full h-full object-contain p-2 transition-opacity ${selected ? "opacity-50" : ""}`}
           loading="lazy"
         />
         {selected && (
-          <div className="absolute inset-0 bg-primary/15 flex items-center justify-center">
-            <Check className="size-6 text-primary" strokeWidth={3} />
+          <>
+            <div className="absolute top-1.5 left-8 z-10 flex items-center justify-center size-5 rounded-full bg-emerald-500 shadow">
+              <Check className="size-3 text-white" strokeWidth={3} />
+            </div>
+            <div className="absolute inset-0 bg-emerald-500/10" />
+          </>
+        )}
+        {alreadyUsed && (
+          <div className="absolute bottom-1.5 right-1.5 z-10">
+            <span className="bg-slate-500/80 text-white text-[10px] font-medium px-1.5 py-0.5 rounded shadow select-none">
+              Used
+            </span>
           </div>
         )}
       </button>
@@ -130,17 +109,15 @@ export default function ImageBucketModal({
   onOpenChange,
   workId,
   chapterId,
+  existingImageUrls,
   onInsertImage,
 }: ImageBucketModalProps) {
   const [images, setImages] = useState<ImageData[] | null>(null)
   const [selected, setSelected] = useState<Set<string>>(new Set())
+  const [alreadyUsedIds, setAlreadyUsedIds] = useState<Set<string>>(new Set())
   const [uploading, setUploading] = useState(false)
   const [deleting, setDeleting] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
-
-  const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
-  )
 
   const refresh = useCallback(async () => {
     try {
@@ -149,18 +126,34 @@ export default function ImageBucketModal({
       if (chapterId) params.set("chapterId", chapterId)
       const { data } = await api.get(`/api/nulis/images?${params.toString()}`)
       setImages(data)
+      return data as ImageData[]
     } catch {
       toast.error("Gagal mengambil daftar gambar")
       setImages([])
+      return [] as ImageData[]
     }
   }, [workId, chapterId])
 
+  const existingUrlSet = useMemo(
+    () => new Set(existingImageUrls ?? []),
+    [existingImageUrls],
+  )
+
   useEffect(() => {
     if (open) {
-      setSelected(new Set())
-      refresh()
+      refresh().then((data) => {
+        setSelected(new Set())
+        if (existingUrlSet.size > 0 && data.length > 0) {
+          const matchedIds = data
+            .filter((img) => existingUrlSet.has(img.url))
+            .map((img) => img.id)
+          setAlreadyUsedIds(new Set(matchedIds))
+        } else {
+          setAlreadyUsedIds(new Set())
+        }
+      })
     }
-  }, [open, refresh])
+  }, [open, refresh, existingUrlSet])
 
   const handleOpenChange = useCallback(
     (newOpen: boolean) => {
@@ -240,29 +233,6 @@ export default function ImageBucketModal({
     [refresh],
   )
 
-  const handleDragEnd = useCallback(
-    async (event: DragEndEvent) => {
-      const { active, over } = event
-      if (!over || active.id === over.id) return
-      if (!images) return
-
-      const oldIndex = images.findIndex((img) => img.id === active.id)
-      const newIndex = images.findIndex((img) => img.id === over.id)
-      const reordered = arrayMove(images, oldIndex, newIndex)
-      setImages(reordered)
-
-      try {
-        await api.patch("/api/nulis/images/reorder", {
-          imageIds: reordered.map((img) => img.id),
-        })
-      } catch {
-        toast.error("Gagal menyimpan urutan")
-        setImages(images)
-      }
-    },
-    [images],
-  )
-
   const handleAddSelectedToEditor = useCallback(() => {
     const sortedUrls = images
       ?.filter((img) => selected.has(img.id))
@@ -329,30 +299,20 @@ export default function ImageBucketModal({
               <Loader2 className="size-6 animate-spin text-muted-foreground" />
             </div>
           ) : (
-            <DndContext
-              sensors={sensors}
-              collisionDetection={closestCenter}
-              onDragEnd={handleDragEnd}
-            >
-              <SortableContext
-                items={images.map((img) => img.id)}
-                strategy={verticalListSortingStrategy}
-              >
-                <div className="grid grid-cols-3 gap-2">
-                  {images.map((img, idx) => (
-                    <SortableImage
-                      key={img.id}
-                      image={img}
-                      index={idx}
-                      selected={selected.has(img.id)}
-                      onToggle={() => handleToggle(img.id)}
-                      onDelete={handleDelete}
-                      deleting={deleting}
-                    />
-                  ))}
-                </div>
-              </SortableContext>
-            </DndContext>
+            <div className="grid grid-cols-3 gap-2">
+              {images.map((img, idx) => (
+                <GalleryImage
+                  key={img.id}
+                  image={img}
+                  index={idx}
+                  selected={selected.has(img.id)}
+                  alreadyUsed={alreadyUsedIds.has(img.id)}
+                  onToggle={() => handleToggle(img.id)}
+                  onDelete={handleDelete}
+                  deleting={deleting}
+                />
+              ))}
+            </div>
           )}
         </div>
       </DialogContent>

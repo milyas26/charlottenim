@@ -62,6 +62,7 @@ function ToolbarDivider() {
 
 export default function ChapterEditor({ content, onChange, placeholder, workId, chapterId }: ChapterEditorProps) {
   const [imageBucketOpen, setImageBucketOpen] = useState(false)
+  const [existingImageUrls, setExistingImageUrls] = useState<string[]>([])
   const editorRef = useRef<Editor | null>(null)
 
   const uploadImage = useCallback(async (file: File) => {
@@ -216,7 +217,13 @@ export default function ChapterEditor({ content, onChange, placeholder, workId, 
         <ToolbarDivider />
 
         <ToolbarButton
-          onClick={() => setImageBucketOpen(true)}
+          onClick={() => {
+            const parser = new DOMParser()
+            const doc = parser.parseFromString(editor.getHTML(), "text/html")
+            const urls = Array.from(doc.querySelectorAll("img")).map((img) => img.getAttribute("src") ?? "").filter(Boolean)
+            setExistingImageUrls(urls)
+            setImageBucketOpen(true)
+          }}
         >
           <ImageIcon className="size-4" />
         </ToolbarButton>
@@ -242,6 +249,7 @@ export default function ChapterEditor({ content, onChange, placeholder, workId, 
         onOpenChange={setImageBucketOpen}
         workId={workId}
         chapterId={chapterId}
+        existingImageUrls={existingImageUrls}
         onInsertImage={(url) => {
           editor.chain().focus().setImage({ src: url }).run()
         }}
