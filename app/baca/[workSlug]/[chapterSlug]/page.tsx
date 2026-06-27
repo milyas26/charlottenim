@@ -3,7 +3,7 @@ import {
   getWorkBySlug,
   getChapterBySlug,
   getAdjacentChapters,
-} from "@/data/dummy";
+} from "@/lib/queries";
 import ReaderPage from "./ReaderPage";
 
 export default async function BacaChapterPage({
@@ -13,13 +13,13 @@ export default async function BacaChapterPage({
 }) {
   const { workSlug, chapterSlug } = await params;
 
-  const work = getWorkBySlug(workSlug);
+  const work = await getWorkBySlug(workSlug);
   if (!work) notFound();
 
-  const chapter = getChapterBySlug(workSlug, chapterSlug);
+  const chapter = await getChapterBySlug(workSlug, chapterSlug);
   if (!chapter) notFound();
 
-  const { prev, next } = getAdjacentChapters(workSlug, chapterSlug);
+  const { prev, next } = await getAdjacentChapters(workSlug, chapterSlug);
 
   return (
     <ReaderPage

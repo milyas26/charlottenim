@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { getWorkBySlug, getChaptersByWorkSlug } from "@/data/dummy";
+import { getWorkBySlug, getChaptersByWorkSlug } from "@/lib/queries";
 import DetailPage from "./DetailPage";
 
 export default async function KaryaDetailPage({
@@ -9,10 +9,10 @@ export default async function KaryaDetailPage({
 }) {
   const { slug } = await params;
 
-  const work = getWorkBySlug(slug);
+  const work = await getWorkBySlug(slug);
   if (!work) notFound();
 
-  const chapters = getChaptersByWorkSlug(slug);
+  const chapters = await getChaptersByWorkSlug(slug);
 
   return <DetailPage work={work} chapters={chapters} />;
 }

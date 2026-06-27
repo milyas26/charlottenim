@@ -2,7 +2,7 @@ import { Work, Chapter } from "./types";
 
 export const works: Work[] = [
   {
-    id: 1,
+    id: "1",
     title: "Senja di Ujung Maret",
     slug: "senja-di-ujung-maret",
     synopsis:
@@ -13,7 +13,7 @@ export const works: Work[] = [
     totalChapters: 3,
   },
   {
-    id: 2,
+    id: "2",
     title: "Dua Detik Sebelum Kamu",
     slug: "dua-detik-sebelum-kamu",
     synopsis:
@@ -24,7 +24,7 @@ export const works: Work[] = [
     totalChapters: 3,
   },
   {
-    id: 3,
+    id: "3",
     title: "Hujan Terakhir di Bulan Juni",
     slug: "hujan-terakhir-di-bulan-juni",
     synopsis:
@@ -35,7 +35,7 @@ export const works: Work[] = [
     totalChapters: 3,
   },
   {
-    id: 4,
+    id: "4",
     title: "Surat Kecil untuk Bintang",
     slug: "surat-kecil-untuk-bintang",
     synopsis:
@@ -46,7 +46,7 @@ export const works: Work[] = [
     totalChapters: 3,
   },
   {
-    id: 5,
+    id: "5",
     title: "Antara Jakarta dan Kenangan",
     slug: "antara-jakarta-dan-kenangan",
     synopsis:
@@ -57,7 +57,7 @@ export const works: Work[] = [
     totalChapters: 3,
   },
   {
-    id: 6,
+    id: "6",
     title: "Pagi yang Tertukar",
     slug: "pagi-yang-tertukar",
     synopsis:
@@ -68,7 +68,7 @@ export const works: Work[] = [
     totalChapters: 3,
   },
   {
-    id: 7,
+    id: "7",
     title: "Stasiun Terakhir",
     slug: "stasiun-terakhir",
     synopsis:
@@ -79,7 +79,7 @@ export const works: Work[] = [
     totalChapters: 3,
   },
   {
-    id: 8,
+    id: "8",
     title: "Kedai Hujan",
     slug: "kedai-hujan",
     synopsis:
@@ -93,8 +93,8 @@ export const works: Work[] = [
 
 export const chapters: Chapter[] = [
   {
-    id: 1,
-    workId: 1,
+    id: "1",
+    workId: "1",
     workSlug: "senja-di-ujung-maret",
     chapterNumber: 1,
     slug: "pertemuan-pertama",
@@ -121,8 +121,8 @@ export const chapters: Chapter[] = [
     status: "PUBLISHED",
   },
   {
-    id: 2,
-    workId: 1,
+    id: "2",
+    workId: "1",
     workSlug: "senja-di-ujung-maret",
     chapterNumber: 2,
     slug: "hujan-dan-kopi",
@@ -157,8 +157,8 @@ export const chapters: Chapter[] = [
     status: "PUBLISHED",
   },
   {
-    id: 3,
-    workId: 1,
+    id: "3",
+    workId: "1",
     workSlug: "senja-di-ujung-maret",
     chapterNumber: 3,
     slug: "maret-belum-berakhir",
@@ -196,8 +196,8 @@ export const chapters: Chapter[] = [
     status: "PUBLISHED",
   },
   {
-    id: 4,
-    workId: 2,
+    id: "4",
+    workId: "2",
     workSlug: "dua-detik-sebelum-kamu",
     chapterNumber: 1,
     slug: "kemampuan-yang-tidak-berguna",
@@ -236,8 +236,8 @@ export const chapters: Chapter[] = [
     status: "PUBLISHED",
   },
   {
-    id: 5,
-    workId: 2,
+    id: "5",
+    workId: "2",
     workSlug: "dua-detik-sebelum-kamu",
     chapterNumber: 2,
     slug: "kekosongan-yang-berbicara",
@@ -279,8 +279,8 @@ export const chapters: Chapter[] = [
     status: "PUBLISHED",
   },
   {
-    id: 6,
-    workId: 2,
+    id: "6",
+    workId: "2",
     workSlug: "dua-detik-sebelum-kamu",
     chapterNumber: 3,
     slug: "pengakuan-di-atas-genteng",
@@ -324,8 +324,8 @@ export const chapters: Chapter[] = [
     status: "PUBLISHED",
   },
   {
-    id: 7,
-    workId: 3,
+    id: "7",
+    workId: "3",
     workSlug: "hujan-terakhir-di-bulan-juni",
     chapterNumber: 1,
     slug: "janji-hujan",
@@ -360,8 +360,8 @@ export const chapters: Chapter[] = [
     status: "PUBLISHED",
   },
   {
-    id: 8,
-    workId: 3,
+    id: "8",
+    workId: "3",
     workSlug: "hujan-terakhir-di-bulan-juni",
     chapterNumber: 2,
     slug: "juni-yang-kelabu",
@@ -404,8 +404,8 @@ export const chapters: Chapter[] = [
     status: "PUBLISHED",
   },
   {
-    id: 9,
-    workId: 3,
+    id: "9",
+    workId: "3",
     workSlug: "hujan-terakhir-di-bulan-juni",
     chapterNumber: 3,
     slug: "hujan-tak-lagi-turun",
@@ -450,8 +450,8 @@ export const chapters: Chapter[] = [
     status: "PUBLISHED",
   },
   {
-    id: 10,
-    workId: 4,
+    id: "10",
+    workId: "4",
     workSlug: "surat-kecil-untuk-bintang",
     chapterNumber: 1,
     slug: "pengirim-surat-misterius",
@@ -484,8 +484,8 @@ export const chapters: Chapter[] = [
     status: "PUBLISHED",
   },
   {
-    id: 11,
-    workId: 4,
+    id: "11",
+    workId: "4",
     workSlug: "surat-kecil-untuk-bintang",
     chapterNumber: 2,
     slug: "balasan-dari-langit",
@@ -529,8 +529,8 @@ export const chapters: Chapter[] = [
     status: "PUBLISHED",
   },
   {
-    id: 12,
-    workId: 4,
+    id: "12",
+    workId: "4",
     workSlug: "surat-kecil-untuk-bintang",
     chapterNumber: 3,
     slug: "perjalanan-ke-utara",
@@ -590,8 +590,8 @@ export const chapters: Chapter[] = [
     status: "PUBLISHED",
   },
   {
-    id: 13,
-    workId: 5,
+    id: "13",
+    workId: "5",
     workSlug: "antara-jakarta-dan-kenangan",
     chapterNumber: 1,
     slug: "kepulangan",
@@ -626,8 +626,8 @@ export const chapters: Chapter[] = [
     status: "PUBLISHED",
   },
   {
-    id: 14,
-    workId: 5,
+    id: "14",
+    workId: "5",
     workSlug: "antara-jakarta-dan-kenangan",
     chapterNumber: 2,
     slug: "jejak-yang-tertinggal",
@@ -675,8 +675,8 @@ export const chapters: Chapter[] = [
     status: "PUBLISHED",
   },
   {
-    id: 15,
-    workId: 5,
+    id: "15",
+    workId: "5",
     workSlug: "antara-jakarta-dan-kenangan",
     chapterNumber: 3,
     slug: "rumah-yang-dulu",
@@ -739,8 +739,8 @@ export const chapters: Chapter[] = [
     status: "PUBLISHED",
   },
   {
-    id: 16,
-    workId: 6,
+    id: "16",
+    workId: "6",
     workSlug: "pagi-yang-tertukar",
     chapterNumber: 1,
     slug: "kopi-dan-kesalahan",
@@ -755,8 +755,8 @@ export const chapters: Chapter[] = [
     status: "PUBLISHED",
   },
   {
-    id: 17,
-    workId: 6,
+    id: "17",
+    workId: "6",
     workSlug: "pagi-yang-tertukar",
     chapterNumber: 2,
     slug: "hape-yang-salah",
@@ -771,8 +771,8 @@ export const chapters: Chapter[] = [
     status: "PUBLISHED",
   },
   {
-    id: 18,
-    workId: 6,
+    id: "18",
+    workId: "6",
     workSlug: "pagi-yang-tertukar",
     chapterNumber: 3,
     slug: "pertemuan-yang-direncanakan",
@@ -788,8 +788,8 @@ export const chapters: Chapter[] = [
     status: "PUBLISHED",
   },
   {
-    id: 19,
-    workId: 7,
+    id: "19",
+    workId: "7",
     workSlug: "stasiun-terakhir",
     chapterNumber: 1,
     slug: "gerbong-ke-tiga",
@@ -804,8 +804,8 @@ export const chapters: Chapter[] = [
     status: "PUBLISHED",
   },
   {
-    id: 20,
-    workId: 7,
+    id: "20",
+    workId: "7",
     workSlug: "stasiun-terakhir",
     chapterNumber: 2,
     slug: "hujan-dan-payung",
@@ -820,8 +820,8 @@ export const chapters: Chapter[] = [
     status: "PUBLISHED",
   },
   {
-    id: 21,
-    workId: 7,
+    id: "21",
+    workId: "7",
     workSlug: "stasiun-terakhir",
     chapterNumber: 3,
     slug: "kopi-kaleng-dan-bintang",
@@ -837,8 +837,8 @@ export const chapters: Chapter[] = [
     status: "PUBLISHED",
   },
   {
-    id: 22,
-    workId: 8,
+    id: "22",
+    workId: "8",
     workSlug: "kedai-hujan",
     chapterNumber: 1,
     slug: "teh-untuk-jiwa",
@@ -853,8 +853,8 @@ export const chapters: Chapter[] = [
     status: "PUBLISHED",
   },
   {
-    id: 23,
-    workId: 8,
+    id: "23",
+    workId: "8",
     workSlug: "kedai-hujan",
     chapterNumber: 2,
     slug: "pelanggan-tanpa-payung",
@@ -869,8 +869,8 @@ export const chapters: Chapter[] = [
     status: "PUBLISHED",
   },
   {
-    id: 24,
-    workId: 8,
+    id: "24",
+    workId: "8",
     workSlug: "kedai-hujan",
     chapterNumber: 3,
     slug: "musim-kemarau-pun-tiba",

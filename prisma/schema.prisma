@@ -30,7 +30,7 @@ enum PurchaseStatus {
 }
 
 model User {
-  id         Int      @id @default(autoincrement())
+  id         String   @id @default(cuid())
   firebaseUid String  @unique
   email      String   @unique
   name       String?
@@ -46,7 +46,7 @@ model User {
 }
 
 model Work {
-  id        Int         @id @default(autoincrement())
+  id        String      @id @default(cuid())
   title     String
   slug      String      @unique
   synopsis  String
@@ -63,8 +63,8 @@ model Work {
 }
 
 model Chapter {
-  id             Int           @id @default(autoincrement())
-  workId         Int
+  id             String        @id @default(cuid())
+  workId         String
   work           Work          @relation(fields: [workId], references: [id], onDelete: Cascade)
   chapterNumber  Int
   slug           String
@@ -87,10 +87,10 @@ model Chapter {
 }
 
 model Purchase {
-  id                    Int            @id @default(autoincrement())
-  userId                Int
+  id                    String         @id @default(cuid())
+  userId                String
   user                  User           @relation(fields: [userId], references: [id], onDelete: Cascade)
-  chapterId             Int
+  chapterId             String
   chapter               Chapter        @relation(fields: [chapterId], references: [id], onDelete: Cascade)
   amount                Int
   status                PurchaseStatus @default(PENDING)
@@ -110,11 +110,11 @@ model Purchase {
 }
 
 model Bookmark {
-  id      Int      @id @default(autoincrement())
-  userId  Int
-  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  workId  Int
-  work    Work     @relation(fields: [workId], references: [id], onDelete: Cascade)
+  id      String @id @default(cuid())
+  userId  String
+  user    User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  workId  String
+  work    Work   @relation(fields: [workId], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now())
 
@@ -122,8 +122,8 @@ model Bookmark {
 }
 
 model ChapterRead {
-  id        Int      @id @default(autoincrement())
-  chapterId Int
+  id        String   @id @default(cuid())
+  chapterId String
   chapter   Chapter  @relation(fields: [chapterId], references: [id], onDelete: Cascade)
   count     Int      @default(0)
 
@@ -131,12 +131,12 @@ model ChapterRead {
 }
 
 model ReadingProgress {
-  id         Int      @id @default(autoincrement())
-  userId     Int
+  id         String   @id @default(cuid())
+  userId     String
   user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  chapterId  Int
+  chapterId  String
   chapter    Chapter  @relation(fields: [chapterId], references: [id], onDelete: Cascade)
-  workId     Int
+  workId     String
   lastReadAt DateTime @default(now())
 
   @@unique([userId, workId])

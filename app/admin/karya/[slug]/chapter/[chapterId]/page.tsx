@@ -71,7 +71,7 @@ export default function AdminChapterEditorPage({
       setOrderedChapters((prev) => {
         if (prev.some((ch) => ch.slug === "create")) return prev
         const dummyChapter: Chapter = {
-          id: -1,
+          id: "new",
           workId: work.id,
           workSlug: work.slug,
           chapterNumber: prev.length + 1,

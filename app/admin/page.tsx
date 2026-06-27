@@ -17,7 +17,7 @@ const statsCards = [
 import { adminPurchases } from "@/data/admin-dummy"
 
 export default function AdminDashboardPage() {
-  const recentWorks = [...works].sort((a, b) => b.id - a.id).slice(0, 5)
+  const recentWorks = [...works].slice(0, 5)
 
   return (
     <div className="space-y-4 p-4">

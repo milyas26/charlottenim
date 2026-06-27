@@ -3,7 +3,7 @@ export type WorkStatus = "DRAFT" | "ONGOING" | "COMPLETED";
 export type ChapterStatus = "DRAFT" | "PUBLISHED" | "DELETED";
 
 export interface Work {
-  id: number;
+  id: string;
   title: string;
   slug: string;
   synopsis: string;
@@ -19,8 +19,8 @@ export interface ChapterRead {
 }
 
 export interface Chapter {
-  id: number;
-  workId: number;
+  id: string;
+  workId: string;
   workSlug: string;
   chapterNumber: number;
   slug: string;
