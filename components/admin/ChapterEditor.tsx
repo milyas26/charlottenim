@@ -1,6 +1,6 @@
 "use client"
 
-import { useRef, useCallback } from "react"
+import { useRef, useCallback, useState } from "react"
 import { useEditor, EditorContent } from "@tiptap/react"
 import type { Editor } from "@tiptap/react"
 import StarterKit from "@tiptap/starter-kit"
@@ -8,6 +8,7 @@ import Placeholder from "@tiptap/extension-placeholder"
 import ImageExt from "@tiptap/extension-image"
 import { Toggle } from "@/components/ui/toggle"
 import { Separator } from "@/components/ui/separator"
+import api from "@/lib/axios"
 import {
   Bold,
   Italic,
@@ -23,6 +24,7 @@ import {
   Code2,
   Minus,
   ImageIcon,
+  Loader2,
 } from "lucide-react"
 
 interface ChapterEditorProps {
@@ -56,25 +58,18 @@ function ToolbarDivider() {
   return <Separator orientation="vertical" className="h-6 mx-0.5" />
 }
 
-function fileToBase64(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader()
-    reader.onload = () => resolve(reader.result as string)
-    reader.onerror = reject
-    reader.readAsDataURL(file)
-  })
-}
-
-function blobToBase64(blob: Blob): Promise<string> {
-  return fileToBase64(new File([blob], "image.png", { type: blob.type }))
-}
-
 export default function ChapterEditor({ content, onChange, placeholder }: ChapterEditorProps) {
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const [uploading, setUploading] = useState(false)
+  const editorRef = useRef<Editor | null>(null)
 
-  const insertImage = useCallback((dataUrl: string) => {
-    if (!editorRef.current) return
-    editorRef.current.chain().focus().setImage({ src: dataUrl }).run()
+  const uploadImage = useCallback(async (file: File) => {
+    const formData = new FormData()
+    formData.append("file", file)
+    const { data } = await api.post("/api/nulis/upload", formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    })
+    return data.url as string
   }, [])
 
   const handleFilePick = useCallback(
@@ -89,14 +84,19 @@ export default function ChapterEditor({ content, onChange, placeholder }: Chapte
         alert("Ukuran gambar maksimal 5MB.")
         return
       }
-      const dataUrl = await fileToBase64(file)
-      insertImage(dataUrl)
-      if (fileInputRef.current) fileInputRef.current.value = ""
+      setUploading(true)
+      try {
+        const url = await uploadImage(file)
+        editorRef.current?.chain().focus().setImage({ src: url }).run()
+      } catch {
+        alert("Gagal upload gambar.")
+      } finally {
+        setUploading(false)
+        if (fileInputRef.current) fileInputRef.current.value = ""
+      }
     },
-    [insertImage],
+    [uploadImage],
   )
-
-  const editorRef = useRef<Editor | null>(null)
 
   const editor = useEditor({
     extensions: [
@@ -115,9 +115,6 @@ export default function ChapterEditor({ content, onChange, placeholder }: Chapte
     onUpdate: ({ editor }) => {
       onChange(editor.getHTML())
     },
-    onCreate: ({ editor }) => {
-      editorRef.current = editor
-    },
     editorProps: {
       attributes: {
         class:
@@ -131,8 +128,18 @@ export default function ChapterEditor({ content, onChange, placeholder }: Chapte
             event.preventDefault()
             const blob = item.getAsFile()
             if (!blob) continue
-            blobToBase64(blob).then((dataUrl) => {
-              insertImage(dataUrl)
+            const file = new File([blob], "image.png", { type: blob.type })
+            if (file.size > 5 * 1024 * 1024) {
+              alert("Ukuran gambar maksimal 5MB.")
+              return true
+            }
+            setUploading(true)
+            uploadImage(file).then((url) => {
+              editorRef.current?.chain().focus().setImage({ src: url }).run()
+            }).catch(() => {
+              alert("Gagal upload gambar.")
+            }).finally(() => {
+              setUploading(false)
             })
             return true
           }
@@ -144,6 +151,8 @@ export default function ChapterEditor({ content, onChange, placeholder }: Chapte
   })
 
   if (!editor) return null
+
+  editorRef.current = editor
 
   return (
     <div className="rounded-lg border border-input bg-background flex flex-col h-full">
@@ -233,7 +242,7 @@ export default function ChapterEditor({ content, onChange, placeholder }: Chapte
         <ToolbarButton
           onClick={() => fileInputRef.current?.click()}
         >
-          <ImageIcon className="size-4" />
+          {uploading ? <Loader2 className="size-4 animate-spin" /> : <ImageIcon className="size-4" />}
         </ToolbarButton>
 
         <input

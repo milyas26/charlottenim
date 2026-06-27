@@ -1,4 +1,5 @@
 import { requireAdmin } from "@/lib/auth-guard"
+import { uploadToS3, generateKey, getExtFromContentType } from "@/lib/s3"
 
 export async function POST(req: Request) {
   try {
@@ -20,10 +21,11 @@ export async function POST(req: Request) {
 
     const bytes = await file.arrayBuffer()
     const buffer = Buffer.from(bytes)
-    const base64 = buffer.toString("base64")
-    const dataUrl = `data:${file.type};base64,${base64}`
+    const ext = getExtFromContentType(file.type)
+    const key = generateKey(ext)
+    const url = await uploadToS3(buffer, file.type, key)
 
-    return Response.json({ url: dataUrl })
+    return Response.json({ url })
   } catch (error) {
     if (error instanceof Response) return error
     console.error("POST /api/nulis/upload error:", error)
