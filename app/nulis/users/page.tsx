@@ -79,7 +79,7 @@ export default function AdminUsersPage() {
               </TableRow>
             ) : (
               filtered.map((user) => (
-                <TableRow key={user.userId}>
+                <TableRow key={user.id}>
                   <TableCell>
                     <div className="flex items-center gap-3">
                       <Avatar>

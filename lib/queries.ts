@@ -577,8 +577,7 @@ export async function getAllUsers(): Promise<AdminUser[]> {
     const lastReadWork =
       u.readingProgresses[0]?.chapter?.work?.title ?? null
     return {
-      id: i + 1,
-      userId: u.id,
+      id: u.id,
       name: u.name || u.email.split("@")[0],
       email: u.email,
       avatarUrl: u.avatarUrl || "",
@@ -592,9 +591,10 @@ export async function getAllUsers(): Promise<AdminUser[]> {
 }
 
 export async function getUserWithPurchases(
-  numericId: string
+  userId: string
 ): Promise<AdminUser & { purchases: Purchase[] } | null> {
-  const users = await prisma.user.findMany({
+  const u = await prisma.user.findUnique({
+    where: { id: userId },
     include: {
       purchases: {
         where: { status: "PAID" },
@@ -612,11 +612,8 @@ export async function getUserWithPurchases(
         },
       },
     },
-    orderBy: { createdAt: "desc" },
   })
 
-  const idx = parseInt(numericId, 10) - 1
-  const u = !isNaN(idx) && idx >= 0 && idx < users.length ? users[idx] : null
   if (!u) return null
 
   const allPurchases = await prisma.purchase.findMany({
@@ -638,8 +635,7 @@ export async function getUserWithPurchases(
     u.readingProgresses[0]?.chapter?.work?.title ?? null
 
   return {
-    id: parseInt(numericId, 10),
-    userId: u.id,
+    id: u.id,
     name: u.name || u.email.split("@")[0],
     email: u.email,
     avatarUrl: u.avatarUrl || "",
@@ -649,8 +645,8 @@ export async function getUserWithPurchases(
     totalSpent,
     lastReadWork,
     purchases: allPurchases.map((p) => ({
-      id: 0,
-      userId: 0,
+      id: p.id,
+      userId: p.userId,
       userName: p.user.name || p.user.email.split("@")[0],
       chapterTitle: p.chapter.title,
       workTitle: p.chapter.work.title,
@@ -728,8 +724,8 @@ export async function getAllPurchases(): Promise<Purchase[]> {
   })
 
   return purchases.map((p) => ({
-    id: 0,
-    userId: 0,
+    id: p.id,
+    userId: p.userId,
     userName: p.user.name || p.user.email.split("@")[0],
     chapterTitle: p.chapter.title,
     workTitle: p.chapter.work.title,

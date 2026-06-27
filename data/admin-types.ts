@@ -1,6 +1,5 @@
 export interface AdminUser {
-  id: number;
-  userId: string;
+  id: string;
   name: string;
   email: string;
   avatarUrl: string;
@@ -12,8 +11,8 @@ export interface AdminUser {
 }
 
 export interface Purchase {
-  id: number;
-  userId: number;
+  id: string;
+  userId: string;
   userName: string;
   chapterTitle: string;
   workTitle: string;
@@ -29,8 +28,8 @@ export interface Purchase {
 }
 
 export interface AdminComment {
-  id: number;
-  userId: number;
+  id: string;
+  userId: string;
   userName: string;
   userAvatar: string;
   workTitle: string;
