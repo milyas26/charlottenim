@@ -8,6 +8,7 @@ import Placeholder from "@tiptap/extension-placeholder"
 import ImageExt from "@tiptap/extension-image"
 import { Toggle } from "@/components/ui/toggle"
 import { Separator } from "@/components/ui/separator"
+import ImageBucketModal from "@/components/admin/ImageBucketModal"
 import api from "@/lib/axios"
 import {
   Bold,
@@ -24,7 +25,6 @@ import {
   Code2,
   Minus,
   ImageIcon,
-  Loader2,
 } from "lucide-react"
 
 interface ChapterEditorProps {
@@ -61,8 +61,7 @@ function ToolbarDivider() {
 }
 
 export default function ChapterEditor({ content, onChange, placeholder, workId, chapterId }: ChapterEditorProps) {
-  const fileInputRef = useRef<HTMLInputElement>(null)
-  const [uploading, setUploading] = useState(false)
+  const [imageBucketOpen, setImageBucketOpen] = useState(false)
   const editorRef = useRef<Editor | null>(null)
 
   const uploadImage = useCallback(async (file: File) => {
@@ -76,32 +75,6 @@ export default function ChapterEditor({ content, onChange, placeholder, workId, 
     })
     return data.url as string
   }, [workId, chapterId])
-
-  const handleFilePick = useCallback(
-    async (e: React.ChangeEvent<HTMLInputElement>) => {
-      const file = e.target.files?.[0]
-      if (!file) return
-      if (!file.type.startsWith("image/")) {
-        alert("File yang dipilih bukan gambar.")
-        return
-      }
-      if (file.size > 5 * 1024 * 1024) {
-        alert("Ukuran gambar maksimal 5MB.")
-        return
-      }
-      setUploading(true)
-      try {
-        const url = await uploadImage(file)
-        editorRef.current?.chain().focus().setImage({ src: url }).run()
-      } catch {
-        alert("Gagal upload gambar.")
-      } finally {
-        setUploading(false)
-        if (fileInputRef.current) fileInputRef.current.value = ""
-      }
-    },
-    [uploadImage],
-  )
 
   const editor = useEditor({
     extensions: [
@@ -141,13 +114,10 @@ export default function ChapterEditor({ content, onChange, placeholder, workId, 
               alert("Ukuran gambar maksimal 5MB.")
               return true
             }
-            setUploading(true)
             uploadImage(file).then((url) => {
               editorRef.current?.chain().focus().setImage({ src: url }).run()
             }).catch(() => {
               alert("Gagal upload gambar.")
-            }).finally(() => {
-              setUploading(false)
             })
             return true
           }
@@ -246,18 +216,12 @@ export default function ChapterEditor({ content, onChange, placeholder, workId, 
         <ToolbarDivider />
 
         <ToolbarButton
-          onClick={() => fileInputRef.current?.click()}
+          onClick={() => setImageBucketOpen(true)}
         >
-          {uploading ? <Loader2 className="size-4 animate-spin" /> : <ImageIcon className="size-4" />}
+          <ImageIcon className="size-4" />
         </ToolbarButton>
 
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept="image/*"
-          onChange={handleFilePick}
-          className="hidden"
-        />
+        <ToolbarDivider />
 
         <div className="ml-auto flex items-center gap-0.5">
           <ToolbarButton onClick={() => editor.chain().focus().undo().run()}>
@@ -272,6 +236,16 @@ export default function ChapterEditor({ content, onChange, placeholder, workId, 
       <div className="flex-1 overflow-y-auto px-6 py-4">
         <EditorContent editor={editor} className="h-full" />
       </div>
+
+      <ImageBucketModal
+        open={imageBucketOpen}
+        onOpenChange={setImageBucketOpen}
+        workId={workId}
+        chapterId={chapterId}
+        onInsertImage={(url) => {
+          editor.chain().focus().setImage({ src: url }).run()
+        }}
+      />
     </div>
   )
 }

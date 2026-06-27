@@ -96,6 +96,7 @@ model Image {
   type      ImageType
   url       String
   key       String
+  order     Int       @default(0)
   workId    String?
   work      Work?     @relation(fields: [workId], references: [id], onDelete: Cascade)
   chapterId String?

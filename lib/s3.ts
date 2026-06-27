@@ -1,4 +1,4 @@
-import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3"
+import { S3Client, PutObjectCommand, DeleteObjectCommand } from "@aws-sdk/client-s3"
 
 const s3Client = new S3Client({
   region: process.env.AWS_REGION ?? "ap-southeast-2",
@@ -34,6 +34,15 @@ export function generateKey(ext: string, prefix: string = "uploads"): string {
   const timestamp = Date.now()
   const random = Math.random().toString(36).substring(2, 10)
   return `${prefix}/${timestamp}-${random}.${ext}`
+}
+
+export async function deleteFromS3(key: string): Promise<void> {
+  await s3Client.send(
+    new DeleteObjectCommand({
+      Bucket: bucket,
+      Key: key,
+    }),
+  )
 }
 
 export function getExtFromContentType(contentType: string): string {
