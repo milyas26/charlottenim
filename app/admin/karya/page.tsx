@@ -1,6 +1,7 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
+import { useAdminHeaderActions } from "@/components/admin/AdminHeader"
 import Link from "next/link"
 import { works, chapters } from "@/data/dummy"
 import { Badge } from "@/components/ui/badge"
@@ -19,6 +20,20 @@ import { PlusCircle, Search, MoreHorizontal, Edit, Eye, BarChart3, Trash2 } from
 import { WorkStatus } from "@/data/types"
 
 export default function AdminWorksPage() {
+  const { setActions } = useAdminHeaderActions()
+
+  useEffect(() => {
+    setActions(
+      <Button asChild>
+        <Link href="/admin/karya/baru">
+          <PlusCircle className="size-4" />
+          Tambah Karya
+        </Link>
+      </Button>
+    )
+    return () => setActions(null)
+  }, [setActions])
+
   const [search, setSearch] = useState("")
   const [statusFilter, setStatusFilter] = useState<WorkStatus | "ALL">("ALL")
 
@@ -29,18 +44,12 @@ export default function AdminWorksPage() {
   })
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 p-4">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Karya</h1>
           <p className="text-muted-foreground mt-1">Kelola semua karya kamu di sini.</p>
         </div>
-        <Button asChild>
-          <Link href="/admin/karya/baru">
-            <PlusCircle className="size-4" />
-            Tambah Karya
-          </Link>
-        </Button>
       </div>
 
       <div className="flex items-center gap-3">

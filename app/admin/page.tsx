@@ -20,7 +20,7 @@ export default function AdminDashboardPage() {
   const recentWorks = [...works].sort((a, b) => b.id - a.id).slice(0, 5)
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 p-4">
       <div>
         <h1 className="text-2xl font-bold tracking-tight">Dashboard</h1>
         <p className="text-muted-foreground mt-1">Selamat datang kembali, Charlotte.</p>

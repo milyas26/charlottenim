@@ -1,6 +1,7 @@
 "use client"
 
-import { use, useState, useCallback, useRef } from "react"
+import { use, useState, useCallback, useRef, useEffect } from "react"
+import { useAdminHeaderActions } from "@/components/admin/AdminHeader"
 import type { WorkStatus } from "@/data/types"
 import Link from "next/link"
 import { works, chapters } from "@/data/dummy"
@@ -67,6 +68,58 @@ export default function AdminWorkDetailPage({ params }: { params: Promise<{ slug
   const [editGenres, setEditGenres] = useState<string[]>(work.genres)
   const [editCoverPreview, setEditCoverPreview] = useState<string | null>(null)
   const dragItem = useRef<number | null>(null)
+
+  const { setActions } = useAdminHeaderActions()
+
+  useEffect(() => {
+    if (isEditing) {
+      setActions(
+        <>
+          <Button variant="outline" size="sm" onClick={() => {
+            setIsEditing(false)
+            setEditCoverPreview(null)
+          }}>
+            <X className="size-4" />
+            Batal
+          </Button>
+          <Button size="sm" disabled={!editTitle || !editSynopsis} onClick={() => {
+            work.title = editTitle
+            work.synopsis = editSynopsis
+            work.status = editStatus
+            work.genres = editGenres
+            setIsEditing(false)
+            alert("Karya berhasil diedit!")
+          }}>
+            <Save className="size-4" />
+            Simpan Perubahan
+          </Button>
+        </>
+      )
+    } else {
+      setActions(
+        <>
+          <Button variant="outline" size="sm" onClick={() => {
+            setEditTitle(work.title)
+            setEditSynopsis(work.synopsis)
+            setEditStatus(work.status)
+            setEditGenres(work.genres)
+            setEditCoverPreview(null)
+            setIsEditing(true)
+          }}>
+            <Edit className="size-4" />
+            Edit Karya
+          </Button>
+          <Button size="sm" asChild>
+            <Link href={`/admin/karya/${work.slug}/chapter/create`}>
+              <PlusCircle className="size-4" />
+              Tambah Chapter
+            </Link>
+          </Button>
+        </>
+      )
+    }
+    return () => setActions(null)
+  }, [setActions, isEditing, editTitle, editSynopsis, editStatus, editGenres, work.slug])
 
   const totalReads = orderedChapters.reduce((sum, ch) => sum + ch.readCount, 0)
 
@@ -152,7 +205,7 @@ export default function AdminWorkDetailPage({ params }: { params: Promise<{ slug
   }, [])
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 p-4">
       <div className="flex items-center gap-3">
         <Button variant="ghost" size="icon" asChild>
           <Link href="/admin/karya">
@@ -162,30 +215,6 @@ export default function AdminWorkDetailPage({ params }: { params: Promise<{ slug
         <div className="flex-1">
           <h1 className="text-2xl font-bold tracking-tight">{work.title}</h1>
           <p className="text-muted-foreground mt-1">/{work.slug}</p>
-        </div>
-        <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" onClick={() => {
-            if (isEditing) {
-              setIsEditing(false)
-              setEditCoverPreview(null)
-            } else {
-              setEditTitle(work.title)
-              setEditSynopsis(work.synopsis)
-              setEditStatus(work.status)
-              setEditGenres(work.genres)
-              setEditCoverPreview(null)
-              setIsEditing(true)
-            }
-          }}>
-            {isEditing ? <X className="size-4" /> : <Edit className="size-4" />}
-            {isEditing ? "Batal" : "Edit Karya"}
-          </Button>
-          <Button size="sm" asChild>
-            <Link href={`/admin/karya/${work.slug}/chapter/create`}>
-              <PlusCircle className="size-4" />
-              Tambah Chapter
-            </Link>
-          </Button>
         </div>
       </div>
 
@@ -310,17 +339,6 @@ export default function AdminWorkDetailPage({ params }: { params: Promise<{ slug
                   )}
                 </div>
 
-                <Button className="w-full" disabled={!editTitle || !editSynopsis} onClick={() => {
-                  work.title = editTitle
-                  work.synopsis = editSynopsis
-                  work.status = editStatus
-                  work.genres = editGenres
-                  setIsEditing(false)
-                  alert("Karya berhasil diedit!")
-                }}>
-                  <Save className="size-4" />
-                  Simpan Perubahan
-                </Button>
               </>
             ) : (
               <>

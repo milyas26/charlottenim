@@ -1,8 +1,26 @@
 "use client"
 
 import { usePathname } from "next/navigation"
-import { useEffect, useRef } from "react"
+import { useEffect, useRef, createContext, useContext, useState } from "react"
 import { ChevronRight } from "lucide-react"
+
+const HeaderActionsContext = createContext<{
+  actions: React.ReactNode | null
+  setActions: (actions: React.ReactNode | null) => void
+}>({ actions: null, setActions: () => {} })
+
+export function AdminHeaderActionsProvider({ children }: { children: React.ReactNode }) {
+  const [actions, setActions] = useState<React.ReactNode | null>(null)
+  return (
+    <HeaderActionsContext.Provider value={{ actions, setActions }}>
+      {children}
+    </HeaderActionsContext.Provider>
+  )
+}
+
+export function useAdminHeaderActions() {
+  return useContext(HeaderActionsContext)
+}
 
 const pathLabels: Record<string, string> = {
   admin: "Dashboard",
@@ -34,6 +52,7 @@ export function AdminHeader() {
   const pathname = usePathname()
   const headerRef = useRef<HTMLDivElement>(null)
   const breadcrumbs = getBreadcrumbs(pathname)
+  const { actions } = useContext(HeaderActionsContext)
 
   useEffect(() => {
     const el = headerRef.current
@@ -59,24 +78,27 @@ export function AdminHeader() {
       className="sticky top-0 z-30 backdrop-blur-xl transition-all duration-300"
       style={{ borderBottom: "1px solid transparent" }}
     >
-      <div className="flex items-center gap-1.5 h-14 px-8 text-sm">
-        {breadcrumbs.map((crumb, i) => {
-          const isLast = i === breadcrumbs.length - 1
-          return (
-            <span key={crumb.href} className="flex items-center gap-1.5">
-              {i > 0 && <ChevronRight className="size-3.5 text-muted-foreground/50" />}
-              <span
-                className={
-                  isLast
-                    ? "font-medium text-foreground"
-                    : "text-muted-foreground"
-                }
-              >
-                {crumb.label}
+      <div className="flex items-center h-14 px-8 text-sm">
+        <div className="flex items-center gap-1.5 flex-1 min-w-0">
+          {breadcrumbs.map((crumb, i) => {
+            const isLast = i === breadcrumbs.length - 1
+            return (
+              <span key={crumb.href} className="flex items-center gap-1.5">
+                {i > 0 && <ChevronRight className="size-3.5 text-muted-foreground/50" />}
+                <span
+                  className={
+                    isLast
+                      ? "font-medium text-foreground"
+                      : "text-muted-foreground"
+                  }
+                >
+                  {crumb.label}
+                </span>
               </span>
-            </span>
-          )
-        })}
+            )
+          })}
+        </div>
+        {actions && <div className="flex items-center gap-2 shrink-0">{actions}</div>}
       </div>
     </div>
   )

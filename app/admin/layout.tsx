@@ -1,6 +1,6 @@
 import type { Metadata } from "next"
 import { AdminSidebar } from "@/components/admin/AdminSidebar"
-import { AdminHeader } from "@/components/admin/AdminHeader"
+import { AdminHeader, AdminHeaderActionsProvider } from "@/components/admin/AdminHeader"
 
 export const metadata: Metadata = {
   title: "Admin Panel — charlottenimmm",
@@ -12,10 +12,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     <div className="min-h-screen bg-background">
       <AdminSidebar />
       <div className="ml-60 min-h-screen">
-        <AdminHeader />
-        <main>
-          <div className="p-4 min-h-[calc(100vh-64px)]">{children}</div>
-        </main>
+        <AdminHeaderActionsProvider>
+          <AdminHeader />
+          <main>
+            <div className="min-h-[calc(100vh-64px)]">{children}</div>
+          </main>
+        </AdminHeaderActionsProvider>
       </div>
     </div>
   )

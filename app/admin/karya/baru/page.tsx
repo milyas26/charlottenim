@@ -1,6 +1,7 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
+import { useAdminHeaderActions } from "@/components/admin/AdminHeader"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -18,6 +19,23 @@ export default function AdminNewWorkPage() {
   const [selectedGenres, setSelectedGenres] = useState<string[]>([])
   const [status, setStatus] = useState<WorkStatus>("DRAFT")
 
+  const { setActions } = useAdminHeaderActions()
+
+  useEffect(() => {
+    setActions(
+      <>
+        <Button variant="outline" asChild>
+          <Link href="/admin/karya">Batal</Link>
+        </Button>
+        <Button disabled={!title || !synopsis}>
+          <Save className="size-4" />
+          Simpan Karya
+        </Button>
+      </>
+    )
+    return () => setActions(null)
+  }, [setActions, title, synopsis])
+
   const toggleGenre = (genre: string) => {
     if (selectedGenres.includes(genre)) {
       setSelectedGenres(selectedGenres.filter((g) => g !== genre))
@@ -34,27 +52,16 @@ export default function AdminNewWorkPage() {
     .trim()
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <Button variant="ghost" size="icon" asChild>
-            <Link href="/admin/karya">
-              <ArrowLeft className="size-4" />
-            </Link>
-          </Button>
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight">Tambah Karya Baru</h1>
-            <p className="text-muted-foreground mt-1">Unggah karya baru ke platform.</p>
-          </div>
-        </div>
-        <div className="flex items-center gap-3">
-          <Button variant="outline" asChild>
-            <Link href="/admin/karya">Batal</Link>
-          </Button>
-          <Button disabled={!title || !synopsis}>
-            <Save className="size-4" />
-            Simpan Karya
-          </Button>
+    <div className="space-y-6 p-4">
+      <div className="flex items-center gap-3">
+        <Button variant="ghost" size="icon" asChild>
+          <Link href="/admin/karya">
+            <ArrowLeft className="size-4" />
+          </Link>
+        </Button>
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">Tambah Karya Baru</h1>
+          <p className="text-muted-foreground mt-1">Unggah karya baru ke platform.</p>
         </div>
       </div>
 

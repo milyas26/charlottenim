@@ -69,7 +69,7 @@ export default function ChapterEditor({ content, onChange, placeholder }: Chapte
     editorProps: {
       attributes: {
         class:
-          "prose prose-sm max-w-none min-h-[400px] focus:outline-none prose-p:mb-3 prose-p:mt-0 prose-p:leading-7 prose-p:text-foreground prose-headings:mb-2 prose-headings:mt-6 prose-headings:font-semibold prose-headings:text-foreground prose-strong:text-foreground prose-em:text-foreground prose-blockquote:text-foreground prose-code:text-foreground prose-ol:text-foreground prose-ul:text-foreground prose-li:text-foreground",
+          "prose prose-sm max-w-none h-full focus:outline-none prose-p:mb-3 prose-p:mt-0 prose-p:leading-7 prose-p:text-foreground prose-headings:mb-2 prose-headings:mt-6 prose-headings:font-semibold prose-headings:text-foreground prose-strong:text-foreground prose-em:text-foreground prose-blockquote:text-foreground prose-code:text-foreground prose-ol:text-foreground prose-ul:text-foreground prose-li:text-foreground",
       },
     },
     immediatelyRender: false,
@@ -78,8 +78,8 @@ export default function ChapterEditor({ content, onChange, placeholder }: Chapte
   if (!editor) return null
 
   return (
-    <div className="rounded-lg border border-input bg-background">
-      <div className="flex flex-wrap items-center gap-0.5 px-2.5 py-2 border-b border-input">
+    <div className="rounded-lg border border-input bg-background flex flex-col h-full">
+      <div className="flex flex-wrap items-center gap-0.5 px-2.5 py-2 border-b border-input shrink-0">
         <ToolbarButton
           onClick={() => editor.chain().focus().toggleBold().run()}
           active={editor.isActive("bold")}
@@ -170,8 +170,8 @@ export default function ChapterEditor({ content, onChange, placeholder }: Chapte
           </ToolbarButton>
         </div>
       </div>
-      <div className="px-6 py-4">
-        <EditorContent editor={editor} />
+      <div className="flex-1 overflow-y-auto px-6 py-4">
+        <EditorContent editor={editor} className="h-full" />
       </div>
     </div>
   )
