@@ -1,0 +1,143 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../lib/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  READER
+  ADMIN
+}
+
+enum WorkStatus {
+  DRAFT
+  ONGOING
+  COMPLETED
+}
+
+enum ChapterStatus {
+  DRAFT
+  PUBLISHED
+}
+
+enum PurchaseStatus {
+  PENDING
+  PAID
+  FAILED
+}
+
+model User {
+  id         Int      @id @default(autoincrement())
+  firebaseUid String  @unique
+  email      String   @unique
+  name       String?
+  avatarUrl  String?
+  role       Role     @default(READER)
+
+  purchases         Purchase[]
+  bookmarks         Bookmark[]
+  readingProgresses ReadingProgress[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Work {
+  id        Int         @id @default(autoincrement())
+  title     String
+  slug      String      @unique
+  synopsis  String
+  coverUrl  String      @default("")
+  genres    String[]
+  status    WorkStatus  @default(DRAFT)
+  deletedAt DateTime?
+
+  chapters  Chapter[]
+  bookmarks Bookmark[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Chapter {
+  id             Int           @id @default(autoincrement())
+  workId         Int
+  work           Work          @relation(fields: [workId], references: [id], onDelete: Cascade)
+  chapterNumber  Int
+  slug           String
+  title          String
+  content        String
+  isPremium      Boolean       @default(false)
+  price          Int           @default(0)
+  status         ChapterStatus @default(DRAFT)
+  deletedAt      DateTime?
+
+  purchases         Purchase[]
+  readingProgresses ReadingProgress[]
+  readStats         ChapterRead?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([workId, slug])
+  @@unique([workId, chapterNumber])
+}
+
+model Purchase {
+  id                    Int            @id @default(autoincrement())
+  userId                Int
+  user                  User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  chapterId             Int
+  chapter               Chapter        @relation(fields: [chapterId], references: [id], onDelete: Cascade)
+  amount                Int
+  status                PurchaseStatus @default(PENDING)
+
+  xenditInvoiceId       String?   @map("xendit_invoice_id")
+  xenditInvoiceUrl      String?   @map("xendit_invoice_url")
+  xenditPaymentId       String?   @map("xendit_payment_id")
+  xenditPaymentChannel  String?   @map("xendit_payment_channel")
+  xenditPaymentMethod   String?   @map("xendit_payment_method")
+  xenditExpiryDate      DateTime? @map("xendit_expiry_date")
+  paidAt                DateTime? @map("paid_at")
+  failureReason         String?   @map("failure_reason")
+
+  createdAt DateTime @default(now())
+
+  @@map("Purchase")
+}
+
+model Bookmark {
+  id      Int      @id @default(autoincrement())
+  userId  Int
+  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  workId  Int
+  work    Work     @relation(fields: [workId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@unique([userId, workId])
+}
+
+model ChapterRead {
+  id        Int      @id @default(autoincrement())
+  chapterId Int
+  chapter   Chapter  @relation(fields: [chapterId], references: [id], onDelete: Cascade)
+  count     Int      @default(0)
+
+  @@unique([chapterId])
+}
+
+model ReadingProgress {
+  id         Int      @id @default(autoincrement())
+  userId     Int
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  chapterId  Int
+  chapter    Chapter  @relation(fields: [chapterId], references: [id], onDelete: Cascade)
+  workId     Int
+  lastReadAt DateTime @default(now())
+
+  @@unique([userId, workId])
+}

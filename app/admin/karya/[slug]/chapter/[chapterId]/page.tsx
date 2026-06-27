@@ -82,6 +82,7 @@ export default function AdminChapterEditorPage({
           price: 0,
           readCount: 0,
           status: "DRAFT",
+          deletedAt: null,
         }
         return [...prev, dummyChapter]
       })

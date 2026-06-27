@@ -11,6 +11,11 @@ export interface Work {
   genres: string[];
   status: WorkStatus;
   totalChapters: number;
+  deletedAt?: string | null;
+}
+
+export interface ChapterRead {
+  count: number;
 }
 
 export interface Chapter {
@@ -25,6 +30,7 @@ export interface Chapter {
   price: number;
   readCount: number;
   status: ChapterStatus;
+  deletedAt?: string | null;
 }
 
 export interface ReaderSettings {
