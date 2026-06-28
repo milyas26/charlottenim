@@ -1,6 +1,7 @@
 "use client"
 
-import { useRef, useCallback, useState } from "react"
+import { useRef, useState } from "react"
+import { useMutation } from "@tanstack/react-query"
 import { useEditor, EditorContent } from "@tiptap/react"
 import type { Editor } from "@tiptap/react"
 import StarterKit from "@tiptap/starter-kit"
@@ -65,17 +66,19 @@ export default function ChapterEditor({ content, onChange, placeholder, workId, 
   const [existingImageUrls, setExistingImageUrls] = useState<string[]>([])
   const editorRef = useRef<Editor | null>(null)
 
-  const uploadImage = useCallback(async (file: File) => {
-    const formData = new FormData()
-    formData.append("file", file)
-    formData.append("type", "CONTENT")
-    formData.append("workId", workId)
-    if (chapterId) formData.append("chapterId", chapterId)
-    const { data } = await api.post("/api/nulis/upload", formData, {
-      headers: { "Content-Type": "multipart/form-data" },
-    })
-    return data.url as string
-  }, [workId, chapterId])
+  const uploadMutation = useMutation({
+    mutationFn: async (file: File) => {
+      const formData = new FormData()
+      formData.append("file", file)
+      formData.append("type", "CONTENT")
+      formData.append("workId", workId)
+      if (chapterId) formData.append("chapterId", chapterId)
+      const { data } = await api.post("/api/nulis/upload", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      })
+      return data.url as string
+    },
+  })
 
   const editor = useEditor({
     extensions: [
@@ -115,7 +118,7 @@ export default function ChapterEditor({ content, onChange, placeholder, workId, 
               alert("Ukuran gambar maksimal 5MB.")
               return true
             }
-            uploadImage(file).then((url) => {
+            uploadMutation.mutateAsync(file).then((url) => {
               editorRef.current?.chain().focus().setImage({ src: url }).run()
             }).catch(() => {
               alert("Gagal upload gambar.")

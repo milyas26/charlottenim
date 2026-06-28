@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/contexts/AuthContext";
 import LoginDialog from "@/components/LoginDialog";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
@@ -13,76 +14,85 @@ interface Props {
 
 export default function CommentsSection({ chapterId }: Props) {
   const { user } = useAuth();
-  const [comments, setComments] = useState<Comment[]>([]);
   const [newComment, setNewComment] = useState("");
-  const [loading, setLoading] = useState(true);
-  const [submitting, setSubmitting] = useState(false);
-  const [likingIds, setLikingIds] = useState<Set<string>>(new Set());
+  const queryClient = useQueryClient();
 
-  useEffect(() => {
-    setLoading(true);
-    api
-      .get<Comment[]>(`/api/comments?chapterId=${chapterId}`)
-      .then(({ data }) => setComments(data))
-      .catch(() => {})
-      .finally(() => setLoading(false));
-  }, [chapterId]);
+  const { data: comments = [], isLoading } = useQuery({
+    queryKey: ["comments", chapterId],
+    queryFn: async () => {
+      const { data } = await api.get<Comment[]>(`/api/comments?chapterId=${chapterId}`)
+      return data
+    },
+  })
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newComment.trim() || !user || submitting) return;
-
-    setSubmitting(true);
-    try {
+  const submitMutation = useMutation({
+    mutationFn: async (content: string) => {
       const { data } = await api.post<Comment>("/api/comments", {
         chapterId,
-        content: newComment.trim(),
-      });
-      setComments((prev) => [data, ...prev]);
-      setNewComment("");
-    } catch {
-      // ignore
-    } finally {
-      setSubmitting(false);
-    }
+        content,
+      })
+      return data
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["comments", chapterId] })
+      setNewComment("")
+    },
+  })
+
+  const likeMutation = useMutation({
+    mutationFn: async (commentId: string) => {
+      const { data } = await api.post<Comment>(`/api/comments/${commentId}/like`)
+      return data
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["comments", chapterId] })
+    },
+  })
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const trimmed = newComment.trim()
+    if (!trimmed || !user || submitMutation.isPending) return;
+    submitMutation.mutate(trimmed);
   };
 
-  const handleLike = async (commentId: string) => {
-    if (!user || likingIds.has(commentId)) return;
-    setLikingIds((prev) => new Set(prev).add(commentId));
-    try {
-      const { data } = await api.post<Comment>(`/api/comments/${commentId}/like`);
-      setComments((prev) =>
-        prev.map((c) => (c.id === commentId ? data : c))
-      );
-    } catch {
-      // ignore
-    } finally {
-      setLikingIds((prev) => {
-        const next = new Set(prev);
-        next.delete(commentId);
-        return next;
-      });
-    }
+  const handleLike = (commentId: string) => {
+    if (!user || likeMutation.isPending) return;
+    likeMutation.mutate(commentId);
   };
 
-  const formatTime = (iso: string) => {
-    const diff = Date.now() - new Date(iso).getTime();
-    const mins = Math.floor(diff / 60000);
-    if (mins < 1) return "Baru saja";
-    if (mins < 60) return `${mins} menit lalu`;
-    const hours = Math.floor(mins / 60);
-    if (hours < 24) return `${hours} jam lalu`;
-    const days = Math.floor(hours / 24);
-    if (days < 7) return `${days} hari lalu`;
-    const weeks = Math.floor(days / 7);
-    if (weeks < 5) return `${weeks} minggu lalu`;
-    return new Date(iso).toLocaleDateString("id-ID", {
-      day: "numeric",
-      month: "short",
-      year: "numeric",
-    });
-  };
+  const formattedTimes = useMemo(() => {
+    // eslint-disable-next-line react-hooks/purity
+    const now = Date.now()
+    const map = new Map<string, string>()
+    for (const c of comments) {
+      const diff = now - new Date(c.createdAt).getTime()
+      const mins = Math.floor(diff / 60000)
+      let text: string
+      if (mins < 1) text = "Baru saja"
+      else if (mins < 60) text = `${mins} menit lalu`
+      else {
+        const hours = Math.floor(mins / 60)
+        if (hours < 24) text = `${hours} jam lalu`
+        else {
+          const days = Math.floor(hours / 24)
+          if (days < 7) text = `${days} hari lalu`
+          else {
+            const weeks = Math.floor(days / 7)
+            text = weeks < 5 ? `${weeks} minggu lalu` : new Date(c.createdAt).toLocaleDateString("id-ID", {
+              day: "numeric",
+              month: "short",
+              year: "numeric",
+            })
+          }
+        }
+      }
+      map.set(c.id, text)
+    }
+    return map
+  }, [comments])
+
+  const formatTime = (id: string) => formattedTimes.get(id) ?? ""
 
   return (
     <div className="px-4 pt-2.5 pb-3 min-h-[200px]">
@@ -110,7 +120,7 @@ export default function CommentsSection({ chapterId }: Props) {
           />
           <button
             type="submit"
-            disabled={!newComment.trim() || submitting}
+            disabled={!newComment.trim() || submitMutation.isPending}
             className="px-3 py-1.5 rounded-lg text-[10px] font-semibold transition-all disabled:opacity-40"
             style={{
               backgroundColor: "var(--accent)",
@@ -118,7 +128,7 @@ export default function CommentsSection({ chapterId }: Props) {
               border: "1px solid var(--accent)",
             }}
           >
-            {submitting ? "..." : "Kirim"}
+            {submitMutation.isPending ? "..." : "Kirim"}
           </button>
         </form>
       ) : (
@@ -147,7 +157,7 @@ export default function CommentsSection({ chapterId }: Props) {
         </div>
       )}
 
-      {loading ? (
+      {isLoading ? (
         <p className="text-xs text-center py-4" style={{ color: "var(--muted)" }}>
           Memuat komentar...
         </p>
@@ -185,7 +195,7 @@ export default function CommentsSection({ chapterId }: Props) {
                     </span>
                   )}
                   <span className="text-[10px]" style={{ color: "var(--muted)" }}>
-                    {formatTime(c.createdAt)}
+                    {formatTime(c.id)}
                   </span>
                 </div>
                 <p className="text-sm leading-relaxed mb-1.5" style={{ color: "var(--foreground)", opacity: 0.85 }}>
@@ -195,7 +205,7 @@ export default function CommentsSection({ chapterId }: Props) {
                   <button
                     type="button"
                     onClick={() => handleLike(c.id)}
-                    disabled={!user || likingIds.has(c.id)}
+                    disabled={!user || likeMutation.isPending}
                     className="flex items-center gap-1 text-xs transition-opacity hover:opacity-80 disabled:opacity-50"
                     style={{ color: "var(--muted)" }}
                   >

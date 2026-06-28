@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useMutation } from "@tanstack/react-query";
 import LoginDialog from "@/components/LoginDialog";
 import {
   Dialog,
@@ -20,11 +21,31 @@ interface Props {
   chapterSlug: string;
 }
 
+function getErrorMessage(err: unknown): string {
+  const axiosErr = err as { response?: { data?: { error?: string } } };
+  return axiosErr?.response?.data?.error ?? "Gagal memproses pembayaran. Coba lagi.";
+}
+
 export default function PaywallOverlay({ price, chapterId, workSlug, chapterSlug }: Props) {
   const { user, loading: authLoading } = useAuth();
-  const [buying, setBuying] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [confirmOpen, setConfirmOpen] = useState(false);
+
+  const buyMutation = useMutation({
+    mutationFn: async () => {
+      const { data } = await api.post("/api/payments/create", {
+        chapterId,
+        workSlug,
+        chapterSlug,
+        payerEmail: user!.email,
+      })
+      return data
+    },
+    onSuccess: (data) => {
+      if (data.invoiceUrl) {
+        window.location.href = data.invoiceUrl
+      }
+    },
+  })
 
   const formattedPrice = new Intl.NumberFormat("id-ID", {
     style: "currency",
@@ -32,31 +53,10 @@ export default function PaywallOverlay({ price, chapterId, workSlug, chapterSlug
     minimumFractionDigits: 0,
   }).format(price);
 
-  const handleBuy = async () => {
+  const handleBuy = () => {
     if (!user) return;
     setConfirmOpen(false);
-    setBuying(true);
-    setError(null);
-
-    try {
-      const { data } = await api.post("/api/payments/create", {
-        chapterId,
-        workSlug,
-        chapterSlug,
-        payerEmail: user.email,
-      });
-
-      if (data.invoiceUrl) {
-        window.location.href = data.invoiceUrl;
-      }
-    } catch (err: unknown) {
-      const axiosErr = err as { response?: { data?: { error?: string } } };
-      setError(
-        axiosErr?.response?.data?.error ?? "Gagal memproses pembayaran. Coba lagi."
-      );
-    } finally {
-      setBuying(false);
-    }
+    buyMutation.mutate();
   };
 
   if (authLoading) {
@@ -99,18 +99,20 @@ export default function PaywallOverlay({ price, chapterId, workSlug, chapterSlug
         Beli chapter ini untuk melanjutkan membaca. Satu kali beli, akses selamanya.
       </p>
 
-      {error && (
-        <p className="text-xs mb-3 max-w-xs mx-auto text-red-500">{error}</p>
+      {buyMutation.isError && (
+        <p className="text-xs mb-3 max-w-xs mx-auto text-red-500">
+          {getErrorMessage(buyMutation.error)}
+        </p>
       )}
 
       {user ? (
         <button
           onClick={() => setConfirmOpen(true)}
-          disabled={buying}
+          disabled={buyMutation.isPending}
           className="w-full max-w-xs py-3 px-6 rounded-xl text-white font-semibold text-sm transition-opacity hover:opacity-90 active:scale-[0.98] disabled:opacity-60"
           style={{ backgroundColor: "var(--accent)" }}
         >
-          {buying ? "Memproses..." : `Beli Chapter \u00B7 ${formattedPrice}`}
+          {buyMutation.isPending ? "Memproses..." : `Beli Chapter \u00B7 ${formattedPrice}`}
         </button>
       ) : (
         <LoginDialog>
@@ -151,7 +153,7 @@ export default function PaywallOverlay({ price, chapterId, workSlug, chapterSlug
             </button>
             <button
               onClick={handleBuy}
-              disabled={buying}
+              disabled={buyMutation.isPending}
               className="flex-1 py-2.5 px-4 rounded-xl text-white text-sm font-semibold transition-opacity hover:opacity-90 disabled:opacity-60"
               style={{ backgroundColor: "var(--accent)" }}
             >

@@ -5,26 +5,39 @@ import { useQuery } from "@tanstack/react-query"
 import { Input } from "@/components/ui/input"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { Pagination } from "@/components/ui/pagination"
+import { useDebounce } from "@/hooks/useDebounce"
 import { Search, Loader2 } from "lucide-react"
 import api from "@/lib/axios"
 import type { AdminComment } from "@/data/admin-types"
 
+interface CommentsResponse {
+  comments: AdminComment[]
+  total: number
+  page: number
+  totalPages: number
+}
+
 export default function AdminCommentsPage() {
   const [search, setSearch] = useState("")
+  const [page, setPage] = useState(1)
+  const [limit, setLimit] = useState(50)
 
-  const { data: comments = [], isLoading } = useQuery({
-    queryKey: ["admin-comments"],
+  const debouncedSearch = useDebounce(search, 400)
+
+  const { data, isLoading } = useQuery({
+    queryKey: ["admin-comments", page, limit, debouncedSearch],
     queryFn: async () => {
-      const { data } = await api.get<AdminComment[]>("/api/nulis/comments")
+      const { data } = await api.get<CommentsResponse>("/api/nulis/comments", {
+        params: { page, limit, search: debouncedSearch },
+      })
       return data
     },
   })
 
-  const filtered = comments.filter((c) =>
-    c.userName.toLowerCase().includes(search.toLowerCase()) ||
-    c.workTitle.toLowerCase().includes(search.toLowerCase()) ||
-    c.content.toLowerCase().includes(search.toLowerCase())
-  )
+  const comments = data?.comments ?? []
+  const total = data?.total ?? 0
+  const totalPages = data?.totalPages ?? 1
 
   const getInitials = (name: string) =>
     name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2)
@@ -44,7 +57,10 @@ export default function AdminCommentsPage() {
         <Input
           placeholder="Cari user, karya, atau komentar..."
           value={search}
-          onChange={(e) => setSearch(e.target.value)}
+          onChange={(e) => {
+            setSearch(e.target.value)
+            setPage(1)
+          }}
           className="pl-9"
         />
       </div>
@@ -60,14 +76,14 @@ export default function AdminCommentsPage() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filtered.length === 0 ? (
+            {comments.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={4} className="text-center py-8 text-muted-foreground">
                   Tidak ada komentar ditemukan.
                 </TableCell>
               </TableRow>
             ) : (
-              filtered.map((c) => (
+              comments.map((c) => (
                 <TableRow key={c.id}>
                   <TableCell>
                     <div className="flex items-center gap-2">
@@ -94,9 +110,17 @@ export default function AdminCommentsPage() {
         </Table>
       </div>
 
-      <div className="flex items-center justify-between text-sm text-muted-foreground">
-        <p>Menampilkan {filtered.length} dari {comments.length} komentar</p>
-      </div>
+      <Pagination
+        page={page}
+        totalPages={totalPages}
+        total={total}
+        limit={limit}
+        onPageChange={setPage}
+        onLimitChange={(newLimit) => {
+          setLimit(newLimit)
+          setPage(1)
+        }}
+      />
     </div>
   )
 }

@@ -1,13 +1,14 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useMutation } from "@tanstack/react-query";
 import { Work, Chapter } from "@/data/types";
 import { useReaderSettings } from "@/hooks/useReaderSettings";
 import ChapterContent from "@/components/reader/ChapterContent";
 import ReadingCustomization from "@/components/reader/ReadingCustomization";
 import PaywallOverlay from "@/components/reader/PaywallOverlay";
 import CommentsSection from "@/components/reader/CommentsSection";
-import { getStoredJwt } from "@/lib/axios";
+import api from "@/lib/axios";
 import {
   Drawer,
   DrawerTrigger,
@@ -44,6 +45,18 @@ export default function ReaderPage({
     return new URLSearchParams(window.location.search).get("payment");
   });
 
+  const chapterReadMutation = useMutation({
+    mutationFn: async (chapterId: string) => {
+      await api.post("/api/chapters/read", { chapterId })
+    },
+  })
+
+  const progressMutation = useMutation({
+    mutationFn: async (params: { workId: string; chapterId: string }) => {
+      await api.post("/api/user/progress", params)
+    },
+  })
+
   useEffect(() => {
     if (typeof window === "undefined") return;
     const url = new URL(window.location.href);
@@ -66,16 +79,14 @@ export default function ReaderPage({
   }, []);
 
   useEffect(() => {
-    const jwt = getStoredJwt();
-    if (!jwt) return;
-    fetch("/api/user/progress", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        ...(jwt ? { Authorization: `Bearer ${jwt}` } : {}),
-      },
-      body: JSON.stringify({ workId: work.id, chapterId: chapter.id }),
-    }).catch(() => {});
+    if (!isUnlocked) return;
+    chapterReadMutation.mutate(chapter.id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [chapter.id, isUnlocked]);
+
+  useEffect(() => {
+    progressMutation.mutate({ workId: work.id, chapterId: chapter.id });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [work.id, chapter.id]);
 
   const isDark = settings.readingMode === "black";

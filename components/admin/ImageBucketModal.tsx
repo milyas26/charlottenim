@@ -1,6 +1,7 @@
 "use client"
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import { useCallback, useMemo, useRef, useState } from "react"
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import {
   Dialog,
   DialogContent,
@@ -41,7 +42,7 @@ function GalleryImage({
   alreadyUsed: boolean
   onToggle: () => void
   onDelete: (id: string) => void
-  deleting: string | null
+  deleting: boolean
 }) {
   return (
     <div className="relative group rounded-lg border border-border bg-muted/30 overflow-hidden">
@@ -56,11 +57,11 @@ function GalleryImage({
             e.stopPropagation()
             onDelete(image.id)
           }}
-          disabled={deleting === image.id}
+          disabled={deleting}
           className="p-1 rounded bg-background/80 hover:bg-destructive hover:text-destructive-foreground transition-colors"
           title="Hapus gambar"
         >
-          {deleting === image.id ? (
+          {deleting ? (
             <Loader2 className="size-3.5 animate-spin" />
           ) : (
             <Trash2 className="size-3.5" />
@@ -112,51 +113,100 @@ export default function ImageBucketModal({
   existingImageUrls,
   onInsertImage,
 }: ImageBucketModalProps) {
-  const [images, setImages] = useState<ImageData[] | null>(null)
+  const queryClient = useQueryClient()
   const [selected, setSelected] = useState<Set<string>>(new Set())
-  const [alreadyUsedIds, setAlreadyUsedIds] = useState<Set<string>>(new Set())
-  const [uploading, setUploading] = useState(false)
-  const [deleting, setDeleting] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  const refresh = useCallback(async () => {
-    try {
+  const sortImages = (images: ImageData[]) =>
+    [...images].sort((a, b) => {
+      if (a.order !== b.order) return a.order - b.order
+      return new Date(a.id).getTime() - new Date(b.id).getTime()
+    })
+
+  const { data: images = [], isLoading } = useQuery({
+    queryKey: ["images", workId, chapterId],
+    queryFn: async () => {
       const params = new URLSearchParams()
       params.set("workId", workId)
       if (chapterId) params.set("chapterId", chapterId)
-      const { data } = await api.get(`/api/nulis/images?${params.toString()}`)
-      setImages(data)
-      return data as ImageData[]
-    } catch {
-      toast.error("Gagal mengambil daftar gambar")
-      setImages([])
-      return [] as ImageData[]
-    }
-  }, [workId, chapterId])
+      const { data } = await api.get<ImageData[]>(`/api/nulis/images?${params.toString()}`)
+      return sortImages(data)
+    },
+    enabled: open,
+  })
+
+  const uploadMutation = useMutation({
+    mutationFn: async (files: FileList) => {
+      let success = 0
+      for (const file of Array.from(files)) {
+        if (!file.type.startsWith("image/")) continue
+        if (file.size > 2 * 1024 * 1024) {
+          toast.error("Ukuran gambar maksimal 2MB")
+          continue
+        }
+        const formData = new FormData()
+        formData.append("file", file)
+        formData.append("type", "CONTENT")
+        formData.append("workId", workId)
+        if (chapterId) formData.append("chapterId", chapterId)
+        await api.post("/api/nulis/upload", formData, {
+          headers: { "Content-Type": "multipart/form-data" },
+        })
+        success++
+      }
+      return success
+    },
+    onSuccess: (success) => {
+      if (success > 0) {
+        toast.success(`${success} gambar berhasil diupload`)
+        queryClient.invalidateQueries({ queryKey: ["images", workId, chapterId] })
+      }
+      if (fileInputRef.current) fileInputRef.current.value = ""
+    },
+    onError: () => {
+      toast.error("Gagal upload gambar")
+      if (fileInputRef.current) fileInputRef.current.value = ""
+    },
+  })
+
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      await api.delete(`/api/nulis/images/${id}`)
+      return id
+    },
+    onSuccess: (id) => {
+      toast.success("Gambar berhasil dihapus")
+      setSelected((prev) => {
+        const next = new Set(prev)
+        next.delete(id)
+        return next
+      })
+      queryClient.invalidateQueries({ queryKey: ["images", workId, chapterId] })
+    },
+    onError: () => {
+      toast.error("Gagal menghapus gambar")
+    },
+  })
 
   const existingUrlSet = useMemo(
     () => new Set(existingImageUrls ?? []),
     [existingImageUrls],
   )
 
-  useEffect(() => {
-    if (open) {
-      refresh().then((data) => {
-        setSelected(new Set())
-        if (existingUrlSet.size > 0 && data.length > 0) {
-          const matchedIds = data
-            .filter((img) => existingUrlSet.has(img.url))
-            .map((img) => img.id)
-          setAlreadyUsedIds(new Set(matchedIds))
-        } else {
-          setAlreadyUsedIds(new Set())
-        }
-      })
+  const alreadyUsedIdsMemo = useMemo(() => {
+    if (!open) return new Set<string>()
+    if (existingUrlSet.size > 0 && images.length > 0) {
+      const matchedIds = images
+        .filter((img) => existingUrlSet.has(img.url))
+        .map((img) => img.id)
+      return new Set<string>(matchedIds)
     }
-  }, [open, refresh, existingUrlSet])
+    return new Set<string>()
+  }, [open, existingUrlSet, images])
 
   const handleOpenChange = useCallback(
     (newOpen: boolean) => {
+      if (newOpen) setSelected(new Set())
       onOpenChange(newOpen)
     },
     [onOpenChange],
@@ -175,69 +225,19 @@ export default function ImageBucketModal({
   }, [])
 
   const handleUpload = useCallback(
-    async (e: React.ChangeEvent<HTMLInputElement>) => {
+    (e: React.ChangeEvent<HTMLInputElement>) => {
       const files = e.target.files
       if (!files || files.length === 0) return
-
-      setUploading(true)
-      let success = 0
-      try {
-        for (const file of Array.from(files)) {
-          if (!file.type.startsWith("image/")) continue
-          if (file.size > 2 * 1024 * 1024) {
-            toast.error("Ukuran gambar maksimal 2MB")
-            continue
-          }
-          const formData = new FormData()
-          formData.append("file", file)
-          formData.append("type", "CONTENT")
-          formData.append("workId", workId)
-          if (chapterId) formData.append("chapterId", chapterId)
-          await api.post("/api/nulis/upload", formData, {
-            headers: { "Content-Type": "multipart/form-data" },
-          })
-          success++
-        }
-        if (success > 0) {
-          toast.success(`${success} gambar berhasil diupload`)
-          await refresh()
-        }
-      } catch {
-        toast.error("Gagal upload gambar")
-      } finally {
-        setUploading(false)
-        if (fileInputRef.current) fileInputRef.current.value = ""
-      }
+      uploadMutation.mutate(files)
     },
-    [workId, chapterId, refresh],
-  )
-
-  const handleDelete = useCallback(
-    async (id: string) => {
-      setDeleting(id)
-      try {
-        await api.delete(`/api/nulis/images/${id}`)
-        toast.success("Gambar berhasil dihapus")
-        setSelected((prev) => {
-          const next = new Set(prev)
-          next.delete(id)
-          return next
-        })
-        await refresh()
-      } catch {
-        toast.error("Gagal menghapus gambar")
-      } finally {
-        setDeleting(null)
-      }
-    },
-    [refresh],
+    [uploadMutation],
   )
 
   const handleAddSelectedToEditor = useCallback(() => {
     const sortedUrls = images
-      ?.filter((img) => selected.has(img.id))
+      .filter((img) => selected.has(img.id))
       .map((img) => img.url)
-    if (sortedUrls && sortedUrls.length > 0) {
+    if (sortedUrls.length > 0) {
       sortedUrls.forEach((url) => onInsertImage(url))
     }
     onOpenChange(false)
@@ -264,17 +264,17 @@ export default function ImageBucketModal({
         <div className="shrink-0 px-4 py-2 flex gap-1">
           <button
             onClick={() => fileInputRef.current?.click()}
-            disabled={uploading}
+            disabled={uploadMutation.isPending}
             className="inline-flex items-center gap-1 px-2.5 py-1 rounded text-xs text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
           >
-            {uploading ? (
+            {uploadMutation.isPending ? (
               <Loader2 className="size-3.5 animate-spin" />
             ) : (
               <Plus className="size-3.5" />
             )}
             Upload
           </button>
-          {images && images.length > 0 && (
+          {images.length > 0 && (
             <button
               onClick={() => setSelected(new Set())}
               className="inline-flex items-center gap-1 px-2.5 py-1 rounded text-xs text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
@@ -294,7 +294,7 @@ export default function ImageBucketModal({
         />
 
         <div className="flex-1 overflow-y-auto px-4 pb-4">
-          {images === null ? (
+          {isLoading ? (
             <div className="flex items-center justify-center h-full">
               <Loader2 className="size-6 animate-spin text-muted-foreground" />
             </div>
@@ -306,10 +306,10 @@ export default function ImageBucketModal({
                   image={img}
                   index={idx}
                   selected={selected.has(img.id)}
-                  alreadyUsed={alreadyUsedIds.has(img.id)}
+                  alreadyUsed={alreadyUsedIdsMemo.has(img.id)}
                   onToggle={() => handleToggle(img.id)}
-                  onDelete={handleDelete}
-                  deleting={deleting}
+                  onDelete={(id) => deleteMutation.mutate(id)}
+                  deleting={deleteMutation.isPending && deleteMutation.variables === img.id}
                 />
               ))}
             </div>

@@ -950,30 +950,65 @@ export async function toggleLikeByCharlotte(commentId: string): Promise<Comment 
   }
 }
 
-export async function getAllCommentsAdmin(): Promise<AdminComment[]> {
-  const comments = await prisma.comment.findMany({
-    include: {
-      user: { select: { id: true, name: true, avatarUrl: true, email: true } },
-      chapter: {
-        select: {
-          title: true,
-          slug: true,
-          work: { select: { title: true, slug: true } },
+export async function incrementChapterRead(chapterId: string) {
+  await prisma.chapterRead.upsert({
+    where: { chapterId },
+    create: { chapterId, count: 1 },
+    update: { count: { increment: 1 } },
+  })
+}
+
+export async function getAllCommentsAdmin(
+  page: number = 1,
+  limit: number = 50,
+  search: string = ""
+): Promise<{ comments: AdminComment[]; total: number; page: number; totalPages: number }> {
+  const skip = (page - 1) * limit
+
+  const where = search
+    ? {
+        OR: [
+          { user: { name: { contains: search, mode: "insensitive" as const } } },
+          { chapter: { work: { title: { contains: search, mode: "insensitive" as const } } } },
+          { content: { contains: search, mode: "insensitive" as const } },
+        ],
+      }
+    : {}
+
+  const [comments, total] = await Promise.all([
+    prisma.comment.findMany({
+      skip,
+      take: limit,
+      where,
+      include: {
+        user: { select: { id: true, name: true, avatarUrl: true, email: true } },
+        chapter: {
+          select: {
+            title: true,
+            slug: true,
+            work: { select: { title: true, slug: true } },
+          },
         },
       },
-    },
-    orderBy: { createdAt: "desc" },
-  })
+      orderBy: { createdAt: "desc" },
+    }),
+    prisma.comment.count({ where }),
+  ])
 
-  return comments.map((c) => ({
-    id: c.id,
-    userId: c.userId,
-    userName: c.user.name || "Anonim",
-    userAvatar: c.user.avatarUrl || "",
-    workTitle: c.chapter.work.title,
-    workSlug: c.chapter.work.slug,
-    chapterTitle: c.chapter.title,
-    content: c.content,
-    createdAt: c.createdAt.toISOString(),
-  }))
+  return {
+    comments: comments.map((c) => ({
+      id: c.id,
+      userId: c.userId,
+      userName: c.user.name || "Anonim",
+      userAvatar: c.user.avatarUrl || "",
+      workTitle: c.chapter.work.title,
+      workSlug: c.chapter.work.slug,
+      chapterTitle: c.chapter.title,
+      content: c.content,
+      createdAt: c.createdAt.toISOString(),
+    })),
+    total,
+    page,
+    totalPages: Math.ceil(total / limit),
+  }
 }
