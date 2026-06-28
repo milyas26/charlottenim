@@ -35,7 +35,7 @@ export default function HeroSection({ work }: Props) {
   return (
     <section className="relative w-full animate-fade-in-up mb-5">
       <div
-        className="relative w-full aspect-[4/5] overflow-hidden rounded-2xl"
+        className="relative w-full aspect-[10/15] overflow-hidden rounded-2xl"
         style={{ background: hasImage ? "var(--surface)" : gradient }}
       >
         {hasImage && (

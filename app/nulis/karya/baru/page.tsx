@@ -238,7 +238,7 @@ export default function AdminNewWorkPage() {
             </CardHeader>
             <CardContent>
               <div className="flex items-center justify-center w-full">
-                <label className="relative flex flex-col items-center justify-center w-full aspect-[3/4] border-2 border-dashed rounded-lg cursor-pointer border-input hover:border-primary/50 hover:bg-accent/5 transition-colors overflow-hidden">
+                <label className="relative flex flex-col items-center justify-center w-full aspect-[10/15] border-2 border-dashed rounded-lg cursor-pointer border-input hover:border-primary/50 hover:bg-accent/5 transition-colors overflow-hidden">
                   <input
                     ref={fileInputRef}
                     type="file"

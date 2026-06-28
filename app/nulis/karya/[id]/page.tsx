@@ -355,7 +355,7 @@ export default function AdminWorkDetailPage({ params }: { params: Promise<{ id: 
             {isEditing ? (
               <>
                 <div className="flex items-center justify-center w-full">
-                  <label className="flex flex-col items-center justify-center w-full aspect-[3/4] border-2 border-dashed rounded-lg cursor-pointer border-input hover:border-primary/50 hover:bg-accent/5 transition-colors relative overflow-hidden">
+                  <label className="flex flex-col items-center justify-center w-full aspect-[10/15] border-2 border-dashed rounded-lg cursor-pointer border-input hover:border-primary/50 hover:bg-accent/5 transition-colors relative overflow-hidden">
                     {editCoverPreview ? (
                       <img
                         src={editCoverPreview}
@@ -475,7 +475,7 @@ export default function AdminWorkDetailPage({ params }: { params: Promise<{ id: 
             ) : (
               <>
                 {(work.coverUrl.startsWith("http") || work.coverUrl.startsWith("data:")) ? (
-                  <img src={work.coverUrl} alt={work.title} className="w-full aspect-[3/4] rounded-lg object-cover" />
+                  <img src={work.coverUrl} alt={work.title} className="w-full aspect-[10/15] rounded-lg object-cover" />
                 ) : (
                   <div className="w-full aspect-[3/4] rounded-lg bg-gradient-to-br from-accent/40 to-accent/10 flex items-center justify-center">
                     <span className="text-4xl font-bold text-accent/40">{work.title.charAt(0)}</span>

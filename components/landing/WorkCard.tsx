@@ -54,7 +54,7 @@ export default function WorkCard({ work }: Props) {
       }}
     >
       <div
-        className="aspect-[3/4] w-full relative flex flex-col items-center justify-center overflow-hidden"
+        className="aspect-[10/15] w-full relative flex flex-col items-center justify-center overflow-hidden"
         style={{ background: hasImage ? "var(--surface)" : gradient }}
       >
         {hasImage && (

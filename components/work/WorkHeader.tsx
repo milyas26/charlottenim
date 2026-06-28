@@ -65,7 +65,7 @@ export default function WorkHeader({ work, firstChapterSlug, readingProgress }: 
               <img
                 src={work.coverUrl}
                 alt={work.title}
-                className="relative z-10 h-[100%] aspect-[3/4] object-cover shadow-lg"
+                className="relative z-10 h-[100%] aspect-[10/15] object-cover shadow-lg"
               />
             </>
           )}
