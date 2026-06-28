@@ -73,10 +73,10 @@ export default function ReaderPage({
   }, []);
 
   useEffect(() => {
-    if (!isUnlocked || !user) return;
+    if (!isUnlocked) return;
     chapterReadMutation.mutate(chapter.id);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [chapter.id, isUnlocked, user]);
+  }, [chapter.id, isUnlocked]);
 
   useEffect(() => {
     if (!user) return;
