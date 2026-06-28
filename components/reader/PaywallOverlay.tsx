@@ -109,15 +109,14 @@ export default function PaywallOverlay({ price, chapterId, workSlug, chapterSlug
         <button
           onClick={() => setConfirmOpen(true)}
           disabled={buyMutation.isPending}
-          className="w-full max-w-xs py-3 px-6 rounded-xl text-white font-semibold text-sm transition-opacity hover:opacity-90 active:scale-[0.98] disabled:opacity-60"
-          style={{ backgroundColor: "var(--accent)" }}
-        >
+          className="w-full max-w-xs py-3 px-6 rounded-xl text-white font-semibold text-sm transition-opacity hover:opacity-90 tap-feedback disabled:opacity-60"
+          style={{ backgroundColor: "var(--accent)" }}>
           {buyMutation.isPending ? "Memproses..." : `Beli Chapter \u00B7 ${formattedPrice}`}
         </button>
       ) : (
         <LoginDialog>
           <button
-            className="w-full max-w-xs py-3 px-6 rounded-xl text-white font-semibold text-sm transition-opacity hover:opacity-90 active:scale-[0.98]"
+            className="w-full max-w-xs py-3 px-6 rounded-xl text-white font-semibold text-sm transition-opacity hover:opacity-90 tap-feedback"
             style={{ backgroundColor: "var(--accent)" }}
           >
             Login untuk Beli &middot; {formattedPrice}
@@ -143,7 +142,7 @@ export default function PaywallOverlay({ price, chapterId, workSlug, chapterSlug
           <DialogFooter className="gap-2 sm:gap-2">
             <button
               onClick={() => setConfirmOpen(false)}
-              className="flex-1 py-2.5 px-4 rounded-xl text-sm font-medium transition-opacity hover:opacity-80"
+              className="flex-1 py-2.5 px-4 rounded-xl text-sm font-medium transition-opacity hover:opacity-80 tap-feedback"
               style={{
                 backgroundColor: "color-mix(in srgb, var(--muted) 15%, transparent)",
                 color: "var(--foreground)",
@@ -154,7 +153,7 @@ export default function PaywallOverlay({ price, chapterId, workSlug, chapterSlug
             <button
               onClick={handleBuy}
               disabled={buyMutation.isPending}
-              className="flex-1 py-2.5 px-4 rounded-xl text-white text-sm font-semibold transition-opacity hover:opacity-90 disabled:opacity-60"
+              className="flex-1 py-2.5 px-4 rounded-xl text-white text-sm font-semibold transition-opacity hover:opacity-90 tap-feedback disabled:opacity-60"
               style={{ backgroundColor: "var(--accent)" }}
             >
               Ya, Beli

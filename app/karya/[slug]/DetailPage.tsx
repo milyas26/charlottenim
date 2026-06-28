@@ -15,7 +15,7 @@ interface Props {
 
 export default function DetailPage({ work, chapters, firstChapterSlug, readingProgress }: Props) {
   return (
-    <div className="min-h-screen bg-[var(--background)]">
+    <div className="min-h-screen bg-[var(--background)] animate-page-enter">
       <Navbar />
 
       <main className="max-w-[480px] mx-auto px-4 pt-4 pb-28">

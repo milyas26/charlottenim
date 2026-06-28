@@ -49,7 +49,7 @@ export default function SearchBar({ value, onChange }: Props) {
       {value && (
         <button
           onClick={() => onChange("")}
-          className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 rounded-full hover:bg-[var(--border)] transition-colors duration-200"
+          className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 rounded-full hover:bg-[var(--border)] transition-colors duration-200 tap-feedback"
           style={{ color: "var(--muted)" }}
         >
           <svg

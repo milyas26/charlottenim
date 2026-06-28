@@ -3,6 +3,7 @@
 import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { House, ShoppingBag, User } from "lucide-react";
+import { hapticTap } from "@/lib/haptics";
 
 const items = [
   { href: "/", label: "Home", icon: House },
@@ -33,7 +34,8 @@ export default function BottomNav() {
             <Link
               key={item.href}
               href={item.href}
-              className="flex flex-col items-center justify-center gap-0.5 size-16 rounded-lg transition-colors"
+              className="flex flex-col items-center justify-center gap-0.5 size-16 rounded-lg transition-colors tap-feedback"
+              onClick={hapticTap}
               style={{
                 color: isActive ? "var(--accent)" : "var(--muted)",
               }}

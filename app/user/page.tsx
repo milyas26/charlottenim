@@ -54,7 +54,7 @@ export default function UserProfilePage() {
         </p>
         <LoginDialog>
           <button
-            className="inline-flex items-center gap-2 text-sm font-semibold px-6 py-2.5 rounded-full transition-all duration-200 hover:opacity-90 active:scale-[0.97]"
+            className="inline-flex items-center gap-2 text-sm font-semibold px-6 py-2.5 rounded-full transition-all duration-200 hover:opacity-90 tap-feedback"
             style={{
               backgroundColor: "var(--accent)",
               color: "var(--primary-foreground)",
@@ -88,7 +88,7 @@ export default function UserProfilePage() {
           </div>
           <button
             onClick={async () => { await logout(); }}
-            className="text-xs font-semibold px-4 py-1.5 rounded-full transition-all duration-200 hover:bg-[var(--surface)] active:scale-[0.97] shrink-0"
+            className="text-xs font-semibold px-4 py-1.5 rounded-full transition-all duration-200 hover:bg-[var(--surface)] tap-feedback shrink-0"
             style={{
               color: "var(--destructive)",
               border: "1px solid var(--border)",

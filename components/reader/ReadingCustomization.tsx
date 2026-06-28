@@ -86,7 +86,7 @@ export default function ReadingCustomization({ settings, onChange }: Props) {
             <button
               key={key}
               onClick={() => update("fontFamily", key)}
-              className={`py-1 px-1.5 rounded-lg text-center transition-all ${fontFamilyClass[key]}`}
+              className={`py-1 px-1.5 rounded-lg text-center transition-all tap-feedback ${fontFamilyClass[key]}`}
               style={{
                 backgroundColor:
                   settings.fontFamily === key
@@ -122,7 +122,7 @@ export default function ReadingCustomization({ settings, onChange }: Props) {
             <button
               key={key}
               onClick={() => update("fontSize", key)}
-              className="py-1 rounded-lg text-center text-[11px] font-medium transition-all"
+              className="py-1 rounded-lg text-center text-[11px] font-medium transition-all tap-feedback"
               style={{
                 backgroundColor:
                   settings.fontSize === key
@@ -158,7 +158,7 @@ export default function ReadingCustomization({ settings, onChange }: Props) {
             <button
               key={key}
               onClick={() => update("lineSpacing", key)}
-              className="py-1.5 px-1 rounded-lg flex flex-col items-center gap-0.5 transition-all"
+              className="py-1.5 px-1 rounded-lg flex flex-col items-center gap-0.5 transition-all tap-feedback"
               style={{
                 backgroundColor:
                   settings.lineSpacing === key
@@ -201,7 +201,7 @@ export default function ReadingCustomization({ settings, onChange }: Props) {
             <button
               key={key}
               onClick={() => update("readingMode", key)}
-              className="py-4 rounded-lg flex items-center justify-center transition-all"
+              className="py-4 rounded-lg flex items-center justify-center transition-all tap-feedback"
               style={{
                 backgroundColor: bg,
                 border:

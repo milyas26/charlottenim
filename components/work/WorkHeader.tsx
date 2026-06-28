@@ -52,7 +52,7 @@ export default function WorkHeader({ work, firstChapterSlug, readingProgress }: 
     <div className="mb-5">
       <div className="flex flex-col gap-3">
         <div
-          className="w-full aspect-[4/3] rounded-2xl flex items-center justify-center relative overflow-hidden"
+          className="w-full aspect-[4/3] rounded-2xl flex items-center justify-center relative overflow-hidden animate-fade-in-up"
           style={{ background: hasImage ? "transparent" : gradient }}
         >
           {hasImage && (
@@ -129,7 +129,7 @@ export default function WorkHeader({ work, firstChapterSlug, readingProgress }: 
           <div className="flex flex-col gap-1.5 mt-4">
             <a
               href={readHref}
-              className="inline-flex items-center gap-2 text-sm font-semibold px-5 py-2.5 rounded-xl text-white transition-all hover:opacity-90 active:scale-[0.98] self-start"
+              className="inline-flex items-center gap-2 text-sm font-semibold px-5 py-2.5 rounded-xl text-white transition-all hover:opacity-90 tap-feedback self-start"
               style={{ backgroundColor: "var(--accent)" }}
             >
               {buttonLabel}

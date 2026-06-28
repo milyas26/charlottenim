@@ -53,7 +53,7 @@ export default function Logo({ href = "/", compact, className }: LogoProps) {
     </>
   );
 
-  const wrapperClassName = `group inline-flex items-center ${className ?? ""}`;
+  const wrapperClassName = `group inline-flex items-center tap-feedback ${className ?? ""}`;
 
   if (href) {
     return (

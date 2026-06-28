@@ -18,11 +18,15 @@ export default function ChapterList({ chapters, workSlug }: Props) {
       </h2>
 
       <div className="space-y-2">
-        {chapters.map((chapter) => (
-          <a
+        {chapters.map((chapter, i) => (
+          <div
             key={chapter.id}
+            className="animate-fade-in-up"
+            style={{ animationDelay: `${i * 60}ms` }}
+          >
+          <a
             href={`/baca/${workSlug}/${chapter.slug}`}
-            className="flex items-center justify-between px-3.5 py-3 rounded-xl transition-all hover:bg-[var(--surface)] group"
+            className="flex items-center justify-between px-3.5 py-3 rounded-xl transition-all hover:bg-[var(--surface)] group tap-feedback"
             style={{ border: "1px solid var(--border)" }}
           >
             <div className="flex items-center gap-3 min-w-0">
@@ -72,6 +76,7 @@ export default function ChapterList({ chapters, workSlug }: Props) {
               </span>
             )}
           </a>
+          </div>
         ))}
       </div>
     </div>

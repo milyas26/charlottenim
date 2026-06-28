@@ -35,7 +35,7 @@ export default function WorkCard({ work }: Props) {
   return (
     <a
       href={`/karya/${work.slug}`}
-      className="group block rounded-2xl overflow-hidden transition-all duration-400 hover:-translate-y-1.5 active:scale-[0.97]"
+      className="group block rounded-2xl overflow-hidden transition-all duration-400 hover:-translate-y-1.5 tap-feedback"
       style={{
         backgroundColor: "var(--surface)",
         border: "1px solid var(--border)",
@@ -144,12 +144,12 @@ export default function WorkCard({ work }: Props) {
           {work.title}
         </h3>
 
-        <div className="flex items-center justify-between">
-          <div className="flex flex-wrap gap-1">
+        <div className="space-y-1">
+          <div className="flex flex-wrap gap-0.5">
             {work.genres.slice(0, 2).map((genre) => (
               <span
                 key={genre}
-                className="text-[10px] font-semibold tracking-wide px-2 py-0.5 rounded-md font-[family-name:var(--font-sans)]"
+                className="text-[8px] font-semibold tracking-wide px-1 py-0 mb-0 rounded-xs font-[family-name:var(--font-sans)]"
                 style={{
                   backgroundColor:
                     "color-mix(in srgb, var(--accent) 10%, transparent)",
@@ -161,7 +161,7 @@ export default function WorkCard({ work }: Props) {
             ))}
             {work.genres.length > 2 && (
               <span
-                className="text-[10px] font-medium px-2 py-0.5 rounded-md"
+                className="text-[8px] font-medium px-1.5 py-0 rounded-xs"
                 style={{ color: "var(--muted)" }}
               >
                 +{work.genres.length - 2}

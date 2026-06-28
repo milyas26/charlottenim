@@ -28,7 +28,7 @@ export default function LandingPage({ works }: Props) {
   const heroWork = publishedWorks[0];
 
   return (
-    <div className="min-h-screen bg-[var(--background)] relative">
+    <div className="min-h-screen bg-[var(--background)] relative animate-page-enter">
       <Navbar />
 
       <main className="max-w-[480px] mx-auto px-4 pt-2 pb-28 relative z-[1]">
@@ -58,7 +58,7 @@ export default function LandingPage({ works }: Props) {
         <SearchBar value={search} onChange={setSearch} />
 
         {filtered.length === 0 ? (
-          <div className="text-center py-24">
+          <div className="animate-fade-in-up text-center py-24">
             <svg
               className="mx-auto mb-4"
               width="44"
@@ -81,12 +81,12 @@ export default function LandingPage({ works }: Props) {
             </p>
           </div>
         ) : (
-          <div className="grid grid-cols-2 gap-3">
+          <div key={search} className="grid grid-cols-2 gap-3">
             {filtered.map((work, i) => (
               <div
                 key={work.id}
                 className="animate-fade-in-up"
-                style={{ animationDelay: `${i * 100}ms` }}
+                style={{ animationDelay: `${i * 80}ms` }}
               >
                 <WorkCard work={work} />
               </div>

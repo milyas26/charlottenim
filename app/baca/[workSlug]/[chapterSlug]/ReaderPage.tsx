@@ -4,10 +4,12 @@ import { useState, useEffect } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { Work, Chapter } from "@/data/types";
 import { useReaderSettings } from "@/hooks/useReaderSettings";
+import { useAuth } from "@/contexts/AuthContext";
 import ChapterContent from "@/components/reader/ChapterContent";
 import ReadingCustomization from "@/components/reader/ReadingCustomization";
 import PaywallOverlay from "@/components/reader/PaywallOverlay";
 import CommentsSection from "@/components/reader/CommentsSection";
+import { hapticTap } from "@/lib/haptics";
 import api from "@/lib/axios";
 import {
   Drawer,
@@ -38,6 +40,7 @@ export default function ReaderPage({
   isUnlocked: initiallyUnlocked,
 }: Props) {
   const { settings, update } = useReaderSettings();
+  const { user } = useAuth();
   const [progress, setProgress] = useState(0);
   const isUnlocked = initiallyUnlocked;
   const [paymentStatus] = useState(() => {
@@ -79,21 +82,22 @@ export default function ReaderPage({
   }, []);
 
   useEffect(() => {
-    if (!isUnlocked) return;
+    if (!isUnlocked || !user) return;
     chapterReadMutation.mutate(chapter.id);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [chapter.id, isUnlocked]);
+  }, [chapter.id, isUnlocked, user]);
 
   useEffect(() => {
+    if (!user) return;
     progressMutation.mutate({ workId: work.id, chapterId: chapter.id });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [work.id, chapter.id]);
+  }, [work.id, chapter.id, user]);
 
   const isDark = settings.readingMode === "black";
   const tagBgPremium = isDark ? premiumBgDark : premiumBgLight;
 
   return (
-    <div className="min-h-screen w-full flex justify-center bg-[var(--rm-bg)]">
+    <div className="min-h-screen w-full flex justify-center bg-[var(--rm-bg)] animate-page-enter">
       <div
         className="fixed top-0 left-0 right-0 h-[3px] z-50"
         style={{
@@ -113,7 +117,8 @@ export default function ReaderPage({
         >
           <a
             href={`/karya/${work.slug}`}
-            className="flex-shrink-0 p-1.5 -ml-1.5 rounded-lg hover:bg-[var(--rm-surface)] transition-colors"
+            onClick={hapticTap}
+            className="flex-shrink-0 p-1.5 -ml-1.5 rounded-lg hover:bg-[var(--rm-surface)] transition-colors tap-feedback"
             style={{ color: "var(--rm-muted)" }}
           >
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -210,7 +215,8 @@ export default function ReaderPage({
               {prevChapter ? (
                 <a
                   href={`/baca/${prevChapter.workSlug}/${prevChapter.slug}`}
-                  className="flex items-center gap-2 px-3 py-3 rounded-full transition-all hover:opacity-80"
+                  onClick={hapticTap}
+                  className="flex items-center gap-2 px-3 py-3 rounded-full transition-all hover:opacity-80 tap-feedback"
                   style={{
                     color: "var(--rm-fg)",
                     border: "1.5px solid var(--rm-border)",
@@ -234,7 +240,8 @@ export default function ReaderPage({
 
             <div className="flex items-center gap-1">
               <Drawer>
-                <DrawerTrigger className="flex flex-col items-center gap-0.5 px-3 rounded-xl transition-all hover:opacity-80 relative"
+                <DrawerTrigger className="flex flex-col items-center gap-0.5 px-3 rounded-xl transition-all hover:opacity-80 relative tap-feedback"
+                  onClick={hapticTap}
                   aria-label="Komentar" style={{ color: "var(--rm-fg)" }}>
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
@@ -258,7 +265,8 @@ export default function ReaderPage({
               </span>
 
               <Drawer>
-                <DrawerTrigger className="flex flex-col items-center gap-0.5 px-3 rounded-xl transition-all hover:opacity-80"
+                <DrawerTrigger className="flex flex-col items-center gap-0.5 px-3 rounded-xl transition-all hover:opacity-80 tap-feedback"
+                  onClick={hapticTap}
                   aria-label="Pengaturan" style={{ color: "var(--rm-fg)" }}>
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <circle cx="12" cy="12" r="3" />
@@ -281,7 +289,8 @@ export default function ReaderPage({
               {nextChapter ? (
                 <a
                   href={`/baca/${nextChapter.workSlug}/${nextChapter.slug}`}
-                  className="flex items-center gap-2 px-3 py-3 rounded-full transition-all hover:opacity-80"
+                  onClick={hapticTap}
+                  className="flex items-center gap-2 px-3 py-3 rounded-full transition-all hover:opacity-80 tap-feedback"
                   style={{
                     color: "var(--rm-fg)",
                     border: "1.5px solid var(--rm-border)",

@@ -160,7 +160,7 @@ export default function HeroSection({ work }: Props) {
         <div className="flex items-center justify-center">
           <a
             href={`/karya/${work.slug}`}
-            className="group inline-flex items-center gap-2.5 text-sm font-semibold px-8 py-3.5 rounded-xl text-white transition-all duration-300 hover:opacity-90 active:scale-[0.97]"
+            className="group inline-flex items-center gap-2.5 text-sm font-semibold px-8 py-3.5 rounded-xl text-white transition-all duration-300 hover:opacity-90 tap-feedback"
             style={{
               backgroundColor: "var(--accent)",
               boxShadow: "0 4px 18px var(--accent-glow)",
