@@ -1,7 +1,8 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono, Playfair_Display, Lora } from "next/font/google";
 import { Providers } from "@/contexts";
 import { Toaster } from "sonner";
+import { SerwistProvider } from "@serwist/turbopack/react";
 import "./globals.css";
 
 export const dynamic = "force-dynamic";
@@ -28,14 +29,37 @@ const lora = Lora({
   weight: ["400", "500"],
 });
 
+const APP_NAME = "Charlottenimmm";
+const APP_DESCRIPTION = "Baca novel & AU karya Charlottenimmm";
+
 export const metadata: Metadata = {
-  title: "charlottenimmm",
-  description: "Baca novel & AU karya charlottenimmm",
+  applicationName: APP_NAME,
+  title: APP_NAME,
+  description: APP_DESCRIPTION,
+  manifest: "/manifest.webmanifest",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: APP_NAME,
+  },
   icons: {
     icon: "/favicon.ico",
     apple: "/apple-touch-icon.png",
   },
+  openGraph: {
+    type: "website",
+    siteName: APP_NAME,
+    title: APP_NAME,
+    description: APP_DESCRIPTION,
+  },
+  twitter: {
+    card: "summary",
+    title: APP_NAME,
+    description: APP_DESCRIPTION,
+  },
 };
+
+export const viewport: Viewport = {};
 
 export default function RootLayout({
   children,
@@ -83,10 +107,12 @@ export default function RootLayout({
         />
       </head>
       <body className="min-h-full flex flex-col">
-        <Providers>
-          {children}
-          <Toaster position="top-center" richColors />
-        </Providers>
+        <SerwistProvider swUrl="/serwist/sw.js">
+          <Providers>
+            {children}
+            <Toaster position="top-center" richColors />
+          </Providers>
+        </SerwistProvider>
       </body>
     </html>
   );

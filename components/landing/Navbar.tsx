@@ -2,8 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { useAuth } from "@/contexts/AuthContext";
-import LoginDialog from "@/components/LoginDialog";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import Logo from "@/components/Logo";
 
 export default function Navbar() {
   const headerRef = useRef<HTMLElement>(null);
@@ -32,35 +31,7 @@ export default function Navbar() {
       style={{ borderBottom: "1px solid transparent" }}
     >
       <div className="max-w-[480px] mx-auto px-5 h-14 flex items-center justify-between">
-        <a href="/" className="group inline-flex items-center">
-          <span
-            aria-hidden="true"
-            className="text-[16px] leading-none opacity-30 transition-all duration-700 ease-out group-hover:opacity-80 group-hover:rotate-[16deg] group-hover:scale-110"
-            style={{ color: "var(--accent)" }}
-          >
-            ✦
-          </span>
-          <img
-            src="/charlottenim-logo.png"
-            alt="Charlottenimmm"
-            className="h-8 w-auto transition-all duration-700 ease-out group-hover:scale-[1.08]"
-          />
-          <span className="relative inline-block">
-            <span
-              className="text-lg italic tracking-[-0.01em] font-[family-name:var(--font-lora)] transition-colors duration-700 ease-out"
-              style={{ color: "var(--foreground)", fontWeight: 450 }}
-            >
-              Charlottenimmm
-            </span>
-            <span
-              className="absolute -bottom-0.5 left-0 h-px w-0 group-hover:w-full transition-all duration-700 ease-out"
-              style={{
-                background:
-                  "linear-gradient(to right, var(--accent), transparent)",
-              }}
-            />
-          </span>
-        </a>
+        <Logo href="/" />
       </div>
     </header>
   );

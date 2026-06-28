@@ -6,6 +6,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import Logo from "@/components/Logo";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRouter } from "next/navigation";
@@ -18,8 +19,8 @@ export default function LoginDialog({ children }: { children: React.ReactNode })
     <Dialog>
       <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent className="w-[90vw] max-w-sm rounded-xl p-8">
-        <DialogTitle className="text-center font-[family-name:var(--font-display)] text-xl tracking-tight">
-          charlottenimmm
+        <DialogTitle className="text-center">
+          <Logo />
         </DialogTitle>
         <p
           className="text-center text-sm -mt-2"

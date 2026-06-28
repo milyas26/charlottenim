@@ -12,6 +12,7 @@ import {
 } from "lucide-react"
 
 import { cn } from "@/lib/utils"
+import Logo from "@/components/Logo"
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
 
@@ -49,17 +50,7 @@ export function AdminSidebar() {
   return (
     <aside className="fixed inset-y-0 left-0 z-40 flex w-60 flex-col border-r bg-sidebar text-sidebar-foreground">
       <div className="flex h-14 items-center gap-2 border-b border-sidebar-border px-4">
-        <Link href="/nulis" className="flex items-center gap-2">
-          <img
-            src="/charlottenim-logo.png"
-            alt="Charlottenimmm"
-            className="h-6 w-auto"
-          />
-          <span className="font-semibold text-sm">Charlottenimmm</span>
-        </Link>
-        <span className="ml-auto rounded bg-sidebar-primary/15 px-1.5 py-0.5 text-[10px] font-medium text-sidebar-primary">
-          ADMIN
-        </span>
+        <Logo compact href="/nulis" />
       </div>
 
       <nav className="flex-1 overflow-y-auto px-3 py-4">

@@ -4,8 +4,8 @@ import { AdminSidebar } from "@/components/admin/AdminSidebar"
 import { AdminHeader, AdminHeaderActionsProvider } from "@/components/admin/AdminHeader"
 
 export const metadata: Metadata = {
-  title: "Nulis Panel — charlottenimmm",
-  description: "Nulis dashboard for charlottenimmm",
+  title: "Nulis Panel — Charlottenimmm",
+  description: "Nulis dashboard for Charlottenimmm",
 }
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
