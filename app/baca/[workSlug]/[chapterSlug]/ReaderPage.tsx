@@ -186,7 +186,7 @@ export default function ReaderPage({
         </div>
 
         <div
-          className="sticky bottom-0 z-40 px-1 pb-1 pt-2"
+          className="sticky bottom-0 z-40 px-3 pb-1 pt-2"
         >
           <div
             className="flex items-center justify-between px-2 py-2 rounded-4xl"
