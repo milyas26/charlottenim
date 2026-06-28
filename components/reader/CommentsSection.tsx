@@ -201,7 +201,7 @@ export default function CommentsSection({ chapterId }: Props) {
                       width="14"
                       height="14"
                       viewBox="0 0 24 24"
-                      fill={c.isLikedByCharlotte ? "var(--accent)" : "none"}
+                      fill={c.isLiked ? "var(--accent)" : "none"}
                       stroke="currentColor"
                       strokeWidth="2"
                       strokeLinecap="round"

@@ -48,6 +48,7 @@ export interface Comment {
   content: string;
   likeCount: number;
   isLikedByCharlotte: boolean;
+  isLiked: boolean;
   isFirst: boolean;
   userId: string;
   userName: string;
