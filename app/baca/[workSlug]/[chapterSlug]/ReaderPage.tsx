@@ -183,7 +183,7 @@ export default function ReaderPage({
         </div>
 
         <div className="sticky bottom-0 z-40 bg-[var(--background)]" style={{ borderTop: "1px solid var(--border)" }}>
-          {showComments && <CommentsSection />}
+          {showComments && <CommentsSection chapterId={chapter.id} />}
           {showCustomization && (
             <div className="px-4 pt-3 pb-1">
               <ReadingCustomization settings={settings} onChange={update} />

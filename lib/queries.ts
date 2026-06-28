@@ -1,6 +1,6 @@
 import { prisma } from "./prisma"
-import type { Work, Chapter } from "@/data/types"
-import type { AdminUser, Purchase } from "@/data/admin-types"
+import type { Work, Chapter, Comment } from "@/data/types"
+import type { AdminUser, Purchase, AdminComment } from "@/data/admin-types"
 
 export async function getWorkBySlug(slug: string): Promise<Work | null> {
   const work = await prisma.work.findUnique({
@@ -814,4 +814,71 @@ export async function upsertReadingProgress(
     create: { userId, workId, chapterId },
     update: { chapterId, lastReadAt: new Date() },
   })
+}
+
+export async function getComments(chapterId: string): Promise<Comment[]> {
+  const comments = await prisma.comment.findMany({
+    where: { chapterId },
+    include: { user: { select: { id: true, name: true, avatarUrl: true } } },
+    orderBy: { createdAt: "desc" },
+  })
+
+  return comments.map((c) => ({
+    id: c.id,
+    content: c.content,
+    userId: c.userId,
+    userName: c.user.name || "Anonim",
+    userAvatar: c.user.avatarUrl,
+    chapterId: c.chapterId,
+    createdAt: c.createdAt.toISOString(),
+  }))
+}
+
+export async function createComment(
+  userId: string,
+  chapterId: string,
+  content: string
+): Promise<Comment> {
+  const c = await prisma.comment.create({
+    data: { userId, chapterId, content },
+    include: { user: { select: { id: true, name: true, avatarUrl: true } } },
+  })
+
+  return {
+    id: c.id,
+    content: c.content,
+    userId: c.userId,
+    userName: c.user.name || "Anonim",
+    userAvatar: c.user.avatarUrl,
+    chapterId: c.chapterId,
+    createdAt: c.createdAt.toISOString(),
+  }
+}
+
+export async function getAllCommentsAdmin(): Promise<AdminComment[]> {
+  const comments = await prisma.comment.findMany({
+    include: {
+      user: { select: { id: true, name: true, avatarUrl: true, email: true } },
+      chapter: {
+        select: {
+          title: true,
+          slug: true,
+          work: { select: { title: true, slug: true } },
+        },
+      },
+    },
+    orderBy: { createdAt: "desc" },
+  })
+
+  return comments.map((c) => ({
+    id: c.id,
+    userId: c.userId,
+    userName: c.user.name || "Anonim",
+    userAvatar: c.user.avatarUrl || "",
+    workTitle: c.chapter.work.title,
+    workSlug: c.chapter.work.slug,
+    chapterTitle: c.chapter.title,
+    content: c.content,
+    createdAt: c.createdAt.toISOString(),
+  }))
 }

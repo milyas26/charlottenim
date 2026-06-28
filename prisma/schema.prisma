@@ -44,6 +44,7 @@ model User {
 
   purchases         Purchase[]
   readingProgresses ReadingProgress[]
+  comments          Comment[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -83,6 +84,7 @@ model Chapter {
   readingProgresses ReadingProgress[]
   readStats         ChapterRead?
   images            Image[]
+  comments          Comment[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -148,4 +150,19 @@ model ReadingProgress {
   lastReadAt DateTime @default(now())
 
   @@unique([userId, workId])
+}
+
+model Comment {
+  id        String   @id @default(cuid())
+  content   String
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  chapterId String
+  chapter   Chapter  @relation(fields: [chapterId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([chapterId])
+  @@index([userId])
 }

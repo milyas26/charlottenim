@@ -42,6 +42,16 @@ export interface ReadingProgressInfo {
   lastReadAt: string;
 }
 
+export interface Comment {
+  id: string;
+  content: string;
+  userId: string;
+  userName: string;
+  userAvatar: string | null;
+  chapterId: string;
+  createdAt: string;
+}
+
 export interface ReaderSettings {
   fontSize: "small" | "medium" | "large";
   lineSpacing: "tight" | "normal" | "relaxed";
