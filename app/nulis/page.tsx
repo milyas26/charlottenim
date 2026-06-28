@@ -1,15 +1,38 @@
-import { getAdminStats, getAllWorks, getAllPurchases } from "@/lib/queries"
+import { cookies } from "next/headers"
+import { apiFetch } from "@/lib/axios"
+import type { AdminStats } from "@/data/admin-types"
+import type { Work } from "@/data/types"
+import type { Purchase } from "@/data/admin-types"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { BookOpen, Users, DollarSign, Eye, BookMarked } from "lucide-react"
 import Link from "next/link"
+import { redirect } from "next/navigation"
+
+type WorkWithReads = Work & { totalReads: number }
+
+async function getAdminCookie(): Promise<string | null> {
+  try {
+    const jar = await cookies()
+    const raw = jar.get("user-data")?.value
+    if (!raw) return null
+    const parsed = JSON.parse(decodeURIComponent(raw))
+    if (parsed.role !== "ADMIN") return null
+    return `user-data=${encodeURIComponent(JSON.stringify(parsed))}`
+  } catch {
+    return null
+  }
+}
 
 export default async function AdminDashboardPage() {
+  const adminCookie = await getAdminCookie()
+  if (!adminCookie) redirect("/")
+
   const [stats, works, purchases] = await Promise.all([
-    getAdminStats(),
-    getAllWorks(),
-    getAllPurchases(),
+    apiFetch<AdminStats>("/api/nulis/stats", { cookie: adminCookie }),
+    apiFetch<WorkWithReads[]>("/api/nulis/works", { cookie: adminCookie }),
+    apiFetch<Purchase[]>("/api/nulis/orders", { cookie: adminCookie }),
   ])
 
   const statsCards = [

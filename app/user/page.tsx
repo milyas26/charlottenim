@@ -5,30 +5,14 @@ import { useQuery } from "@tanstack/react-query";
 import LoginDialog from "@/components/LoginDialog";
 import BottomNav from "@/components/layout/BottomNav";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import api from "@/lib/axios";
-
-type PurchasedChapter = {
-  chapterId: string
-  chapterTitle: string
-  chapterSlug: string
-  chapterNumber: number
-  isPremium: boolean
-  price: number
-  workId: string
-  workSlug: string
-  workTitle: string
-  purchaseStatus: string
-}
+import { fetchUserPurchases, type PurchasedChapter } from "@/lib/api/user";
 
 export default function UserProfilePage() {
   const { user, loading, logout } = useAuth();
 
   const { data: purchasedChapters = [], isLoading: chaptersLoading } = useQuery({
     queryKey: ["user-purchases"],
-    queryFn: async () => {
-      const { data } = await api.get<PurchasedChapter[]>("/api/user/purchases")
-      return data
-    },
+    queryFn: fetchUserPurchases,
     enabled: !!user,
   })
 

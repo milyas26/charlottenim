@@ -9,8 +9,9 @@ import {
   type User,
 } from "firebase/auth";
 import { auth } from "@/lib/firebase";
-import api, { setStoredJwt, clearStoredJwt } from "@/lib/axios";
-import { readDbUser, clearDbUser, type DbUser } from "@/lib/cookies";
+import { setStoredJwt, clearStoredJwt } from "@/lib/axios";
+import { syncUser, loginWithFirebase, logoutUser } from "@/lib/api/auth";
+import { readDbUser, clearDbUser, setDbUserCookie, type DbUser } from "@/lib/cookies";
 
 interface AuthContextType {
   user: DbUser | null;
@@ -62,17 +63,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const firebaseUser = result.user;
     if (!firebaseUser) return;
 
-    const idToken = await firebaseUser.getIdToken()
-
-    const { data: synced } = await api.post<DbUser>("/api/auth/sync", {
+    const synced = await syncUser({
       firebaseUid: firebaseUser.uid,
       email: firebaseUser.email,
       name: firebaseUser.displayName,
       avatarUrl: firebaseUser.photoURL,
     })
     setDbUser(synced)
+    document.cookie = setDbUserCookie(synced)
 
-    const { data: loginData } = await api.post<{ jwt: string; user: DbUser }>("/api/auth/login", { idToken })
+    const loginData = await loginWithFirebase(firebaseUser.uid)
     setStoredJwt(loginData.jwt)
   };
 
@@ -81,7 +81,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setDbUser(null)
     clearDbUser()
     clearStoredJwt()
-    try { await api.post("/api/auth/logout") } catch { /* ignore */ }
+    try { await logoutUser() } catch { /* ignore */ }
   };
 
   return (

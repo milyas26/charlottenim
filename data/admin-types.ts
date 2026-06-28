@@ -40,11 +40,14 @@ export interface AdminComment {
 }
 
 export interface AdminStats {
-  totalWorks: number;
-  totalChapters: number;
-  totalUsers: number;
-  totalRevenue: number;
-  totalReads: number;
-  premiumChapters: number;
-  freeChapters: number;
+  totalWorks: number
+  totalChapters: number
+  totalUsers: number
+  totalRevenue: number
+  totalReads: number
+  premiumChapters: number
+  freeChapters: number
+  draftCount: number
+  ongoingCount: number
+  completedCount: number
 }

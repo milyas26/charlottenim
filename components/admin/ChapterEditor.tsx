@@ -1,7 +1,6 @@
 "use client"
 
 import { useRef, useState } from "react"
-import { useMutation } from "@tanstack/react-query"
 import { useEditor, EditorContent } from "@tiptap/react"
 import type { Editor } from "@tiptap/react"
 import StarterKit from "@tiptap/starter-kit"
@@ -10,7 +9,7 @@ import ImageExt from "@tiptap/extension-image"
 import { Toggle } from "@/components/ui/toggle"
 import { Separator } from "@/components/ui/separator"
 import ImageBucketModal from "@/components/admin/ImageBucketModal"
-import api from "@/lib/axios"
+import { useUploadFile } from "@/lib/api/upload"
 import {
   Bold,
   Italic,
@@ -66,19 +65,11 @@ export default function ChapterEditor({ content, onChange, placeholder, workId, 
   const [existingImageUrls, setExistingImageUrls] = useState<string[]>([])
   const editorRef = useRef<Editor | null>(null)
 
-  const uploadMutation = useMutation({
-    mutationFn: async (file: File) => {
-      const formData = new FormData()
-      formData.append("file", file)
-      formData.append("type", "CONTENT")
-      formData.append("workId", workId)
-      if (chapterId) formData.append("chapterId", chapterId)
-      const { data } = await api.post("/api/nulis/upload", formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-      })
-      return data.url as string
-    },
-  })
+  const uploadMutation = useUploadFile()
+
+  const handleUpload = async (file: File) => {
+    return uploadMutation.mutateAsync({ file, type: "CONTENT", workId, chapterId })
+  }
 
   const editor = useEditor({
     extensions: [
@@ -118,7 +109,7 @@ export default function ChapterEditor({ content, onChange, placeholder, workId, 
               alert("Ukuran gambar maksimal 5MB.")
               return true
             }
-            uploadMutation.mutateAsync(file).then((url) => {
+            handleUpload(file).then((url) => {
               editorRef.current?.chain().focus().setImage({ src: url }).run()
             }).catch(() => {
               alert("Gagal upload gambar.")

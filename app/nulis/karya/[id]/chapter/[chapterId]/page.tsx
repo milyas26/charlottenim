@@ -29,7 +29,16 @@ import { toast } from "sonner"
 import { Save, GripVertical, PlusCircle, Lock, LockOpen, ChevronRight, ChevronLeft, X, List, SlidersHorizontal, PanelLeftClose, PanelLeftOpen, PanelRightClose, PanelRightOpen, Loader2 } from "lucide-react"
 import { useAdminHeaderActions } from "@/components/admin/AdminHeader"
 import Link from "next/link"
-import api from "@/lib/axios"
+import {
+  useAdminChapter,
+  useAdminChapterList,
+  createChapter,
+  updateChapter,
+  reorderChapters,
+  chaptersKeys,
+  type ChapterListItem,
+} from "@/lib/api/chapters"
+import { useAdminWork, worksKeys } from "@/lib/api/works"
 
 type WorkDetail = {
   id: string
@@ -41,20 +50,6 @@ type WorkDetail = {
   status: string
   totalChapters: number
   deletedAt: string | null
-}
-
-type ChapterListItem = {
-  id: string
-  workId: string
-  workSlug: string
-  chapterNumber: number
-  slug: string
-  title: string
-  isPremium: boolean
-  price: number
-  readCount: number
-  status: ChapterStatus
-  deletedAt?: string | null
 }
 
 type DraftFields = {
@@ -92,30 +87,11 @@ export default function AdminChapterEditorPage({
 
   const { setActions } = useAdminHeaderActions()
 
-  const { data: work } = useQuery({
-    queryKey: ["works", id],
-    queryFn: async () => {
-      const { data } = await api.get<WorkDetail>(`/api/nulis/works/${id}`)
-      return data
-    },
-  })
+  const { data: work } = useAdminWork(id)
 
-  const { data: chapters = [] } = useQuery({
-    queryKey: ["works", id, "chapters"],
-    queryFn: async () => {
-      const { data } = await api.get<ChapterListItem[]>(`/api/nulis/works/${id}/chapters`)
-      return data.sort((a, b) => a.chapterNumber - b.chapterNumber)
-    },
-  })
+  const { data: chapters = [] } = useAdminChapterList(id)
 
-  const { data: chapterData, isLoading: chapterLoading, isError: chapterError } = useQuery({
-    queryKey: ["works", id, "chapters", chapterId],
-    queryFn: async () => {
-      const { data } = await api.get<Chapter>(`/api/nulis/works/${id}/chapters/${chapterId}`)
-      return data
-    },
-    enabled: !isNew,
-  })
+  const { data: chapterData, isLoading: chapterLoading, isError: chapterError } = useAdminChapter(id, isNew ? "" : chapterId)
 
   const prevChapterIdRef = useRef(chapterId)
   useEffect(() => {
@@ -146,7 +122,7 @@ export default function AdminChapterEditorPage({
       if (!work || !title || !content) throw new Error("Missing data")
 
       if (isNew) {
-        const { data: created } = await api.post(`/api/nulis/works/${id}/chapters`, {
+        const created = await createChapter(id, {
           chapterNumber: chapters.length + 1,
           chapterSlug: chapterSlug || `chapter-${chapters.length + 1}`,
           title: title.trim(),
@@ -157,7 +133,7 @@ export default function AdminChapterEditorPage({
         })
         return { created, isNew: true as const }
       } else {
-        const { data: updated } = await api.put(`/api/nulis/works/${id}/chapters/${chapterId}`, {
+        const updated = await updateChapter(id, chapterId, {
           slug: chapterSlug || undefined,
           title: title.trim(),
           content,
@@ -169,8 +145,9 @@ export default function AdminChapterEditorPage({
       }
     },
     onSuccess: (result) => {
-      queryClient.invalidateQueries({ queryKey: ["works", id, "chapters"] })
-      queryClient.invalidateQueries({ queryKey: ["works"] })
+      queryClient.invalidateQueries({ queryKey: worksKeys.chapters(id) })
+      queryClient.invalidateQueries({ queryKey: worksKeys.all })
+      queryClient.invalidateQueries({ queryKey: chaptersKeys.adminDetail(id, chapterId) })
       toast.success(result.isNew ? "Chapter berhasil dibuat" : "Chapter berhasil disimpan")
       if (result.isNew) {
         router.replace(`/nulis/karya/${id}/chapter/${result.created.id}`)
@@ -185,7 +162,7 @@ export default function AdminChapterEditorPage({
 
   const reorderMutation = useMutation({
     mutationFn: async (chapterIds: string[]) => {
-      await api.put(`/api/nulis/works/${id}/chapters/reorder`, { chapterIds })
+      await reorderChapters(id, chapterIds)
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["works", id, "chapters"] })

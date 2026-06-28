@@ -1,7 +1,6 @@
 "use client"
 
 import { use } from "react"
-import { useQuery } from "@tanstack/react-query"
 import Link from "next/link"
 import { notFound } from "next/navigation"
 import { Badge } from "@/components/ui/badge"
@@ -11,25 +10,12 @@ import { Separator } from "@/components/ui/separator"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { ArrowLeft, Mail, Calendar, ShoppingBag, BookOpen, Loader2 } from "lucide-react"
-import api from "@/lib/axios"
-import type { AdminUser, Purchase } from "@/data/admin-types"
-
-type UserDetail = AdminUser & { purchases: Purchase[] }
+import { useAdminUserDetail, type UserDetail } from "@/lib/api/admin"
 
 export default function AdminUserDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params)
 
-  const { data: user, isLoading } = useQuery({
-    queryKey: ["admin-user", id],
-    queryFn: async () => {
-      try {
-        const { data } = await api.get<UserDetail>(`/api/nulis/users/${id}`)
-        return data
-      } catch {
-        return null
-      }
-    },
-  })
+  const { data: user, isLoading } = useAdminUserDetail(id)
 
   if (isLoading) {
     return (

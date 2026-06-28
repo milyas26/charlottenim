@@ -1,50 +1,60 @@
-import { notFound } from "next/navigation";
-import { cookies } from "next/headers";
-import {
-  getWorkBySlug,
-  getChapterBySlug,
-  getAdjacentChapters,
-  isChapterPurchasedByUser,
-} from "@/lib/queries";
-import type { DbUser } from "@/lib/cookies";
-import ReaderPage from "./ReaderPage";
+import { notFound } from "next/navigation"
+import { cookies } from "next/headers"
+import { apiFetch } from "@/lib/axios"
+import type { Work, Chapter } from "@/data/types"
+import type { DbUser } from "@/lib/cookies"
+import ReaderPage from "./ReaderPage"
 
 async function getDbUserFromCookie(): Promise<DbUser | null> {
   try {
-    const jar = await cookies();
-    const raw = jar.get("user-data")?.value;
-    if (!raw) return null;
-    const parsed = JSON.parse(decodeURIComponent(raw));
-    return parsed as DbUser;
+    const jar = await cookies()
+    const raw = jar.get("user-data")?.value
+    if (!raw) return null
+    const parsed = JSON.parse(decodeURIComponent(raw))
+    return parsed as DbUser
   } catch {
-    return null;
+    return null
   }
 }
 
 export default async function BacaChapterPage({
   params,
 }: {
-  params: Promise<{ workSlug: string; chapterSlug: string }>;
+  params: Promise<{ workSlug: string; chapterSlug: string }>
 }) {
-  const { workSlug, chapterSlug } = await params;
+  const { workSlug, chapterSlug } = await params
 
-  const work = await getWorkBySlug(workSlug);
-  if (!work) notFound();
+  const work = await apiFetch<Work>(`/api/works/${workSlug}`).catch(() => null)
+  if (!work) notFound()
 
-  const chapter = await getChapterBySlug(workSlug, chapterSlug);
-  if (!chapter) notFound();
+  const chapter = await apiFetch<Chapter>(
+    `/api/chapters/by-slug/${workSlug}/${chapterSlug}`
+  ).catch(() => null)
+  if (!chapter) notFound()
 
-  const { prev, next } = await getAdjacentChapters(workSlug, chapterSlug);
+  const adjacentData = await apiFetch<{
+    prev: Chapter | null
+    next: Chapter | null
+  }>(`/api/chapters/adjacent/${workSlug}/${chapterSlug}`)
 
-  let isUnlocked = !chapter.isPremium;
+  let isUnlocked = !chapter.isPremium
 
   if (!isUnlocked) {
-    const dbUser = await getDbUserFromCookie();
+    const dbUser = await getDbUserFromCookie()
     if (dbUser) {
       if (dbUser.role === "ADMIN") {
-        isUnlocked = true;
+        isUnlocked = true
       } else {
-        isUnlocked = await isChapterPurchasedByUser(dbUser.id, chapter.id);
+        try {
+          const cookieStr = `user-data=${encodeURIComponent(JSON.stringify(dbUser))}`
+          const result = await apiFetch<{ purchased: boolean }>(
+            `/api/chapters/${chapter.id}/purchased`,
+            { cookie: cookieStr }
+          )
+          isUnlocked = result.purchased
+        } catch {
+          isUnlocked = false
+        }
       }
     }
   }
@@ -53,9 +63,9 @@ export default async function BacaChapterPage({
     <ReaderPage
       work={work}
       chapter={chapter}
-      prevChapter={prev}
-      nextChapter={next}
+      prevChapter={adjacentData.prev}
+      nextChapter={adjacentData.next}
       isUnlocked={isUnlocked}
     />
-  );
+  )
 }

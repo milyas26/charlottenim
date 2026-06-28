@@ -12,7 +12,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { useAuth } from "@/contexts/AuthContext";
-import api from "@/lib/axios";
+import { createPayment } from "@/lib/api/payments";
 
 interface Props {
   price: number;
@@ -31,15 +31,12 @@ export default function PaywallOverlay({ price, chapterId, workSlug, chapterSlug
   const [confirmOpen, setConfirmOpen] = useState(false);
 
   const buyMutation = useMutation({
-    mutationFn: async () => {
-      const { data } = await api.post("/api/payments/create", {
-        chapterId,
-        workSlug,
-        chapterSlug,
-        payerEmail: user!.email,
-      })
-      return data
-    },
+    mutationFn: async () => createPayment({
+      chapterId,
+      workSlug,
+      chapterSlug,
+      payerEmail: user!.email,
+    }),
     onSuccess: (data) => {
       if (data.invoiceUrl) {
         window.location.href = data.invoiceUrl

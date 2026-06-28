@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useMutation } from "@tanstack/react-query";
 import { Work, Chapter } from "@/data/types";
 import { useReaderSettings } from "@/hooks/useReaderSettings";
 import { useAuth } from "@/contexts/AuthContext";
@@ -10,7 +9,7 @@ import ReadingCustomization from "@/components/reader/ReadingCustomization";
 import PaywallOverlay from "@/components/reader/PaywallOverlay";
 import CommentsSection from "@/components/reader/CommentsSection";
 import { hapticTap } from "@/lib/haptics";
-import api from "@/lib/axios";
+import { useMarkChapterRead, useSaveProgress } from "@/lib/api/chapters";
 import {
   Drawer,
   DrawerTrigger,
@@ -48,17 +47,9 @@ export default function ReaderPage({
     return new URLSearchParams(window.location.search).get("payment");
   });
 
-  const chapterReadMutation = useMutation({
-    mutationFn: async (chapterId: string) => {
-      await api.post("/api/chapters/read", { chapterId })
-    },
-  })
+  const chapterReadMutation = useMarkChapterRead()
 
-  const progressMutation = useMutation({
-    mutationFn: async (params: { workId: string; chapterId: string }) => {
-      await api.post("/api/user/progress", params)
-    },
-  })
+  const progressMutation = useSaveProgress()
 
   useEffect(() => {
     if (typeof window === "undefined") return;

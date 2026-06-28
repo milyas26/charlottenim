@@ -1,13 +1,12 @@
 "use client"
 
 import { useState } from "react"
-import { useQuery } from "@tanstack/react-query"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Search, Loader2 } from "lucide-react"
-import api from "@/lib/axios"
+import { useAdminOrders } from "@/lib/api/admin"
 import type { Purchase } from "@/data/admin-types"
 
 type StatusFilter = "ALL" | "PAID" | "PENDING" | "FAILED"
@@ -16,13 +15,7 @@ export default function AdminOrdersPage() {
   const [search, setSearch] = useState("")
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("ALL")
 
-  const { data: purchases = [], isLoading } = useQuery({
-    queryKey: ["admin-orders"],
-    queryFn: async () => {
-      const { data } = await api.get<Purchase[]>("/api/nulis/orders")
-      return data
-    },
-  })
+  const { data: purchases = [], isLoading } = useAdminOrders()
 
   const filtered = purchases.filter((p) => {
     const matchSearch =

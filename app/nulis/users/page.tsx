@@ -1,7 +1,6 @@
 "use client"
 
 import { useState } from "react"
-import { useQuery } from "@tanstack/react-query"
 import Link from "next/link"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -9,19 +8,13 @@ import { Input } from "@/components/ui/input"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Search, ChevronRight, Loader2 } from "lucide-react"
-import api from "@/lib/axios"
+import { useAdminUsers } from "@/lib/api/admin"
 import type { AdminUser } from "@/data/admin-types"
 
 export default function AdminUsersPage() {
   const [search, setSearch] = useState("")
 
-  const { data: users = [], isLoading } = useQuery({
-    queryKey: ["admin-users"],
-    queryFn: async () => {
-      const { data } = await api.get<AdminUser[]>("/api/nulis/users")
-      return data
-    },
-  })
+  const { data: users = [], isLoading } = useAdminUsers()
 
   const filtered = users.filter(
     (u) =>

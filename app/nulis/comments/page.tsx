@@ -1,22 +1,13 @@
 "use client"
 
 import { useState } from "react"
-import { useQuery } from "@tanstack/react-query"
 import { Input } from "@/components/ui/input"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Pagination } from "@/components/ui/pagination"
 import { useDebounce } from "@/hooks/useDebounce"
 import { Search, Loader2 } from "lucide-react"
-import api from "@/lib/axios"
-import type { AdminComment } from "@/data/admin-types"
-
-interface CommentsResponse {
-  comments: AdminComment[]
-  total: number
-  page: number
-  totalPages: number
-}
+import { useAdminComments } from "@/lib/api/comments"
 
 export default function AdminCommentsPage() {
   const [search, setSearch] = useState("")
@@ -25,15 +16,7 @@ export default function AdminCommentsPage() {
 
   const debouncedSearch = useDebounce(search, 400)
 
-  const { data, isLoading } = useQuery({
-    queryKey: ["admin-comments", page, limit, debouncedSearch],
-    queryFn: async () => {
-      const { data } = await api.get<CommentsResponse>("/api/nulis/comments", {
-        params: { page, limit, search: debouncedSearch },
-      })
-      return data
-    },
-  })
+  const { data, isLoading } = useAdminComments(page, limit, debouncedSearch)
 
   const comments = data?.comments ?? []
   const total = data?.total ?? 0

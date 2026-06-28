@@ -14,7 +14,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { ArrowLeft, Save, X, Upload, Loader2 } from "lucide-react"
 import { GENRES } from "@/lib/constants"
 import { WorkStatus } from "@/data/types"
-import api from "@/lib/axios"
+import { createWork } from "@/lib/api/works"
+import { uploadFile } from "@/lib/api/upload"
 
 export default function AdminNewWorkPage() {
   const router = useRouter()
@@ -53,16 +54,10 @@ export default function AdminNewWorkPage() {
 
       let coverUrl = ""
       if (coverFileRef.current) {
-        const formData = new FormData()
-        formData.append("file", coverFileRef.current)
-        formData.append("type", "COVER")
-        const { data: uploadData } = await api.post("/api/nulis/upload", formData, {
-          headers: { "Content-Type": "multipart/form-data" },
-        })
-        coverUrl = uploadData.url
+        coverUrl = await uploadFile(coverFileRef.current, "COVER", "")
       }
 
-      const { data: work } = await api.post("/api/nulis/works", {
+      const work = await createWork({
         title: currentTitle.trim(),
         slug,
         synopsis: synopsisRef.current.trim(),

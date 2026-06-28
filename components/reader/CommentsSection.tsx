@@ -5,7 +5,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/contexts/AuthContext";
 import LoginDialog from "@/components/LoginDialog";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import api from "@/lib/axios";
+import { fetchComments, createComment, likeComment } from "@/lib/api/comments";
 import type { Comment } from "@/data/types";
 
 interface Props {
@@ -19,20 +19,11 @@ export default function CommentsSection({ chapterId }: Props) {
 
   const { data: comments = [], isLoading } = useQuery({
     queryKey: ["comments", chapterId],
-    queryFn: async () => {
-      const { data } = await api.get<Comment[]>(`/api/comments?chapterId=${chapterId}`)
-      return data
-    },
+    queryFn: () => fetchComments(chapterId),
   })
 
   const submitMutation = useMutation({
-    mutationFn: async (content: string) => {
-      const { data } = await api.post<Comment>("/api/comments", {
-        chapterId,
-        content,
-      })
-      return data
-    },
+    mutationFn: (content: string) => createComment(chapterId, content),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["comments", chapterId] })
       setNewComment("")
@@ -40,10 +31,7 @@ export default function CommentsSection({ chapterId }: Props) {
   })
 
   const likeMutation = useMutation({
-    mutationFn: async (commentId: string) => {
-      const { data } = await api.post<Comment>(`/api/comments/${commentId}/like`)
-      return data
-    },
+    mutationFn: likeComment,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["comments", chapterId] })
     },

@@ -1,14 +1,15 @@
 "use client"
 
 import { useCallback, useMemo, useRef, useState } from "react"
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
+import { useMutation, useQueryClient } from "@tanstack/react-query"
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-import api from "@/lib/axios"
+import { useAdminImages, deleteAdminImage, adminKeys } from "@/lib/api/admin"
+import { uploadMultipleFiles } from "@/lib/api/upload"
 import { Check, Loader2, Plus, Trash2 } from "lucide-react"
 import { toast } from "sonner"
 
@@ -123,43 +124,14 @@ export default function ImageBucketModal({
       return new Date(a.id).getTime() - new Date(b.id).getTime()
     })
 
-  const { data: images = [], isLoading } = useQuery({
-    queryKey: ["images", workId, chapterId],
-    queryFn: async () => {
-      const params = new URLSearchParams()
-      params.set("workId", workId)
-      if (chapterId) params.set("chapterId", chapterId)
-      const { data } = await api.get<ImageData[]>(`/api/nulis/images?${params.toString()}`)
-      return sortImages(data)
-    },
-    enabled: open,
-  })
+  const { data: images = [], isLoading } = useAdminImages(workId, chapterId, open)
 
   const uploadMutation = useMutation({
-    mutationFn: async (files: FileList) => {
-      let success = 0
-      for (const file of Array.from(files)) {
-        if (!file.type.startsWith("image/")) continue
-        if (file.size > 2 * 1024 * 1024) {
-          toast.error("Ukuran gambar maksimal 2MB")
-          continue
-        }
-        const formData = new FormData()
-        formData.append("file", file)
-        formData.append("type", "CONTENT")
-        formData.append("workId", workId)
-        if (chapterId) formData.append("chapterId", chapterId)
-        await api.post("/api/nulis/upload", formData, {
-          headers: { "Content-Type": "multipart/form-data" },
-        })
-        success++
-      }
-      return success
-    },
-    onSuccess: (success) => {
+    mutationFn: ({ files }: { files: FileList }) => uploadMultipleFiles(files, workId, chapterId),
+    onSuccess: (success: number) => {
       if (success > 0) {
         toast.success(`${success} gambar berhasil diupload`)
-        queryClient.invalidateQueries({ queryKey: ["images", workId, chapterId] })
+        queryClient.invalidateQueries({ queryKey: adminKeys.images(workId, chapterId) })
       }
       if (fileInputRef.current) fileInputRef.current.value = ""
     },
@@ -170,18 +142,15 @@ export default function ImageBucketModal({
   })
 
   const deleteMutation = useMutation({
-    mutationFn: async (id: string) => {
-      await api.delete(`/api/nulis/images/${id}`)
-      return id
-    },
-    onSuccess: (id) => {
+    mutationFn: deleteAdminImage,
+    onSuccess: (_data, id) => {
       toast.success("Gambar berhasil dihapus")
       setSelected((prev) => {
         const next = new Set(prev)
         next.delete(id)
         return next
       })
-      queryClient.invalidateQueries({ queryKey: ["images", workId, chapterId] })
+      queryClient.invalidateQueries({ queryKey: adminKeys.images(workId, chapterId) })
     },
     onError: () => {
       toast.error("Gagal menghapus gambar")
@@ -228,7 +197,7 @@ export default function ImageBucketModal({
     (e: React.ChangeEvent<HTMLInputElement>) => {
       const files = e.target.files
       if (!files || files.length === 0) return
-      uploadMutation.mutate(files)
+      uploadMutation.mutate({ files })
     },
     [uploadMutation],
   )

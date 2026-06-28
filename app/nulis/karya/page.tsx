@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
+import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { useAdminHeaderActions } from "@/components/admin/AdminHeader"
 import Link from "next/link"
 import { Badge } from "@/components/ui/badge"
@@ -27,10 +27,8 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 import { PlusCircle, Search, MoreHorizontal, Edit, Eye, Trash2, Loader2 } from "lucide-react"
-import api from "@/lib/axios"
+import { useAdminWorks, deleteWork, worksKeys, type WorkWithReads } from "@/lib/api/works"
 import type { WorkStatus, Work } from "@/data/types"
-
-type WorkWithReads = Work & { totalReads: number }
 
 export default function AdminWorksPage() {
   const { setActions } = useAdminHeaderActions()
@@ -52,26 +50,15 @@ export default function AdminWorksPage() {
   const [statusFilter, setStatusFilter] = useState<WorkStatus | "ALL">("ALL")
   const [deleteTarget, setDeleteTarget] = useState<WorkWithReads | null>(null)
 
-  const { data: works = [], isLoading } = useQuery({
-    queryKey: ["works"],
-    queryFn: async () => {
-      const { data } = await api.get<WorkWithReads[]>("/api/nulis/works")
-      return data
-    },
-  })
+  const { data: works = [], isLoading } = useAdminWorks()
 
   const deleteMutation = useMutation({
-    mutationFn: async (id: string) => {
-      await api.delete(`/api/nulis/works/${id}`)
-    },
+    mutationFn: deleteWork,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["works"] })
+      queryClient.invalidateQueries({ queryKey: worksKeys.list("admin") })
       setDeleteTarget(null)
     },
-    onError: (err) => {
-      console.error(err)
-      setDeleteTarget(null)
-    },
+    onError: () => setDeleteTarget(null),
   })
 
   const filtered = works.filter((w) => {

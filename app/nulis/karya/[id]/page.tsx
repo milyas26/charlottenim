@@ -56,8 +56,18 @@ import {
   Loader2,
 } from "lucide-react"
 import { GENRES } from "@/lib/constants"
-import api from "@/lib/axios"
-
+import {
+  useAdminWork,
+  useAdminWorkChapters,
+  updateWork as updateWorkApi,
+  deleteWork as deleteWorkApi,
+  worksKeys,
+} from "@/lib/api/works"
+import {
+  deleteChapter as deleteChapterApi,
+  reorderChapters as reorderChaptersApi,
+} from "@/lib/api/chapters"
+import { uploadFile as uploadFileApi } from "@/lib/api/upload"
 type WorkDetail = {
   id: string
   title: string
@@ -92,21 +102,9 @@ export default function AdminWorkDetailPage({ params }: { params: Promise<{ id: 
   const [deleteWorkOpen, setDeleteWorkOpen] = useState(false)
   const { setActions } = useAdminHeaderActions()
 
-  const { data: work, isLoading } = useQuery({
-    queryKey: ["works", id],
-    queryFn: async () => {
-      const { data } = await api.get<WorkDetail>(`/api/nulis/works/${id}`)
-      return data
-    },
-  })
+  const { data: work, isLoading } = useAdminWork(id)
 
-  const { data: chapters = [] } = useQuery({
-    queryKey: ["works", id, "chapters"],
-    queryFn: async () => {
-      const { data } = await api.get<Chapter[]>(`/api/nulis/works/${id}/chapters`)
-      return data.sort((a, b) => a.chapterNumber - b.chapterNumber)
-    },
-  })
+  const { data: chapters = [] } = useAdminWorkChapters(id)
 
   const saveMutation = useMutation({
     mutationFn: async () => {
@@ -121,19 +119,12 @@ export default function AdminWorkDetailPage({ params }: { params: Promise<{ id: 
 
       let coverUrl = work.coverUrl
       if (editCoverFile) {
-        const formData = new FormData()
-        formData.append("file", editCoverFile)
-        formData.append("type", "COVER")
-        formData.append("workId", work.id)
-        const { data: uploadData } = await api.post("/api/nulis/upload", formData, {
-          headers: { "Content-Type": "multipart/form-data" },
-        })
-        coverUrl = uploadData.url
+        coverUrl = await uploadFileApi(editCoverFile, "COVER", work.id)
       } else if (editCoverPreview) {
         coverUrl = editCoverPreview
       }
 
-      await api.put(`/api/nulis/works/${work.id}`, {
+      await updateWorkApi(work.id, {
         title: editTitle.trim(),
         slug: newSlug,
         synopsis: editSynopsis.trim(),
@@ -146,9 +137,9 @@ export default function AdminWorkDetailPage({ params }: { params: Promise<{ id: 
       setIsEditing(false)
       setEditCoverPreview(null)
       setEditCoverFile(null)
-      queryClient.invalidateQueries({ queryKey: ["works", id] })
-      queryClient.invalidateQueries({ queryKey: ["works", id, "chapters"] })
-      queryClient.invalidateQueries({ queryKey: ["works"] })
+      queryClient.invalidateQueries({ queryKey: worksKeys.detail(id) })
+      queryClient.invalidateQueries({ queryKey: worksKeys.chapters(id) })
+      queryClient.invalidateQueries({ queryKey: worksKeys.list("admin") })
     },
     onError: (err: Error) => {
       alert((err as { response?: { data?: { error?: string } } })?.response?.data?.error || err?.message || "Gagal mengupdate karya")
@@ -158,10 +149,10 @@ export default function AdminWorkDetailPage({ params }: { params: Promise<{ id: 
   const deleteWorkMutation = useMutation({
     mutationFn: async () => {
       if (!work) return
-      await api.delete(`/api/nulis/works/${work.id}`)
+      await deleteWorkApi(work.id)
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["works"] })
+      queryClient.invalidateQueries({ queryKey: worksKeys.list("admin") })
       router.push("/nulis/karya")
     },
     onError: (err: Error) => {
@@ -172,10 +163,10 @@ export default function AdminWorkDetailPage({ params }: { params: Promise<{ id: 
 
   const deleteChapterMutation = useMutation({
     mutationFn: async (chapterId: string) => {
-      await api.delete(`/api/nulis/works/${id}/chapters/${chapterId}`)
+      await deleteChapterApi(id, chapterId)
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["works", id, "chapters"] })
+      queryClient.invalidateQueries({ queryKey: worksKeys.chapters(id) })
       setDeleteChapterTarget(null)
     },
     onError: (err) => {
@@ -186,10 +177,10 @@ export default function AdminWorkDetailPage({ params }: { params: Promise<{ id: 
 
   const reorderMutation = useMutation({
     mutationFn: async (chapterIds: string[]) => {
-      await api.put(`/api/nulis/works/${id}/chapters/reorder`, { chapterIds })
+      await reorderChaptersApi(id, chapterIds)
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["works", id, "chapters"] })
+      queryClient.invalidateQueries({ queryKey: worksKeys.chapters(id) })
       setConfirmOpen(false)
       setDragFromIndex(null)
       setDropIndex(null)
