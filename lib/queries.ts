@@ -211,6 +211,7 @@ export async function getChaptersByWorkSlugLight(workSlug: string): Promise<Chap
       status: true,
       deletedAt: true,
       readStats: { select: { count: true } },
+      _count: { select: { comments: true } },
     },
   })
 
@@ -225,6 +226,7 @@ export async function getChaptersByWorkSlugLight(workSlug: string): Promise<Chap
     isPremium: c.isPremium,
     price: c.price,
     readCount: c.readStats?.count ?? 0,
+    commentCount: c._count.comments,
     status: c.status as Chapter["status"],
     deletedAt: c.deletedAt?.toISOString() ?? null,
   })) as ChapterListItem[]
@@ -261,6 +263,7 @@ export async function getChaptersByWorkIdLight(workId: string): Promise<ChapterL
       status: true,
       deletedAt: true,
       readStats: { select: { count: true } },
+      _count: { select: { comments: true } },
     },
   })
 
@@ -275,6 +278,7 @@ export async function getChaptersByWorkIdLight(workId: string): Promise<ChapterL
     isPremium: c.isPremium,
     price: c.price,
     readCount: c.readStats?.count ?? 0,
+    commentCount: c._count.comments,
     status: c.status as Chapter["status"],
     deletedAt: c.deletedAt?.toISOString() ?? null,
   })) as ChapterListItem[]
@@ -297,7 +301,7 @@ export async function createChapter(workSlug: string, data: ChapterCreateData): 
       price: data.price ?? 0,
       status: status as "DRAFT" | "PUBLISHED",
     },
-    include: { readStats: true, work: { select: { slug: true } } },
+    include: { readStats: true, _count: { select: { comments: true } }, work: { select: { slug: true } } },
   })
 
   return {
@@ -311,6 +315,7 @@ export async function createChapter(workSlug: string, data: ChapterCreateData): 
     isPremium: chapter.isPremium,
     price: chapter.price,
     readCount: chapter.readStats?.count ?? 0,
+    commentCount: chapter._count.comments,
     status: chapter.status as Chapter["status"],
     deletedAt: chapter.deletedAt?.toISOString() ?? null,
   }
@@ -333,7 +338,7 @@ export async function createChapterByWorkId(workId: string, data: ChapterCreateD
       price: data.price ?? 0,
       status: status as "DRAFT" | "PUBLISHED",
     },
-    include: { readStats: true, work: { select: { slug: true } } },
+    include: { readStats: true, _count: { select: { comments: true } }, work: { select: { slug: true } } },
   })
 
   return {
@@ -347,6 +352,7 @@ export async function createChapterByWorkId(workId: string, data: ChapterCreateD
     isPremium: chapter.isPremium,
     price: chapter.price,
     readCount: chapter.readStats?.count ?? 0,
+    commentCount: chapter._count.comments,
     status: chapter.status as Chapter["status"],
     deletedAt: chapter.deletedAt?.toISOString() ?? null,
   }
@@ -383,7 +389,7 @@ export async function updateChapter(chapterId: string, data: ChapterUpdateData):
   const chapter = await prisma.chapter.update({
     where: { id: chapterId },
     data: updateData,
-    include: { readStats: true, work: { select: { slug: true } } },
+    include: { readStats: true, _count: { select: { comments: true } }, work: { select: { slug: true } } },
   })
 
   return {
@@ -397,6 +403,7 @@ export async function updateChapter(chapterId: string, data: ChapterUpdateData):
     isPremium: chapter.isPremium,
     price: chapter.price,
     readCount: chapter.readStats?.count ?? 0,
+    commentCount: chapter._count.comments,
     status: chapter.status as Chapter["status"],
     deletedAt: chapter.deletedAt?.toISOString() ?? null,
   }
@@ -464,7 +471,7 @@ export async function getChaptersByWorkSlug(workSlug: string): Promise<Chapter[]
   const chapters = await prisma.chapter.findMany({
     where: { workId: work.id, deletedAt: null },
     orderBy: { chapterNumber: "asc" },
-    include: { readStats: true }
+    include: { readStats: true, _count: { select: { comments: true } } }
   })
 
   return chapters.map((c) => ({
@@ -478,6 +485,7 @@ export async function getChaptersByWorkSlug(workSlug: string): Promise<Chapter[]
     isPremium: c.isPremium,
     price: c.price,
     readCount: c.readStats?.count ?? 0,
+    commentCount: c._count.comments,
     status: c.status as Chapter["status"],
     deletedAt: c.deletedAt?.toISOString() ?? null,
   }))
@@ -493,9 +501,9 @@ export async function getChapterBySlug(
   })
   if (!work) return null
 
-  const chapter = await prisma.chapter.findUnique({
+    const chapter = await prisma.chapter.findUnique({
     where: { workId_slug: { workId: work.id, slug: chapterSlug } },
-    include: { readStats: true }
+    include: { readStats: true, _count: { select: { comments: true } } }
   })
   if (!chapter) return null
 
@@ -510,6 +518,7 @@ export async function getChapterBySlug(
     isPremium: chapter.isPremium,
     price: chapter.price,
     readCount: chapter.readStats?.count ?? 0,
+    commentCount: chapter._count.comments,
     status: chapter.status as Chapter["status"],
     deletedAt: chapter.deletedAt?.toISOString() ?? null,
   }
@@ -518,7 +527,7 @@ export async function getChapterBySlug(
 export async function getChapterById(chapterId: string): Promise<Chapter | null> {
   const chapter = await prisma.chapter.findUnique({
     where: { id: chapterId },
-    include: { readStats: true, work: { select: { id: true, slug: true } } }
+    include: { readStats: true, _count: { select: { comments: true } }, work: { select: { id: true, slug: true } } }
   })
   if (!chapter) return null
 
@@ -533,6 +542,7 @@ export async function getChapterById(chapterId: string): Promise<Chapter | null>
     isPremium: chapter.isPremium,
     price: chapter.price,
     readCount: chapter.readStats?.count ?? 0,
+    commentCount: chapter._count.comments,
     status: chapter.status as Chapter["status"],
     deletedAt: chapter.deletedAt?.toISOString() ?? null,
   }

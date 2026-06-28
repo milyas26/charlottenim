@@ -87,7 +87,7 @@ export default function CommentsSection({ chapterId }: Props) {
   return (
     <div className="px-4 pt-2.5 pb-3 min-h-[200px]">
       <h3
-        className="text-sm font-semibold uppercase tracking-wider mb-2"
+        className="text-xs font-semibold uppercase tracking-wider mb-2"
         style={{ color: "var(--foreground)" }}
       >
         Komentar ({comments.length})
@@ -101,7 +101,7 @@ export default function CommentsSection({ chapterId }: Props) {
             onChange={(e) => setNewComment(e.target.value)}
             placeholder="Tulis komentar..."
             maxLength={1000}
-            className="flex-1 px-3 py-2 rounded-xl text-sm outline-none transition-colors"
+            className="flex-1 px-3 py-2 rounded-xl text-xs outline-none transition-colors"
             style={{
               backgroundColor: "var(--surface)",
               border: "1px solid var(--border)",
@@ -111,7 +111,7 @@ export default function CommentsSection({ chapterId }: Props) {
           <button
             type="submit"
             disabled={!newComment.trim() || submitting}
-            className="px-4 py-2 rounded-xl text-xs font-semibold transition-all disabled:opacity-40"
+            className="px-3 py-1.5 rounded-lg text-[10px] font-semibold transition-all disabled:opacity-40"
             style={{
               backgroundColor: "var(--accent)",
               color: "#fff",

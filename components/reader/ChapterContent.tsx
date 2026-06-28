@@ -43,7 +43,7 @@ export default function ChapterContent({
   return (
     <article
       style={{
-        color: "var(--foreground)",
+        color: "var(--rm-fg, var(--foreground))",
         fontSize: `var(--r-fs, ${fontSizeMap[settings.fontSize]})`,
         lineHeight: `var(--r-lh, ${lineHeightMap[settings.lineSpacing]})`,
         fontFamily: `var(--r-ff, ${fontFamilyMap[settings.fontFamily]})`,

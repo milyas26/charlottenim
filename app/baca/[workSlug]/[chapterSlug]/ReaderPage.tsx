@@ -8,6 +8,13 @@ import ReadingCustomization from "@/components/reader/ReadingCustomization";
 import PaywallOverlay from "@/components/reader/PaywallOverlay";
 import CommentsSection from "@/components/reader/CommentsSection";
 import { getStoredJwt } from "@/lib/axios";
+import {
+  Drawer,
+  DrawerTrigger,
+  DrawerContent,
+  DrawerHeader,
+  DrawerTitle,
+} from "@/components/ui/drawer";
 
 interface Props {
   work: Work;
@@ -30,11 +37,8 @@ export default function ReaderPage({
   isUnlocked: initiallyUnlocked,
 }: Props) {
   const { settings, update } = useReaderSettings();
-  const [showCustomization, setShowCustomization] = useState(false);
-  const [showComments, setShowComments] = useState(false);
   const [progress, setProgress] = useState(0);
   const isUnlocked = initiallyUnlocked;
-
   const [paymentStatus] = useState(() => {
     if (typeof window === "undefined") return null;
     return new URLSearchParams(window.location.search).get("payment");
@@ -74,14 +78,15 @@ export default function ReaderPage({
     }).catch(() => {});
   }, [work.id, chapter.id]);
 
-  const tagBgPremium = settings.darkMode ? premiumBgDark : premiumBgLight;
+  const isDark = settings.readingMode === "black";
+  const tagBgPremium = isDark ? premiumBgDark : premiumBgLight;
 
   return (
-    <div className="min-h-screen w-full flex justify-center bg-[var(--background)]">
+    <div className="min-h-screen w-full flex justify-center bg-[var(--rm-bg)]">
       <div
         className="fixed top-0 left-0 right-0 h-[3px] z-50"
         style={{
-          backgroundColor: "var(--accent)",
+          backgroundColor: "var(--rm-accent)",
           width: `${progress}%`,
           transition: "width 0.15s linear",
         }}
@@ -91,16 +96,14 @@ export default function ReaderPage({
         <header
           className="sticky top-0 z-40 px-5 py-3 flex items-center gap-3 backdrop-blur-md"
           style={{
-            backgroundColor: settings.darkMode
-              ? "rgba(27, 22, 20, 0.85)"
-              : "rgba(249, 245, 239, 0.85)",
-            borderBottom: "1px solid var(--border)",
+            backgroundColor: "var(--rm-header-bg)",
+            borderBottom: "1px solid var(--rm-border)",
           }}
         >
           <a
             href={`/karya/${work.slug}`}
-            className="flex-shrink-0 p-1.5 -ml-1.5 rounded-lg hover:bg-[var(--surface)] transition-colors"
-            style={{ color: "var(--muted)" }}
+            className="flex-shrink-0 p-1.5 -ml-1.5 rounded-lg hover:bg-[var(--rm-surface)] transition-colors"
+            style={{ color: "var(--rm-muted)" }}
           >
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M19 12H5M12 19l-7-7 7-7" />
@@ -112,12 +115,12 @@ export default function ReaderPage({
               className="text-[10px] font-bold tracking-wider px-1.5 py-0.5 rounded flex-shrink-0 font-[family-name:var(--font-sans)]"
               style={{
                 backgroundColor: chapter.isPremium ? tagBgPremium : gratisBg,
-                color: chapter.isPremium ? "var(--accent)" : gratisText,
+                color: chapter.isPremium ? "var(--rm-accent)" : gratisText,
               }}
             >
               {chapter.chapterNumber}
             </span>
-            <span className="text-sm font-semibold truncate" style={{ color: "var(--foreground)" }}>
+            <span className="text-sm font-semibold truncate" style={{ color: "var(--rm-fg)" }}>
               {chapter.title}
             </span>
           </div>
@@ -127,7 +130,7 @@ export default function ReaderPage({
               className="text-[9px] font-bold uppercase tracking-widest px-1.5 py-0.5 rounded flex-shrink-0"
               style={{
                 backgroundColor: tagBgPremium,
-                color: "var(--accent)",
+                color: "var(--rm-accent)",
               }}
             >
               PREMIUM
@@ -166,9 +169,9 @@ export default function ReaderPage({
               />
               <div className="relative my-3 text-center">
                 <div className="absolute inset-0 flex items-center" aria-hidden="true">
-                  <div className="w-full" style={{ borderTop: "1px dashed var(--border)" }} />
+                  <div className="w-full" style={{ borderTop: "1px dashed var(--rm-border)" }} />
                 </div>
-                <span className="relative px-4 text-xs tracking-wider uppercase font-semibold text-[var(--muted)] bg-[var(--background)] font-[family-name:var(--font-sans)]">
+                <span className="relative px-4 text-xs tracking-wider uppercase font-semibold text-[var(--rm-muted)] bg-[var(--rm-bg)] font-[family-name:var(--font-sans)]">
                   konten terkunci
                 </span>
               </div>
@@ -182,78 +185,108 @@ export default function ReaderPage({
           )}
         </div>
 
-        <div className="sticky bottom-0 z-40 bg-[var(--background)]" style={{ borderTop: "1px solid var(--border)" }}>
-          {showComments && <CommentsSection chapterId={chapter.id} />}
-          {showCustomization && (
-            <div className="px-4 pt-3 pb-1">
-              <ReadingCustomization settings={settings} onChange={update} />
-            </div>
-          )}
-
-          <div className="flex items-center justify-between px-3 py-3">
-            <div className="flex items-center gap-1 flex-shrink-0">
+        <div
+          className="sticky bottom-0 z-40 px-3 pb-3 pt-2"
+          style={{ backgroundColor: "var(--rm-bg)" }}
+        >
+          <div
+            className="flex items-center justify-between px-2 py-2 rounded-4xl"
+            style={{
+              backgroundColor: "var(--rm-surface)",
+              border: "1px solid var(--rm-border)",
+            }}
+          >
+            <div className="flex items-center gap-0.5 flex-shrink-0">
               {prevChapter ? (
                 <a
                   href={`/baca/${prevChapter.workSlug}/${prevChapter.slug}`}
-                  className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold transition-all hover:bg-[var(--surface)]"
-                  style={{ color: "var(--foreground)", border: "1px solid var(--border)" }}
+                  className="flex items-center gap-2 px-3 py-3 rounded-full transition-all hover:opacity-80"
+                  style={{
+                    color: "var(--rm-fg)",
+                    border: "1.5px solid var(--rm-border)",
+                  }}
                 >
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M15 18l-6-6 6-6" />
                   </svg>
-                  Prev
+                  <span className="text-xs font-semibold">Prev</span>
                 </a>
               ) : (
-                <span className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold opacity-30 flex-shrink-0"
-                  style={{ color: "var(--muted)", border: "1px solid var(--border)" }}>
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <span className="flex items-center gap-2 px-3 py-2 rounded-full opacity-20 flex-shrink-0"
+                  style={{ color: "var(--rm-muted)", border: "1.5px solid var(--rm-border)" }}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M15 18l-6-6 6-6" />
                   </svg>
-                  Prev
+                  <span className="text-xs font-semibold">Prev</span>
                 </span>
               )}
             </div>
 
-            <div className="flex items-center gap-1.5">
-              <button onClick={() => { setShowComments(!showComments); if (showCustomization) setShowCustomization(false); }}
-                className="p-2 rounded-xl transition-all hover:bg-[var(--surface)]"
-                style={{ backgroundColor: showComments ? "var(--accent)" : "transparent" }}
-                aria-label="Komentar">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill={showComments ? "white" : "none"} stroke={showComments ? "white" : "currentColor"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+            <div className="flex items-center gap-1">
+              <Drawer>
+                <DrawerTrigger className="flex flex-col items-center gap-0.5 px-3 rounded-xl transition-all hover:opacity-80 relative"
+                  aria-label="Komentar" style={{ color: "var(--rm-fg)" }}>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+                  </svg>
+                  <span className="text-[10px]">{chapter.commentCount} Komentar</span>
+                </DrawerTrigger>
+                <DrawerContent>
+                  <CommentsSection chapterId={chapter.id} />
+                </DrawerContent>
+              </Drawer>
+
+              <span
+                className="flex flex-col items-center justify-center gap-0.5 px-3 rounded-xl"
+                style={{ color: "var(--rm-muted)" }}
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+                  <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
                 </svg>
-              </button>
-              <span className="text-xs font-medium px-1" style={{ color: "var(--muted)" }}>
-                {chapter.chapterNumber}/{work.totalChapters}
+                <span className="text-[10px] font-semibold">{chapter.chapterNumber}/{work.totalChapters}</span>
               </span>
-              <button onClick={() => { setShowCustomization(!showCustomization); if (showComments) setShowComments(false); }}
-                className="p-2 rounded-xl transition-all hover:bg-[var(--surface)]"
-                style={{ backgroundColor: showCustomization ? "var(--accent)" : "transparent" }}
-                aria-label="Pengaturan tampilan">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill={showCustomization ? "white" : "none"} stroke={showCustomization ? "white" : "currentColor"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <circle cx="12" cy="12" r="3" />
-                  <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
-                </svg>
-              </button>
+
+              <Drawer>
+                <DrawerTrigger className="flex flex-col items-center gap-0.5 px-3 rounded-xl transition-all hover:opacity-80"
+                  aria-label="Pengaturan" style={{ color: "var(--rm-fg)" }}>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="12" cy="12" r="3" />
+                    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+                  </svg>
+                  <span className="text-[10px]">Tampilan</span>
+                </DrawerTrigger>
+                <DrawerContent>
+                  <DrawerHeader>
+                    <DrawerTitle>Pengaturan Tampilan</DrawerTitle>
+                  </DrawerHeader>
+                  <div className="px-3 pt-1 pb-4">
+                    <ReadingCustomization settings={settings} onChange={update} />
+                  </div>
+                </DrawerContent>
+              </Drawer>
             </div>
 
-            <div className="flex items-center gap-1 flex-shrink-0">
+            <div className="flex items-center gap-0.5 flex-shrink-0">
               {nextChapter ? (
                 <a
                   href={`/baca/${nextChapter.workSlug}/${nextChapter.slug}`}
-                  className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold transition-all hover:bg-[var(--surface)]"
-                  style={{ color: "var(--foreground)", border: "1px solid var(--border)" }}
+                  className="flex items-center gap-2 px-3 py-3 rounded-full transition-all hover:opacity-80"
+                  style={{
+                    color: "var(--rm-fg)",
+                    border: "1.5px solid var(--rm-border)",
+                  }}
                 >
-                  Next
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <span className="text-xs font-semibold">Next</span>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M9 18l6-6-6-6" />
                   </svg>
                 </a>
               ) : (
-                <span className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold opacity-30 flex-shrink-0"
-                  style={{ color: "var(--muted)", border: "1px solid var(--border)" }}>
-                  Next
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <span className="flex items-center gap-2 px-3 py-2 rounded-full opacity-20 flex-shrink-0"
+                  style={{ color: "var(--rm-muted)", border: "1.5px solid var(--rm-border)" }}>
+                  <span className="text-xs font-semibold">Next</span>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M9 18l6-6-6-6" />
                   </svg>
                 </span>

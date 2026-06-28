@@ -81,9 +81,6 @@ export default function RootLayout({
                   var s = localStorage.getItem('reader-settings');
                   if (!s) return;
                   var p = JSON.parse(s);
-                  if (p.darkMode) {
-                    document.documentElement.classList.add('dark');
-                  }
                   var fs = { small: '15px', medium: '17px', large: '19px' };
                   var lh = { tight: '1.75', normal: '2.1', relaxed: '2.5' };
                   var ff = {
@@ -91,14 +88,29 @@ export default function RootLayout({
                     georgia: "Georgia, 'Times New Roman', serif",
                     sans: 'var(--font-geist-sans)'
                   };
+                  var modes = {
+                    white:  { bg:'#FFFFFF', fg:'#1A1A1A', sf:'#F5F5F5', bd:'#E0E0E0', mu:'#6B7280', ac:'#B87B5C', hb:'rgba(255,255,255,0.85)' },
+                    cream:  { bg:'#F9F5EF', fg:'#2C241A', sf:'#F3ECE1', bd:'#E0D5C5', mu:'#8C7B6E', ac:'#B87B5C', hb:'rgba(249,245,239,0.85)' },
+                    black:  { bg:'#1B1614', fg:'#E8DDD0', sf:'#241E1A', bd:'#3D342C', mu:'#8C8074', ac:'#D4A574', hb:'rgba(27,22,20,0.85)' }
+                  };
+                  var m = modes[p.readingMode] || modes.cream;
+                  if (p.darkMode && !p.readingMode) m = modes.black;
+                  var r = document.documentElement.style;
+                  r.setProperty('--rm-bg', m.bg);
+                  r.setProperty('--rm-fg', m.fg);
+                  r.setProperty('--rm-surface', m.sf);
+                  r.setProperty('--rm-border', m.bd);
+                  r.setProperty('--rm-muted', m.mu);
+                  r.setProperty('--rm-accent', m.ac);
+                  r.setProperty('--rm-header-bg', m.hb);
                   if (p.fontSize && fs[p.fontSize]) {
-                    document.documentElement.style.setProperty('--r-fs', fs[p.fontSize]);
+                    r.setProperty('--r-fs', fs[p.fontSize]);
                   }
                   if (p.lineSpacing && lh[p.lineSpacing]) {
-                    document.documentElement.style.setProperty('--r-lh', lh[p.lineSpacing]);
+                    r.setProperty('--r-lh', lh[p.lineSpacing]);
                   }
                   if (p.fontFamily && ff[p.fontFamily]) {
-                    document.documentElement.style.setProperty('--r-ff', ff[p.fontFamily]);
+                    r.setProperty('--r-ff', ff[p.fontFamily]);
                   }
                 } catch(e) {}
               })();

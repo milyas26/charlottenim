@@ -29,6 +29,7 @@ export interface Chapter {
   isPremium: boolean;
   price: number;
   readCount: number;
+  commentCount: number;
   status: ChapterStatus;
   deletedAt?: string | null;
 }
@@ -55,9 +56,11 @@ export interface Comment {
   createdAt: string;
 }
 
+export type ReadingMode = "white" | "cream" | "black";
+
 export interface ReaderSettings {
   fontSize: "small" | "medium" | "large";
   lineSpacing: "tight" | "normal" | "relaxed";
   fontFamily: "lora" | "georgia" | "sans";
-  darkMode: boolean;
+  readingMode: ReadingMode;
 }
