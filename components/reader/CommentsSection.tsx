@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import LoginDialog from "@/components/LoginDialog";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import api from "@/lib/axios";
 import type { Comment } from "@/data/types";
 
@@ -16,6 +17,7 @@ export default function CommentsSection({ chapterId }: Props) {
   const [newComment, setNewComment] = useState("");
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [likingIds, setLikingIds] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     setLoading(true);
@@ -45,6 +47,25 @@ export default function CommentsSection({ chapterId }: Props) {
     }
   };
 
+  const handleLike = async (commentId: string) => {
+    if (!user || likingIds.has(commentId)) return;
+    setLikingIds((prev) => new Set(prev).add(commentId));
+    try {
+      const { data } = await api.post<Comment>(`/api/comments/${commentId}/like`);
+      setComments((prev) =>
+        prev.map((c) => (c.id === commentId ? data : c))
+      );
+    } catch {
+      // ignore
+    } finally {
+      setLikingIds((prev) => {
+        const next = new Set(prev);
+        next.delete(commentId);
+        return next;
+      });
+    }
+  };
+
   const formatTime = (iso: string) => {
     const diff = Date.now() - new Date(iso).getTime();
     const mins = Math.floor(diff / 60000);
@@ -64,7 +85,7 @@ export default function CommentsSection({ chapterId }: Props) {
   };
 
   return (
-    <div className="px-4 pt-2.5 pb-3 min-h-[400px]">
+    <div className="px-4 pt-2.5 pb-3 min-h-[200px]">
       <h3
         className="text-sm font-semibold uppercase tracking-wider mb-2"
         style={{ color: "var(--foreground)" }}
@@ -138,32 +159,72 @@ export default function CommentsSection({ chapterId }: Props) {
         <div className="space-y-3 max-h-[420px] overflow-y-auto pr-1">
           {comments.map((c) => (
             <div key={c.id} className="flex gap-3">
-              <div
-                className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold overflow-hidden"
-                style={{
-                  backgroundColor: "var(--surface)",
-                  color: "var(--accent)",
-                  border: "1px solid var(--border)",
-                }}
-              >
-                {c.userAvatar ? (
-                  <img src={c.userAvatar} alt="" className="w-full h-full object-cover" />
-                ) : (
-                  c.userName.charAt(0).toUpperCase()
-                )}
-              </div>
+              <Avatar className="size-8">
+                <AvatarImage src={c.userAvatar || undefined} alt={c.userName} referrerPolicy="no-referrer" />
+                <AvatarFallback className="text-xs font-bold"
+                  style={{ backgroundColor: "var(--surface)", color: "var(--accent)", border: "1px solid var(--border)" }}
+                >
+                  {c.userName.charAt(0).toUpperCase()}
+                </AvatarFallback>
+              </Avatar>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-0.5">
                   <span className="text-xs font-semibold" style={{ color: "var(--foreground)" }}>
                     {c.userName}
                   </span>
+                  {c.isFirst && (
+                    <span
+                      className="text-[9px] font-medium px-1.5 py-0.5 rounded"
+                      style={{
+                        backgroundColor: "color-mix(in srgb, var(--accent) 12%, transparent)",
+                        color: "var(--accent)",
+                        opacity: 0.8,
+                      }}
+                    >
+                      pertama
+                    </span>
+                  )}
                   <span className="text-[10px]" style={{ color: "var(--muted)" }}>
                     {formatTime(c.createdAt)}
                   </span>
                 </div>
-                <p className="text-sm leading-relaxed" style={{ color: "var(--foreground)", opacity: 0.85 }}>
+                <p className="text-sm leading-relaxed mb-1.5" style={{ color: "var(--foreground)", opacity: 0.85 }}>
                   {c.content}
                 </p>
+                <div className="flex items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() => handleLike(c.id)}
+                    disabled={!user || likingIds.has(c.id)}
+                    className="flex items-center gap-1 text-xs transition-opacity hover:opacity-80 disabled:opacity-50"
+                    style={{ color: "var(--muted)" }}
+                  >
+                    <svg
+                      width="14"
+                      height="14"
+                      viewBox="0 0 24 24"
+                      fill={c.isLikedByCharlotte ? "var(--accent)" : "none"}
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3H14zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3" />
+                    </svg>
+                    <span>{c.likeCount}</span>
+                  </button>
+                  {c.isLikedByCharlotte && (
+                    <span
+                      className="text-[9px] font-medium px-1.5 py-0.5 rounded"
+                      style={{
+                        color: "var(--accent)",
+                        opacity: 0.6,
+                      }}
+                    >
+                      Liked by Charlotte
+                    </span>
+                  )}
+                </div>
               </div>
             </div>
           ))}

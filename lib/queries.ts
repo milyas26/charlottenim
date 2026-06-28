@@ -819,13 +819,16 @@ export async function upsertReadingProgress(
 export async function getComments(chapterId: string): Promise<Comment[]> {
   const comments = await prisma.comment.findMany({
     where: { chapterId },
-    include: { user: { select: { id: true, name: true, avatarUrl: true } } },
+    include: { user: { select: { id: true, name: true, avatarUrl: true, role: true } } },
     orderBy: { createdAt: "desc" },
   })
 
   return comments.map((c) => ({
     id: c.id,
     content: c.content,
+    likeCount: c.likeCount,
+    isLikedByCharlotte: c.isLikedByCharlotte,
+    isFirst: c.isFirst,
     userId: c.userId,
     userName: c.user.name || "Anonim",
     userAvatar: c.user.avatarUrl,
@@ -839,14 +842,96 @@ export async function createComment(
   chapterId: string,
   content: string
 ): Promise<Comment> {
+  const existingCount = await prisma.comment.count({ where: { chapterId } })
+
   const c = await prisma.comment.create({
-    data: { userId, chapterId, content },
-    include: { user: { select: { id: true, name: true, avatarUrl: true } } },
+    data: { userId, chapterId, content, isFirst: existingCount === 0 },
+    include: { user: { select: { id: true, name: true, avatarUrl: true, role: true } } },
   })
 
   return {
     id: c.id,
     content: c.content,
+    likeCount: c.likeCount,
+    isLikedByCharlotte: c.isLikedByCharlotte,
+    isFirst: c.isFirst,
+    userId: c.userId,
+    userName: c.user.name || "Anonim",
+    userAvatar: c.user.avatarUrl,
+    chapterId: c.chapterId,
+    createdAt: c.createdAt.toISOString(),
+  }
+}
+
+export async function likeComment(commentId: string): Promise<Comment | null> {
+  const existing = await prisma.comment.findUnique({ where: { id: commentId } })
+  if (!existing) return null
+
+  const c = await prisma.comment.update({
+    where: { id: commentId },
+    data: { likeCount: { increment: 1 } },
+    include: { user: { select: { id: true, name: true, avatarUrl: true, role: true } } },
+  })
+
+  return {
+    id: c.id,
+    content: c.content,
+    likeCount: c.likeCount,
+    isLikedByCharlotte: c.isLikedByCharlotte,
+    isFirst: c.isFirst,
+    userId: c.userId,
+    userName: c.user.name || "Anonim",
+    userAvatar: c.user.avatarUrl,
+    chapterId: c.chapterId,
+    createdAt: c.createdAt.toISOString(),
+  }
+}
+
+export async function unlikeComment(commentId: string): Promise<Comment | null> {
+  const existing = await prisma.comment.findUnique({ where: { id: commentId } })
+  if (!existing) return null
+
+  const c = await prisma.comment.update({
+    where: { id: commentId },
+    data: { likeCount: { decrement: 1 } },
+    include: { user: { select: { id: true, name: true, avatarUrl: true, role: true } } },
+  })
+
+  return {
+    id: c.id,
+    content: c.content,
+    likeCount: c.likeCount,
+    isLikedByCharlotte: c.isLikedByCharlotte,
+    isFirst: c.isFirst,
+    userId: c.userId,
+    userName: c.user.name || "Anonim",
+    userAvatar: c.user.avatarUrl,
+    chapterId: c.chapterId,
+    createdAt: c.createdAt.toISOString(),
+  }
+}
+
+export async function toggleLikeByCharlotte(commentId: string): Promise<Comment | null> {
+  const existing = await prisma.comment.findUnique({ where: { id: commentId } })
+  if (!existing) return null
+
+  const c = await prisma.comment.update({
+    where: { id: commentId },
+    data: {
+      isLikedByCharlotte: !existing.isLikedByCharlotte,
+      likeCount: existing.isLikedByCharlotte
+        ? { decrement: 1 }
+        : { increment: 1 },
+    },
+    include: { user: { select: { id: true, name: true, avatarUrl: true, role: true } } },
+  })
+
+  return {
+    id: c.id,
+    content: c.content,
+    likeCount: c.likeCount,
+    isLikedByCharlotte: c.isLikedByCharlotte,
+    isFirst: c.isFirst,
     userId: c.userId,
     userName: c.user.name || "Anonim",
     userAvatar: c.user.avatarUrl,

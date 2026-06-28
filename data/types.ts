@@ -45,6 +45,9 @@ export interface ReadingProgressInfo {
 export interface Comment {
   id: string;
   content: string;
+  likeCount: number;
+  isLikedByCharlotte: boolean;
+  isFirst: boolean;
   userId: string;
   userName: string;
   userAvatar: string | null;

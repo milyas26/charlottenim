@@ -153,12 +153,15 @@ model ReadingProgress {
 }
 
 model Comment {
-  id        String   @id @default(cuid())
-  content   String
-  userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  chapterId String
-  chapter   Chapter  @relation(fields: [chapterId], references: [id], onDelete: Cascade)
+  id                 String   @id @default(cuid())
+  content            String
+  likeCount          Int      @default(0)
+  isLikedByCharlotte Boolean  @default(false)
+  isFirst            Boolean  @default(false)
+  userId             String
+  user               User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  chapterId          String
+  chapter            Chapter  @relation(fields: [chapterId], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

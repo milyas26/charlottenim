@@ -1,0 +1,4 @@
+-- AlterTable
+ALTER TABLE "Comment" ADD COLUMN     "isFirst" BOOLEAN NOT NULL DEFAULT false,
+ADD COLUMN     "isLikedByCharlotte" BOOLEAN NOT NULL DEFAULT false,
+ADD COLUMN     "likeCount" INTEGER NOT NULL DEFAULT 0;
