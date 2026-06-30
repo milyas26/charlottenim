@@ -170,23 +170,45 @@ export default function WorkCard({ work }: Props) {
           </div>
 
           <div
-            className="text-[10px] font-semibold flex items-center gap-1"
+            className="text-[10px] font-semibold flex items-center justify-between"
             style={{ color: "var(--muted)" }}
           >
-            <svg
-              width="10"
-              height="10"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              style={{ opacity: 0.55 }}
-            >
-              <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
-              <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
-            </svg>
-            {work.totalChapters}
+            <span className="flex items-center gap-1">
+              <svg
+                width="10"
+                height="10"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                style={{ opacity: 0.55 }}
+              >
+                <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+                <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+              </svg>
+              {work.totalChapters} chapters
+            </span>
+
+            {work.totalReads !== undefined && (
+              <span className="flex items-center gap-1">
+                <svg
+                  width="10"
+                  height="10"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  style={{ opacity: 0.55 }}
+                >
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                  <circle cx="12" cy="12" r="3" />
+                </svg>
+                {(work.totalReads ?? 0).toLocaleString("id-ID")} reads
+              </span>
+            )}
           </div>
         </div>
       </div>

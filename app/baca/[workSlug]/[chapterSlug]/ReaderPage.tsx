@@ -8,6 +8,8 @@ import ChapterContent from "@/components/reader/ChapterContent";
 import ReadingCustomization from "@/components/reader/ReadingCustomization";
 import PaywallOverlay from "@/components/reader/PaywallOverlay";
 import CommentsSection from "@/components/reader/CommentsSection";
+import LoginGate from "@/components/reader/LoginGate";
+import { useReaderGate } from "@/hooks/useReaderGate";
 import { hapticTap } from "@/lib/haptics";
 import { useMarkChapterRead, useSaveProgress } from "@/lib/api/chapters";
 import {
@@ -40,8 +42,14 @@ export default function ReaderPage({
 }: Props) {
   const { settings, update } = useReaderSettings();
   const { user } = useAuth();
-  const [progress, setProgress] = useState(0);
   const isUnlocked = initiallyUnlocked;
+  const { mustLogin, loading: gateLoading } = useReaderGate(
+    work.slug,
+    chapter.slug,
+    chapter.id,
+    isUnlocked
+  );
+  const [progress, setProgress] = useState(0);
   const [paymentStatus] = useState(() => {
     if (typeof window === "undefined") return null;
     return new URLSearchParams(window.location.search).get("payment");
@@ -73,10 +81,10 @@ export default function ReaderPage({
   }, []);
 
   useEffect(() => {
-    if (!isUnlocked) return;
+    if (!isUnlocked || mustLogin) return;
     chapterReadMutation.mutate(chapter.id);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [chapter.id, isUnlocked]);
+  }, [chapter.id, isUnlocked, mustLogin]);
 
   useEffect(() => {
     if (!user) return;
@@ -86,6 +94,16 @@ export default function ReaderPage({
 
   const isDark = settings.readingMode === "black";
   const tagBgPremium = isDark ? premiumBgDark : premiumBgLight;
+
+  if (gateLoading) {
+    return (
+      <div className="min-h-screen w-full" style={{ backgroundColor: "var(--rm-bg)" }} />
+    );
+  }
+
+  if (mustLogin) {
+    return <LoginGate />;
+  }
 
   return (
     <div className="min-h-screen w-full flex justify-center bg-[var(--rm-bg)] animate-page-enter">

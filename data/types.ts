@@ -11,6 +11,7 @@ export interface Work {
   genres: string[];
   status: WorkStatus;
   totalChapters: number;
+  totalReads?: number;
   deletedAt?: string | null;
 }
 
