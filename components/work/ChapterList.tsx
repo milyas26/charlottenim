@@ -1,6 +1,7 @@
 "use client";
 
 import { Chapter } from "@/data/types";
+import { formatCompactNumber } from "@/lib/formatNumber";
 
 interface Props {
   chapters: Chapter[];
@@ -49,7 +50,7 @@ export default function ChapterList({ chapters, workSlug }: Props) {
                   {chapter.title}
                 </p>
                 <p className="text-[11px] font-medium" style={{ color: "var(--muted)" }}>
-                  {chapter.readCount.toLocaleString("id-ID")} pembaca · {chapter.commentCount.toLocaleString("id-ID")} komentar
+                  {formatCompactNumber(chapter.readCount)} pembaca · {chapter.commentCount.toLocaleString("id-ID")} komentar
                 </p>
               </div>
             </div>

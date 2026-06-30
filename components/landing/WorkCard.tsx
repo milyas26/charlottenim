@@ -1,6 +1,7 @@
 "use client";
 
 import { Work } from "@/data/types";
+import { formatCompactNumber } from "@/lib/formatNumber";
 
 interface Props {
   work: Work;
@@ -206,7 +207,7 @@ export default function WorkCard({ work }: Props) {
                   <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
                   <circle cx="12" cy="12" r="3" />
                 </svg>
-                {(work.totalReads ?? 0).toLocaleString("id-ID")} reads
+                {formatCompactNumber(work.totalReads ?? 0)} reads
               </span>
             )}
           </div>
