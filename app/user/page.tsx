@@ -138,7 +138,7 @@ export default function UserProfilePage() {
 
           <div className="mt-6">
             <a
-              href="/user/contact"
+              href="/contact"
               className="flex items-center justify-center gap-2 text-sm font-semibold px-6 py-3 rounded-xl transition-all duration-200 hover:opacity-90 tap-feedback"
               style={{
                 backgroundColor: "var(--surface)",
