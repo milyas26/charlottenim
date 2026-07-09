@@ -14,6 +14,39 @@ import {
 import { useAuth } from "@/contexts/AuthContext";
 import { createPayment } from "@/lib/api/payments";
 
+const SNAP_SRC = process.env.NEXT_PUBLIC_MIDTRANS_IS_PRODUCTION === "true"
+  ? "https://app.midtrans.com/snap/snap.js"
+  : "https://app.sandbox.midtrans.com/snap/snap.js";
+
+const CLIENT_KEY = process.env.NEXT_PUBLIC_MIDTRANS_CLIENT_KEY ?? "";
+
+let snapScriptLoaded = false;
+
+function loadSnapScript(): Promise<void> {
+  return new Promise((resolve) => {
+    if (snapScriptLoaded) {
+      resolve();
+      return;
+    }
+    const existing = document.querySelector(`script[src="${SNAP_SRC}"]`);
+    if (existing) {
+      existing.addEventListener("load", () => {
+        snapScriptLoaded = true;
+        resolve();
+      });
+      return;
+    }
+    const script = document.createElement("script");
+    script.src = SNAP_SRC;
+    script.setAttribute("data-client-key", CLIENT_KEY);
+    script.onload = () => {
+      snapScriptLoaded = true;
+      resolve();
+    };
+    document.body.appendChild(script);
+  });
+}
+
 interface Props {
   price: number;
   chapterId: string;
@@ -24,6 +57,19 @@ interface Props {
 function getErrorMessage(err: unknown): string {
   const axiosErr = err as { response?: { data?: { error?: string } } };
   return axiosErr?.response?.data?.error ?? "Gagal memproses pembayaran. Coba lagi.";
+}
+
+declare global {
+  interface Window {
+    snap?: {
+      pay: (token: string, callbacks: {
+        onSuccess?: (result: unknown) => void;
+        onPending?: (result: unknown) => void;
+        onError?: (result: unknown) => void;
+        onClose?: () => void;
+      }) => void;
+    };
+  }
 }
 
 export default function PaywallOverlay({ price, chapterId, workSlug, chapterSlug }: Props) {
@@ -37,12 +83,24 @@ export default function PaywallOverlay({ price, chapterId, workSlug, chapterSlug
       chapterSlug,
       payerEmail: user!.email,
     }),
-    onSuccess: (data) => {
-      if (data.invoiceUrl) {
-        window.location.href = data.invoiceUrl
-      }
+    onSuccess: async (data) => {
+      await loadSnapScript();
+      const paymentUrl = new URL(window.location.href);
+      paymentUrl.searchParams.set("payment", "success");
+      window.snap?.pay(data.snapToken, {
+        onSuccess: () => {
+          window.location.href = paymentUrl.toString();
+        },
+        onPending: () => {
+          window.location.href = paymentUrl.toString();
+        },
+        onError: () => {
+          window.location.href = paymentUrl.toString();
+        },
+        onClose: () => {},
+      });
     },
-  })
+  });
 
   const formattedPrice = new Intl.NumberFormat("id-ID", {
     style: "currency",
