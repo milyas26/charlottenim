@@ -38,8 +38,8 @@ export default function PaywallOverlay({ price, chapterId, workSlug, chapterSlug
       payerEmail: user!.email,
     }),
     onSuccess: (data) => {
-      if (data.invoiceUrl) {
-        window.location.href = data.invoiceUrl
+      if (data.paymentUrl) {
+        window.location.href = data.paymentUrl
       }
     },
   })

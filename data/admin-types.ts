@@ -18,10 +18,8 @@ export interface Purchase {
   workTitle: string;
   amount: number;
   status: "PENDING" | "PAID" | "FAILED";
-  xenditInvoiceUrl?: string | null;
-  xenditPaymentChannel?: string | null;
-  xenditPaymentMethod?: string | null;
-  xenditExpiryDate?: string | null;
+  duitkuPaymentUrl?: string | null;
+  duitkuPaymentCode?: string | null;
   paidAt?: string | null;
   failureReason?: string | null;
   createdAt: string;

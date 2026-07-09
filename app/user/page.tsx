@@ -135,6 +135,25 @@ export default function UserProfilePage() {
             </div>
           )}
         </section>
+
+          <div className="mt-6">
+            <a
+              href="/user/contact"
+              className="flex items-center justify-center gap-2 text-sm font-semibold px-6 py-3 rounded-xl transition-all duration-200 hover:opacity-90 tap-feedback"
+              style={{
+                backgroundColor: "var(--surface)",
+                color: "var(--accent)",
+                border: "1px solid var(--border)",
+              }}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="10" />
+                <path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3" />
+                <line x1="12" y1="17" x2="12.01" y2="17" />
+              </svg>
+              Contact Support
+            </a>
+          </div>
       </div>
 
       <BottomNav />

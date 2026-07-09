@@ -7,7 +7,7 @@ export async function createPayment(payload: {
   chapterSlug: string
   payerEmail: string
 }) {
-  const { data } = await api.post<{ invoiceUrl: string }>("/api/payments/create", payload)
+  const { data } = await api.post<{ paymentUrl: string }>("/api/payments/create", payload)
   return data
 }
 
