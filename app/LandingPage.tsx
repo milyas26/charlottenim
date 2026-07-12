@@ -96,8 +96,6 @@ export default function LandingPage({ works }: Props) {
       </main>
 
       <BottomNav />
-
-
     </div>
   );
 }

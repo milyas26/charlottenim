@@ -97,12 +97,12 @@ export default function Footer() {
         </div>
 
         <div className="text-center pt-4">
-          <p
+          {/* <p
             className="text-[10px] tracking-[0.3em] uppercase font-semibold"
             style={{ color: "var(--muted)", opacity: 0.35 }}
           >
             charlottenimmm
-          </p>
+          </p> */}
         </div>
       </div>
     </footer>
