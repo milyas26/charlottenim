@@ -185,13 +185,22 @@ export default function ReaderPage({
             />
           ) : (
             <>
-              <ChapterContent
-                content={chapter.content}
-                settings={settings}
-                isPremium={true}
-                isUnlocked={false}
-                previewOnly={true}
-              />
+              <div className="relative">
+                <ChapterContent
+                  content={chapter.content}
+                  settings={settings}
+                  isPremium={true}
+                  isUnlocked={false}
+                  previewOnly={true}
+                />
+                <div
+                  className="absolute bottom-0 left-0 right-0 pointer-events-none"
+                  style={{
+                    height: "96px",
+                    background: "linear-gradient(to bottom, transparent, var(--rm-bg))",
+                  }}
+                />
+              </div>
               <div className="relative my-3 text-center">
                 <div className="absolute inset-0 flex items-center" aria-hidden="true">
                   <div className="w-full" style={{ borderTop: "1px dashed var(--rm-border)" }} />

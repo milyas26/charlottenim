@@ -60,5 +60,16 @@ export default function ChapterContent({
 function getPreviewParagraphs(html: string): string {
   const match = html.match(/<p>[\s\S]*?<\/p>/g);
   if (!match || match.length === 0) return html;
-  return match.slice(0, 3).join("");
+  let preview = match.slice(0, 3).join("");
+  preview = limitImages(preview, 1);
+  return preview;
+}
+
+function limitImages(html: string, maxImages: number): string {
+  let count = 0;
+  return html.replace(/<img[\s\S]*?>/gi, (m) => {
+    count++;
+    if (count > maxImages) return "";
+    return m;
+  });
 }
