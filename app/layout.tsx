@@ -3,6 +3,7 @@ import { Geist, Geist_Mono, Playfair_Display, Lora } from "next/font/google";
 import { Providers } from "@/contexts";
 import { Toaster } from "sonner";
 import { SerwistProvider } from "@serwist/turbopack/react";
+import Footer from "@/components/layout/Footer";
 import "./globals.css";
 
 export const dynamic = "force-dynamic";
@@ -122,6 +123,7 @@ export default function RootLayout({
         <SerwistProvider swUrl="/serwist/sw.js">
           <Providers>
             {children}
+            <Footer />
             <Toaster position="top-center" richColors />
           </Providers>
         </SerwistProvider>

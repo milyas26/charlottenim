@@ -25,14 +25,7 @@ export default function DetailPage({ work, chapters, firstChapterSlug, readingPr
 
       <BottomNav />
 
-      <footer className="text-center py-6 pb-20">
-        <p
-          className="text-xs tracking-widest uppercase font-medium"
-          style={{ color: "var(--muted)", opacity: 0.4 }}
-        >
-          charlottenimmm
-        </p>
-      </footer>
+
     </div>
   );
 }

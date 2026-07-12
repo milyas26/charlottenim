@@ -1,32 +1,35 @@
 "use client";
 
-import BottomNav from "@/components/layout/BottomNav";
-import Link from "next/link";
-import { Mail, Phone, MapPin, ArrowLeft } from "lucide-react";
+import { usePathname } from "next/navigation";
+import Logo from "@/components/Logo";
+import { Mail, Phone, MapPin } from "lucide-react";
 
-export default function ContactSupportPage() {
+export default function Footer() {
+  const pathname = usePathname();
+
+  if (pathname.startsWith("/baca/")) return null;
+  if (pathname.startsWith("/nulis")) return null;
+
   return (
-    <div className="min-h-screen px-4 pb-28">
-      <div className="max-w-[480px] mx-auto pt-8">
-        <Link
-          href="/user"
-          className="inline-flex items-center gap-1.5 text-sm font-medium mb-8 tap-feedback"
-          style={{ color: "var(--muted)" }}
-        >
-          <ArrowLeft size={16} />
-          Kembali
-        </Link>
+    <footer className="mt-auto border-t" style={{ borderColor: "var(--border)" }}>
+      <div className="max-w-[480px] mx-auto px-4 pt-10 pb-6 space-y-8">
+        <div className="flex flex-col items-center text-center">
+          <Logo href={undefined} className="mb-3" />
+          <p className="text-sm leading-relaxed max-w-xs" style={{ color: "var(--muted)" }}>
+            Platform baca novel & AU karya Charlottenimmm. Temukan cerita premium, dukung langsung kreator favoritmu.
+          </p>
+        </div>
 
-        <section
-          className="rounded-xl p-5 space-y-5"
+        <div
+          className="rounded-xl p-5 space-y-4"
           style={{
             backgroundColor: "var(--surface)",
             border: "1px solid var(--border)",
           }}
         >
-          <h2 className="text-sm font-bold font-[family-name:var(--font-display)]">
+          <h3 className="text-xs font-bold font-[family-name:var(--font-display)]">
             Hubungi Kami
-          </h2>
+          </h3>
 
           <a
             href="mailto:charlottenimmm@gmail.com"
@@ -91,10 +94,17 @@ export default function ContactSupportPage() {
               </p>
             </div>
           </div>
-        </section>
-      </div>
+        </div>
 
-      <BottomNav />
-    </div>
+        <div className="text-center pt-4">
+          <p
+            className="text-[10px] tracking-[0.3em] uppercase font-semibold"
+            style={{ color: "var(--muted)", opacity: 0.35 }}
+          >
+            charlottenimmm
+          </p>
+        </div>
+      </div>
+    </footer>
   );
 }

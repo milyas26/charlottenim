@@ -97,15 +97,7 @@ export default function LandingPage({ works }: Props) {
 
       <BottomNav />
 
-      <footer className="text-center py-6 pb-20 relative z-[1]">
-        <div className="gold-rule max-w-[120px] mx-auto mb-3" />
-        <p
-          className="text-[11px] tracking-[0.35em] uppercase font-medium"
-          style={{ color: "var(--muted)", opacity: 0.3 }}
-        >
-          charlottenimmm
-        </p>
-      </footer>
+
     </div>
   );
 }
