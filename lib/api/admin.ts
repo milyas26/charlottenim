@@ -17,6 +17,18 @@ export async function fetchAdminStats(cookie?: string) {
   return apiFetch<AdminStats>("/api/nulis/stats", { cookie })
 }
 
+export async function fetchAdminStatsClient() {
+  const { data } = await api.get<AdminStats>("/api/nulis/stats")
+  return data
+}
+
+export function useAdminStats() {
+  return useQuery({
+    queryKey: adminKeys.stats(),
+    queryFn: fetchAdminStatsClient,
+  })
+}
+
 export async function fetchAdminOrders() {
   const { data } = await api.get<Purchase[]>("/api/nulis/orders")
   return data
