@@ -126,7 +126,7 @@ export default async function AdminDashboardPage() {
                 <div key={`${purchase.createdAt}-${i}`} className="flex items-center justify-between">
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium truncate">{purchase.userName}</p>
-                    <p className="text-xs text-muted-foreground truncate">{purchase.workTitle} — {purchase.chapterTitle}</p>
+                    <p className="text-xs text-muted-foreground truncate">{purchase.workTitle} — {purchase.targetTitle}</p>
                   </div>
                   <div className="ml-3 text-right">
                     <p className="text-sm font-medium">Rp {purchase.amount.toLocaleString("id-ID")}</p>

@@ -33,6 +33,77 @@ export interface Chapter {
   commentCount: number;
   status: ChapterStatus;
   deletedAt?: string | null;
+  bundleTitle?: string | null;
+}
+
+export interface BundleInfo {
+  id: string;
+  workId: string;
+  workTitle: string;
+  workSlug: string;
+  title: string;
+  slug: string;
+  description: string;
+  price: number;
+  chapterCount: number;
+  chapters: BundleChapterInfo[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface BundleChapterInfo {
+  id: string;
+  chapterNumber: number;
+  title: string;
+  slug: string;
+  isPremium: boolean;
+  price: number;
+}
+
+export interface BundleListItem {
+  id: string;
+  workId: string;
+  workTitle: string;
+  workSlug: string;
+  title: string;
+  slug: string;
+  description: string;
+  price: number;
+  chapterCount: number;
+  createdAt: string;
+}
+
+export interface ChapterBundleInfo {
+  id: string;
+  title: string;
+  slug: string;
+  price: number;
+  chapterCount: number;
+  workTitle: string;
+}
+
+export interface PublicBundle {
+  id: string;
+  workId: string;
+  workTitle: string;
+  workSlug: string;
+  workCoverUrl: string;
+  title: string;
+  slug: string;
+  description: string;
+  price: number;
+  chapterCount: number;
+  chapters: BundleChapterInfo[];
+}
+
+export interface PublicBundleListItem {
+  id: string;
+  workTitle: string;
+  workCoverUrl: string;
+  title: string;
+  slug: string;
+  price: number;
+  chapterCount: number;
 }
 
 export interface ReadingProgressInfo {

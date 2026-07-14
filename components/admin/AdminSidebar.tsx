@@ -9,6 +9,7 @@ import {
   ChevronLeft,
   ShoppingCart,
   MessageSquare,
+  Package,
 } from "lucide-react"
 
 import { cn } from "@/lib/utils"
@@ -36,6 +37,11 @@ const sidebarItems = [
     title: "Orders",
     href: "/nulis/orders",
     icon: ShoppingCart,
+  },
+  {
+    title: "Paket",
+    href: "/nulis/paket",
+    icon: Package,
   },
   {
     title: "Comments",

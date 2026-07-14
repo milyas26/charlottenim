@@ -21,7 +21,7 @@ export default function AdminOrdersPage() {
     const matchSearch =
       p.userName.toLowerCase().includes(search.toLowerCase()) ||
       p.workTitle.toLowerCase().includes(search.toLowerCase()) ||
-      p.chapterTitle.toLowerCase().includes(search.toLowerCase())
+      p.targetTitle.toLowerCase().includes(search.toLowerCase())
     const matchStatus = statusFilter === "ALL" || p.status === statusFilter
     return matchSearch && matchStatus
   })
@@ -77,7 +77,8 @@ export default function AdminOrdersPage() {
             <TableRow>
               <TableHead>User</TableHead>
               <TableHead>Karya</TableHead>
-              <TableHead>Chapter</TableHead>
+              <TableHead>Tipe</TableHead>
+              <TableHead>Item</TableHead>
               <TableHead className="text-right">Jumlah</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Tanggal</TableHead>
@@ -86,7 +87,7 @@ export default function AdminOrdersPage() {
           <TableBody>
             {filtered.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
                   Tidak ada pembelian ditemukan.
                 </TableCell>
               </TableRow>
@@ -95,7 +96,12 @@ export default function AdminOrdersPage() {
                 <TableRow key={`${p.createdAt}-${p.userId || i}`}>
                   <TableCell className="font-medium">{p.userName}</TableCell>
                   <TableCell className="text-muted-foreground">{p.workTitle}</TableCell>
-                  <TableCell className="text-muted-foreground">{p.chapterTitle}</TableCell>
+                  <TableCell>
+                    <Badge variant={p.type === "bundle" ? "outline" : "secondary"}>
+                      {p.type === "bundle" ? "Paket" : "Chapter"}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="text-muted-foreground">{p.targetTitle}</TableCell>
                   <TableCell className="text-right">Rp {p.amount.toLocaleString("id-ID")}</TableCell>
                   <TableCell>
                     <Badge variant={statusVariant[p.status]}>

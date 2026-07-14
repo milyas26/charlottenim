@@ -14,7 +14,8 @@ export interface Purchase {
   id: string;
   userId: string;
   userName: string;
-  chapterTitle: string;
+  type: "chapter" | "bundle";
+  targetTitle: string;
   workTitle: string;
   amount: number;
   status: "PENDING" | "PAID" | "FAILED";

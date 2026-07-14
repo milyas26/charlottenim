@@ -107,7 +107,8 @@ export default function AdminUserDetailPage({ params }: { params: Promise<{ id: 
                 <TableHeader>
                   <TableRow>
                     <TableHead>Karya</TableHead>
-                    <TableHead>Chapter</TableHead>
+                    <TableHead>Tipe</TableHead>
+                    <TableHead>Item</TableHead>
                     <TableHead>Jumlah</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead className="text-right">Tanggal</TableHead>
@@ -115,9 +116,14 @@ export default function AdminUserDetailPage({ params }: { params: Promise<{ id: 
                 </TableHeader>
                 <TableBody>
                   {user.purchases.map((p) => (
-                    <TableRow key={p.createdAt + p.userId + p.workTitle}>
+                    <TableRow key={p.createdAt + p.userId + p.targetTitle}>
                       <TableCell className="font-medium">{p.workTitle}</TableCell>
-                      <TableCell className="text-muted-foreground">{p.chapterTitle}</TableCell>
+                      <TableCell>
+                        <Badge variant={p.type === "bundle" ? "outline" : "secondary"}>
+                          {p.type === "bundle" ? "Paket" : "Chapter"}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-muted-foreground">{p.targetTitle}</TableCell>
                       <TableCell>Rp {p.amount.toLocaleString("id-ID")}</TableCell>
                       <TableCell>
                         <Badge variant={p.status === "PAID" ? "default" : p.status === "FAILED" ? "destructive" : "secondary"}>

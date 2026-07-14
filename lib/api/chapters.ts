@@ -47,6 +47,7 @@ export type ChapterListItem = {
   readCount: number
   status: ChapterStatus
   deletedAt?: string | null
+  bundleTitle?: string | null
 }
 
 export async function fetchAdminChapterList(workId: string) {

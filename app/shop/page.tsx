@@ -1,65 +1,108 @@
 "use client";
 
-import BottomNav from "@/components/layout/BottomNav";
+import { useQuery } from "@tanstack/react-query"
+import BottomNav from "@/components/layout/BottomNav"
+import BundleCard from "@/components/shop/BundleCard"
+import { fetchPublicBundles } from "@/lib/api/bundles"
+import { Loader2, Package, Book, BookOpen } from "lucide-react"
 
 export default function ShopPage() {
+  const { data: bundles = [], isLoading } = useQuery({
+    queryKey: ["bundles", "public"],
+    queryFn: fetchPublicBundles,
+  })
+
   return (
     <div className="min-h-screen bg-[var(--background)] flex flex-col">
-      <div className="flex-1 flex flex-col items-center justify-center max-w-[480px] mx-auto w-full px-4 pb-24">
-        <div
-          className="size-20 rounded-full flex items-center justify-center mb-5"
-          style={{ backgroundColor: "color-mix(in srgb, var(--accent) 10%, transparent)" }}
-        >
-          <svg
-            width="32"
-            height="32"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            style={{ color: "var(--accent)" }}
+      <div className="flex-1 max-w-[480px] mx-auto w-full px-4 pb-24">
+        <div className="pt-6 pb-4">
+          <h1
+            className="text-xl font-bold font-[family-name:var(--font-display)] text-center tracking-wide"
+            style={{ color: "var(--foreground)" }}
           >
-            <circle cx="9" cy="21" r="1" />
-            <circle cx="20" cy="21" r="1" />
-            <path d="M1 1h4l2.68 13.39a2 2 0 002 1.61h9.72a2 2 0 002-1.61L23 6H6" />
-          </svg>
+            Shop
+          </h1>
+          <div className="gold-rule max-w-[80px] mx-auto my-3" />
         </div>
 
-        <h1
-          className="text-xl font-bold font-[family-name:var(--font-display)] text-center tracking-wide"
-          style={{ color: "var(--foreground)" }}
-        >
-          Shop
-        </h1>
+        <section className="mb-8">
+          <div className="flex items-center gap-2 mb-3">
+            <Package className="size-5" style={{ color: "var(--accent)" }} />
+            <h2
+              className="text-base font-bold font-[family-name:var(--font-display)]"
+              style={{ color: "var(--foreground)" }}
+            >
+              Paket
+            </h2>
+            {!isLoading && (
+              <span className="text-xs" style={{ color: "var(--muted)" }}>
+                ({bundles.length})
+              </span>
+            )}
+          </div>
 
-        <div className="gold-rule max-w-[80px] mx-auto my-4" />
+          {isLoading ? (
+            <div className="flex items-center justify-center py-16">
+              <Loader2 className="size-6 animate-spin" style={{ color: "var(--muted)" }} />
+            </div>
+          ) : bundles.length === 0 ? (
+            <div
+              className="rounded-2xl p-8 text-center"
+              style={{
+                backgroundColor: "var(--surface)",
+                border: "1px solid var(--border)",
+              }}
+            >
+              <div
+                className="size-12 rounded-full flex items-center justify-center mx-auto mb-3"
+                style={{ backgroundColor: "color-mix(in srgb, var(--accent) 10%, transparent)" }}
+              >
+                <Package className="size-6" style={{ color: "var(--accent)" }} />
+              </div>
+              <p className="text-sm" style={{ color: "var(--muted)" }}>
+                Belum ada paket tersedia.
+              </p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 gap-3">
+              {bundles.map((bundle) => (
+                <BundleCard key={bundle.id} bundle={bundle} />
+              ))}
+            </div>
+          )}
+        </section>
 
-        <p
-          className="text-sm text-center leading-relaxed max-w-[260px]"
-          style={{ color: "var(--muted)" }}
-        >
-          Toko akan segera hadir. Nantikan merchandise dan koleksi spesial.
-        </p>
+        <section>
+          <div className="flex items-center gap-2 mb-3">
+            <Book className="size-5" style={{ color: "var(--accent)" }} />
+            <h2
+              className="text-base font-bold font-[family-name:var(--font-display)]"
+              style={{ color: "var(--foreground)" }}
+            >
+              Buku Cetak
+            </h2>
+          </div>
 
-        <div className="flex gap-1.5 mt-6">
-          <span
-            className="size-1.5 rounded-full"
-            style={{ backgroundColor: "var(--accent)", opacity: 0.4 }}
-          />
-          <span
-            className="size-1.5 rounded-full animate-pulse-dot"
-            style={{ backgroundColor: "var(--accent)" }}
-          />
-          <span
-            className="size-1.5 rounded-full"
-            style={{ backgroundColor: "var(--accent)", opacity: 0.4 }}
-          />
-        </div>
+          <div
+            className="rounded-2xl p-8 text-center"
+            style={{
+              backgroundColor: "var(--surface)",
+              border: "1px solid var(--border)",
+            }}
+          >
+            <div
+              className="size-12 rounded-full flex items-center justify-center mx-auto mb-3"
+              style={{ backgroundColor: "color-mix(in srgb, var(--accent) 10%, transparent)" }}
+            >
+              <BookOpen className="size-6" style={{ color: "var(--accent)" }} />
+            </div>
+            <p className="text-sm" style={{ color: "var(--muted)" }}>
+              Segera hadir.
+            </p>
+          </div>
+        </section>
       </div>
-
       <BottomNav />
     </div>
-  );
+  )
 }

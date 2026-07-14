@@ -54,6 +54,7 @@ import {
   X,
   Upload,
   Loader2,
+  Package,
 } from "lucide-react"
 import { GENRES } from "@/lib/constants"
 import {
@@ -231,6 +232,12 @@ export default function AdminWorkDetailPage({ params }: { params: Promise<{ id: 
           }}>
             <Edit className="size-4" />
             Edit Karya
+          </Button>
+          <Button variant="outline" size="sm" asChild>
+            <Link href={`/nulis/karya/${work.id}/paket/create`}>
+              <Package className="size-4" />
+              Buat Paket
+            </Link>
           </Button>
           <Button size="sm" asChild>
             <Link href={`/nulis/karya/${work.id}/chapter/create`}>
@@ -534,18 +541,19 @@ export default function AdminWorkDetailPage({ params }: { params: Promise<{ id: 
                   <TableHead>Chapter</TableHead>
                   <TableHead>Judul</TableHead>
                   <TableHead>Akses</TableHead>
+                  <TableHead>Paket</TableHead>
                   <TableHead className="text-right">Dibaca</TableHead>
                   <TableHead className="w-[60px]"></TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {chapters.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
-                      Belum ada chapter. Tambah chapter pertama.
-                    </TableCell>
-                  </TableRow>
-                ) : (
+                  {chapters.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                        Belum ada chapter. Tambah chapter pertama.
+                      </TableCell>
+                    </TableRow>
+                  ) : (
                   chapters.map((ch, index) => (
                     <TableRow
                       key={ch.id}
@@ -588,6 +596,16 @@ export default function AdminWorkDetailPage({ params }: { params: Promise<{ id: 
                             <LockOpen className="size-3" />
                             Gratis
                           </Badge>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        {ch.bundleTitle ? (
+                          <Badge variant="outline" className="gap-1 text-xs">
+                            <Package className="size-3" />
+                            {ch.bundleTitle}
+                          </Badge>
+                        ) : (
+                          <span className="text-xs text-muted-foreground">-</span>
                         )}
                       </TableCell>
                       <TableCell className="text-right text-muted-foreground">
