@@ -11,16 +11,17 @@ interface Props {
   chapters: Chapter[];
   firstChapterSlug: string;
   readingProgress: ReadingProgressInfo | null;
+  unlockedChapterIds: string[];
 }
 
-export default function DetailPage({ work, chapters, firstChapterSlug, readingProgress }: Props) {
+export default function DetailPage({ work, chapters, firstChapterSlug, readingProgress, unlockedChapterIds }: Props) {
   return (
     <div className="min-h-screen bg-[var(--background)] animate-page-enter">
       <Navbar />
 
       <main className="max-w-[480px] mx-auto px-4 pt-4 pb-28">
         <WorkHeader work={work} firstChapterSlug={firstChapterSlug} readingProgress={readingProgress} />
-        <ChapterList chapters={chapters} workSlug={work.slug} />
+        <ChapterList chapters={chapters} workSlug={work.slug} unlockedChapterIds={unlockedChapterIds} />
       </main>
 
       <BottomNav />

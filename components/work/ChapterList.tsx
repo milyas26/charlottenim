@@ -2,13 +2,17 @@
 
 import { Chapter } from "@/data/types";
 import { formatCompactNumber } from "@/lib/formatNumber";
+import { CheckCircle } from "lucide-react";
 
 interface Props {
   chapters: Chapter[];
   workSlug: string;
+  unlockedChapterIds: string[];
 }
 
-export default function ChapterList({ chapters, workSlug }: Props) {
+export default function ChapterList({ chapters, workSlug, unlockedChapterIds }: Props) {
+  const unlockedSet = new Set(unlockedChapterIds)
+
   return (
     <div>
       <h2
@@ -19,7 +23,10 @@ export default function ChapterList({ chapters, workSlug }: Props) {
       </h2>
 
       <div className="space-y-2">
-        {chapters.map((chapter, i) => (
+        {chapters.map((chapter, i) => {
+          const isUnlocked = unlockedSet.has(chapter.id)
+
+          return (
           <div
             key={chapter.id}
             className="animate-fade-in-up"
@@ -34,10 +41,10 @@ export default function ChapterList({ chapters, workSlug }: Props) {
               <span
                 className="text-xs font-bold w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 font-[family-name:var(--font-sans)]"
                 style={{
-                  backgroundColor: chapter.isPremium
+                  backgroundColor: chapter.isPremium && !isUnlocked
                     ? "color-mix(in srgb, var(--accent) 12%, transparent)"
                     : "color-mix(in srgb, #5B8C5A 12%, transparent)",
-                  color: chapter.isPremium ? "var(--accent)" : "#5B8C5A",
+                  color: chapter.isPremium && !isUnlocked ? "var(--accent)" : "#5B8C5A",
                 }}
               >
                 {chapter.chapterNumber}
@@ -56,15 +63,28 @@ export default function ChapterList({ chapters, workSlug }: Props) {
             </div>
 
             {chapter.isPremium ? (
-              <span
-                className="text-[11px] font-semibold px-2.5 py-1 rounded-md flex-shrink-0 font-[family-name:var(--font-sans)]"
-                style={{
-                  backgroundColor: "color-mix(in srgb, var(--accent) 12%, transparent)",
-                  color: "var(--accent)",
-                }}
-              >
-                Rp {chapter.price.toLocaleString("id-ID")}
-              </span>
+              isUnlocked ? (
+                <span
+                  className="text-[11px] font-semibold px-2.5 py-1 rounded-md flex-shrink-0 font-[family-name:var(--font-sans)] flex items-center gap-1"
+                  style={{
+                    backgroundColor: "color-mix(in srgb, #5B8C5A 12%, transparent)",
+                    color: "#5B8C5A",
+                  }}
+                >
+                  <CheckCircle className="size-3" />
+                  Dibeli
+                </span>
+              ) : (
+                <span
+                  className="text-[11px] font-semibold px-2.5 py-1 rounded-md flex-shrink-0 font-[family-name:var(--font-sans)]"
+                  style={{
+                    backgroundColor: "color-mix(in srgb, var(--accent) 12%, transparent)",
+                    color: "var(--accent)",
+                  }}
+                >
+                  Rp {chapter.price.toLocaleString("id-ID")}
+                </span>
+              )
             ) : (
               <span
                 className="text-[11px] font-semibold px-2.5 py-1 rounded-md flex-shrink-0 font-[family-name:var(--font-sans)]"
@@ -78,7 +98,7 @@ export default function ChapterList({ chapters, workSlug }: Props) {
             )}
           </a>
           </div>
-        ))}
+        )})}
       </div>
     </div>
   );

@@ -32,6 +32,7 @@ export default async function KaryaDetailPage({
 
   const dbUser = await getDbUserFromCookie()
   let readingProgress: ReadingProgressInfo | null = null
+  let unlockedChapterIds: string[] = []
   if (dbUser) {
     try {
       const cookieStr = `user-data=${encodeURIComponent(JSON.stringify(dbUser))}`
@@ -52,6 +53,15 @@ export default async function KaryaDetailPage({
         }
       }
     } catch { /* no progress */ }
+
+    try {
+      const cookieStr = `user-data=${encodeURIComponent(JSON.stringify(dbUser))}`
+      const unlocked = await apiFetch<{ chapterIds: string[] }>(
+        `/api/user/unlocked-chapters/${work.id}`,
+        { cookie: cookieStr }
+      )
+      unlockedChapterIds = unlocked?.chapterIds ?? []
+    } catch { /* no unlocks */ }
   }
 
   return (
@@ -60,6 +70,7 @@ export default async function KaryaDetailPage({
       chapters={chapters}
       firstChapterSlug={firstChapterSlug}
       readingProgress={readingProgress}
+      unlockedChapterIds={unlockedChapterIds}
     />
   )
 }
