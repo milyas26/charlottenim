@@ -7,8 +7,9 @@ import { useRouter } from "next/navigation"
 import { useAuth } from "@/contexts/AuthContext"
 import LoginDialog from "@/components/LoginDialog"
 import BottomNav from "@/components/layout/BottomNav"
-import { fetchPublicBundleBySlug, createBundlePayment } from "@/lib/api/bundles"
-import { Loader2, Package, ArrowLeft } from "lucide-react"
+import { fetchPublicBundleBySlug, createManualBundlePayment } from "@/lib/api/bundles"
+import { fetchUserPurchases } from "@/lib/api/user"
+import { Loader2, Package, ArrowLeft, CheckCircle } from "lucide-react"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -36,6 +37,14 @@ export default function PublicBundleDetailPage({
     queryFn: () => fetchPublicBundleBySlug(slug),
   })
 
+  const { data: purchases } = useQuery({
+    queryKey: ["user-purchases"],
+    queryFn: fetchUserPurchases,
+    enabled: !!user,
+  })
+
+  const isOwned = bundle ? (purchases?.bundles?.some((b) => b.bundleId === bundle.id) ?? false) : false
+
   const handleBuy = async () => {
     if (!user || !bundle) return
     setShowConfirm(true)
@@ -46,14 +55,10 @@ export default function PublicBundleDetailPage({
     setShowConfirm(false)
     setIsBuying(true)
     try {
-      const data = await createBundlePayment({
+      const data = await createManualBundlePayment({
         bundleId: bundle.id,
-        workSlug: bundle.workSlug,
-        payerEmail: user.email,
       })
-      if (data.paymentUrl) {
-        window.location.href = data.paymentUrl
-      }
+      router.push(`/bayar/${data.purchaseId}`)
     } catch {
       setIsBuying(false)
     }
@@ -173,7 +178,15 @@ export default function PublicBundleDetailPage({
             </p>
           </div>
 
-          {user ? (
+          {isOwned ? (
+            <div
+              className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold"
+              style={{ backgroundColor: "color-mix(in srgb, #5B8C5A 12%, transparent)", color: "#5B8C5A" }}
+            >
+              <CheckCircle className="size-4" />
+              Sudah Dimiliki
+            </div>
+          ) : user ? (
             <button
               onClick={handleBuy}
               disabled={isBuying}
@@ -225,34 +238,70 @@ export default function PublicBundleDetailPage({
         </h2>
 
         <div className="space-y-2">
-          {bundle.chapters.map((ch) => (
-            <div
-              key={ch.id}
-              className="flex items-center gap-3 p-3 rounded-xl"
-              style={{
-                backgroundColor: "var(--surface)",
-                border: "1px solid var(--border)",
-              }}
-            >
-              <span
-                className="text-xs font-bold w-8 h-6 flex items-center justify-center rounded-md shrink-0"
+          {bundle.chapters.map((ch) => {
+            const content = (
+              <>
+                <span
+                  className="text-xs font-bold w-8 h-6 flex items-center justify-center rounded-md shrink-0"
+                  style={{
+                    backgroundColor: "color-mix(in srgb, var(--accent) 10%, transparent)",
+                    color: "var(--accent)",
+                  }}
+                >
+                  {ch.chapterNumber}
+                </span>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium truncate" style={{ color: "var(--foreground)" }}>
+                    {ch.title}
+                  </p>
+                </div>
+                <span className="text-xs shrink-0" style={{ color: "var(--muted)" }}>
+                  {ch.isPremium ? `Rp ${ch.price.toLocaleString("id-ID")}` : "Gratis"}
+                </span>
+                {isOwned && (
+                  <svg
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    style={{ color: "var(--muted)", opacity: 0.5, flexShrink: 0 }}
+                  >
+                    <path d="M9 18l6-6-6-6" />
+                  </svg>
+                )}
+              </>
+            )
+
+            const classes = isOwned
+              ? "flex items-center gap-3 p-3 rounded-xl transition-colors hover:bg-[var(--border)]"
+              : "flex items-center gap-3 p-3 rounded-xl"
+
+            return isOwned ? (
+              <Link
+                key={ch.id}
+                href={`/baca/${bundle.workSlug}/${ch.slug}`}
+                className={classes}
+                style={{ backgroundColor: "var(--surface)", border: "1px solid var(--border)" }}
+              >
+                {content}
+              </Link>
+            ) : (
+              <div
+                key={ch.id}
+                className={classes}
                 style={{
-                  backgroundColor: "color-mix(in srgb, var(--accent) 10%, transparent)",
-                  color: "var(--accent)",
+                  backgroundColor: "var(--surface)",
+                  border: "1px solid var(--border)",
                 }}
               >
-                {ch.chapterNumber}
-              </span>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium truncate" style={{ color: "var(--foreground)" }}>
-                  {ch.title}
-                </p>
+                {content}
               </div>
-              <span className="text-xs shrink-0" style={{ color: "var(--muted)" }}>
-                {ch.isPremium ? `Rp ${ch.price.toLocaleString("id-ID")}` : "Gratis"}
-              </span>
-            </div>
-          ))}
+            )
+          })}
         </div>
       </div>
       <BottomNav />

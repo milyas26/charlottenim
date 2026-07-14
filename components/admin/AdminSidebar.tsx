@@ -16,6 +16,7 @@ import { cn } from "@/lib/utils"
 import Logo from "@/components/Logo"
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
+import { usePendingOrderCount } from "@/lib/api/admin"
 
 const sidebarItems = [
   {
@@ -37,6 +38,7 @@ const sidebarItems = [
     title: "Orders",
     href: "/nulis/orders",
     icon: ShoppingCart,
+    badge: "orders" as const,
   },
   {
     title: "Paket",
@@ -52,6 +54,7 @@ const sidebarItems = [
 
 export function AdminSidebar() {
   const pathname = usePathname()
+  const { data: pendingCount = 0 } = usePendingOrderCount()
 
   return (
     <aside className="fixed inset-y-0 left-0 z-40 flex w-60 flex-col border-r bg-sidebar text-sidebar-foreground">
@@ -77,7 +80,12 @@ export function AdminSidebar() {
                 )}
               >
                 <Icon className="size-4 opacity-50" />
-                <span>{item.title}</span>
+                <span className="flex-1">{item.title}</span>
+                {"badge" in item && item.badge === "orders" && pendingCount > 0 && (
+                  <span className="inline-flex items-center justify-center size-5 rounded-full bg-red-500 text-[10px] font-bold text-white">
+                    {pendingCount > 99 ? "99+" : pendingCount}
+                  </span>
+                )}
               </Link>
             )
           })}

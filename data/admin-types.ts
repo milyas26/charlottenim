@@ -19,10 +19,13 @@ export interface Purchase {
   workTitle: string;
   amount: number;
   status: "PENDING" | "PAID" | "FAILED";
+  paymentMethod: "DUITKU" | "MANUAL_TRANSFER";
   duitkuPaymentUrl?: string | null;
   duitkuPaymentCode?: string | null;
+  paymentProofUrl?: string | null;
   paidAt?: string | null;
   failureReason?: string | null;
+  approvedAt?: string | null;
   createdAt: string;
 }
 

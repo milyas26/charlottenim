@@ -7,6 +7,7 @@ export const adminKeys = {
   all: ["admin"] as const,
   stats: () => [...adminKeys.all, "stats"] as const,
   orders: () => [...adminKeys.all, "orders"] as const,
+  pendingCount: () => [...adminKeys.all, "orders", "pending-count"] as const,
   users: () => [...adminKeys.all, "users"] as const,
   userDetail: (id: string) => [...adminKeys.all, "user", id] as const,
   images: (workId: string, chapterId?: string) => [...adminKeys.all, "images", workId, chapterId] as const,
@@ -56,6 +57,27 @@ export async function fetchAdminImages(workId: string, chapterId?: string) {
 
 export async function deleteAdminImage(id: string) {
   await api.delete(`/api/nulis/images/${id}`)
+}
+
+export async function approvePayment(purchaseId: string) {
+  await api.patch(`/api/nulis/orders/${purchaseId}/approve`)
+}
+
+export async function rejectPayment(purchaseId: string, reason?: string) {
+  await api.patch(`/api/nulis/orders/${purchaseId}/reject`, { reason })
+}
+
+export async function fetchPendingOrderCount() {
+  const { data } = await api.get<{ count: number }>("/api/nulis/orders/pending-count")
+  return data.count
+}
+
+export function usePendingOrderCount() {
+  return useQuery({
+    queryKey: adminKeys.pendingCount(),
+    queryFn: fetchPendingOrderCount,
+    refetchInterval: 30_000,
+  })
 }
 
 export function useAdminOrders() {

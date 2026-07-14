@@ -1,16 +1,28 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query"
+import { useAuth } from "@/contexts/AuthContext"
 import BottomNav from "@/components/layout/BottomNav"
 import BundleCard from "@/components/shop/BundleCard"
 import { fetchPublicBundles } from "@/lib/api/bundles"
+import { fetchUserPurchases } from "@/lib/api/user"
 import { Loader2, Package, Book, BookOpen } from "lucide-react"
 
 export default function ShopPage() {
+  const { user } = useAuth()
+
   const { data: bundles = [], isLoading } = useQuery({
     queryKey: ["bundles", "public"],
     queryFn: fetchPublicBundles,
   })
+
+  const { data: purchases } = useQuery({
+    queryKey: ["user-purchases"],
+    queryFn: fetchUserPurchases,
+    enabled: !!user,
+  })
+
+  const ownedBundleIds = new Set(purchases?.bundles?.map((b) => b.bundleId) ?? [])
 
   return (
     <div className="min-h-screen bg-[var(--background)] flex flex-col">
@@ -66,7 +78,7 @@ export default function ShopPage() {
           ) : (
             <div className="grid grid-cols-2 gap-3">
               {bundles.map((bundle) => (
-                <BundleCard key={bundle.id} bundle={bundle} />
+                <BundleCard key={bundle.id} bundle={bundle} isOwned={ownedBundleIds.has(bundle.id)} />
               ))}
             </div>
           )}

@@ -84,6 +84,20 @@ export async function createBundlePayment(payload: {
   return data
 }
 
+export async function createManualBundlePayment(payload: {
+  bundleId: string
+}) {
+  const { data } = await api.post<{
+    purchaseId: string
+    amount: number
+    bundleTitle: string
+    bankName: string
+    bankAccountNumber: string
+    bankAccountHolder: string
+  }>("/api/payments/manual/bundle/create", payload)
+  return data
+}
+
 export function useAdminBundles() {
   return useQuery({
     queryKey: bundlesKeys.adminAll(),

@@ -2,13 +2,14 @@
 
 import Link from "next/link"
 import type { PublicBundleListItem } from "@/data/types"
-import { Package } from "lucide-react"
+import { Package, CheckCircle } from "lucide-react"
 
 interface Props {
   bundle: PublicBundleListItem
+  isOwned?: boolean
 }
 
-export default function BundleCard({ bundle }: Props) {
+export default function BundleCard({ bundle, isOwned }: Props) {
   const formattedPrice = new Intl.NumberFormat("id-ID", {
     style: "currency",
     currency: "IDR",
@@ -20,12 +21,19 @@ export default function BundleCard({ bundle }: Props) {
   return (
     <Link
       href={`/paket/${bundle.slug}`}
-      className="rounded-2xl overflow-hidden flex flex-col transition-transform hover:scale-[1.02] active:scale-[0.98] tap-feedback"
+      className="rounded-2xl overflow-hidden flex flex-col transition-transform hover:scale-[1.02] active:scale-[0.98] tap-feedback relative"
       style={{
         backgroundColor: "var(--surface)",
         border: "1px solid var(--border)",
       }}
     >
+      {isOwned && (
+        <div className="absolute top-2 right-2 z-20 flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-green-600 text-white">
+          <CheckCircle className="size-3" />
+          Dimiliki
+        </div>
+      )}
+
       <div className="aspect-[3/2] relative overflow-hidden">
         {hasCover ? (
           <>
