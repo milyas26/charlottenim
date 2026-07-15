@@ -26,6 +26,7 @@ import {
 import { Search, Loader2, Check, X } from "lucide-react"
 import { useAdminOrders, approvePayment, rejectPayment } from "@/lib/api/admin"
 import { adminKeys } from "@/lib/api/admin"
+import { Pagination } from "@/components/ui/pagination"
 import type { Purchase } from "@/data/admin-types"
 
 type StatusFilter = "ALL" | "PAID" | "PENDING" | "FAILED"
@@ -37,14 +38,27 @@ export default function AdminOrdersPage() {
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("ALL")
   const [detailPurchase, setDetailPurchase] = useState<Purchase | null>(null)
   const [confirmAction, setConfirmAction] = useState<ConfirmAction>(null)
+  const [page, setPage] = useState(1)
+  const [limit, setLimit] = useState(10)
 
-  const { data: purchases = [], isLoading } = useAdminOrders()
+  const params = {
+    ...(search && { search }),
+    ...(statusFilter !== "ALL" && { status: statusFilter }),
+    page,
+    limit,
+  }
+
+  const { data: result, isLoading } = useAdminOrders(params)
+  const purchases = result?.data ?? []
+  const total = result?.total ?? 0
+  const totalPages = Math.max(1, Math.ceil(total / (limit || 10)))
+
   const qc = useQueryClient()
 
   const approveMutation = useMutation({
     mutationFn: approvePayment,
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: adminKeys.orders() })
+      qc.invalidateQueries({ queryKey: ["admin", "orders"] })
       qc.invalidateQueries({ queryKey: adminKeys.pendingCount() })
       setConfirmAction(null)
     },
@@ -53,19 +67,10 @@ export default function AdminOrdersPage() {
   const rejectMutation = useMutation({
     mutationFn: (id: string) => rejectPayment(id),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: adminKeys.orders() })
+      qc.invalidateQueries({ queryKey: ["admin", "orders"] })
       qc.invalidateQueries({ queryKey: adminKeys.pendingCount() })
       setConfirmAction(null)
     },
-  })
-
-  const filtered = purchases.filter((p) => {
-    const matchSearch =
-      p.userName.toLowerCase().includes(search.toLowerCase()) ||
-      p.workTitle.toLowerCase().includes(search.toLowerCase()) ||
-      p.targetTitle.toLowerCase().includes(search.toLowerCase())
-    const matchStatus = statusFilter === "ALL" || p.status === statusFilter
-    return matchSearch && matchStatus
   })
 
   const statusVariant: Record<string, "default" | "secondary" | "destructive"> = {
@@ -93,6 +98,16 @@ export default function AdminOrdersPage() {
     ? purchases.find((p) => p.id === confirmAction.id)
     : null
 
+  const handleSearchChange = (value: string) => {
+    setSearch(value)
+    setPage(1)
+  }
+
+  const handleStatusChange = (value: string) => {
+    setStatusFilter(value as StatusFilter)
+    setPage(1)
+  }
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-20">
@@ -109,11 +124,11 @@ export default function AdminOrdersPage() {
           <Input
             placeholder="Cari user, karya, atau chapter..."
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={(e) => handleSearchChange(e.target.value)}
             className="pl-9"
           />
         </div>
-        <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as StatusFilter)}>
+        <Select value={statusFilter} onValueChange={handleStatusChange}>
           <SelectTrigger className="w-[150px]">
             <SelectValue placeholder="Semua Status" />
           </SelectTrigger>
@@ -142,14 +157,14 @@ export default function AdminOrdersPage() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filtered.length === 0 ? (
+            {purchases.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={9} className="text-center py-8 text-muted-foreground">
                   Tidak ada pembelian ditemukan.
                 </TableCell>
               </TableRow>
             ) : (
-              filtered.map((p, i) => (
+              purchases.map((p: Purchase, i: number) => (
                 <TableRow
                   key={`${p.createdAt}-${p.userId || i}`}
                   className="cursor-pointer hover:bg-muted/50"
@@ -212,9 +227,17 @@ export default function AdminOrdersPage() {
         </Table>
       </div>
 
-      <div className="flex items-center justify-between text-sm text-muted-foreground">
-        <p>Menampilkan {filtered.length} dari {purchases.length} pembelian</p>
-      </div>
+      <Pagination
+        page={page}
+        totalPages={totalPages}
+        total={total}
+        limit={limit}
+        onPageChange={(p) => setPage(p)}
+        onLimitChange={(l) => {
+          setLimit(l)
+          setPage(1)
+        }}
+      />
 
       <Dialog open={!!detailPurchase} onOpenChange={(open) => !open && setDetailPurchase(null)}>
         <DialogContent className="max-w-md max-h-[85vh] flex flex-col">

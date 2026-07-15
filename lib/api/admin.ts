@@ -6,11 +6,33 @@ import type { AdminStats, AdminUser, Purchase } from "@/data/admin-types"
 export const adminKeys = {
   all: ["admin"] as const,
   stats: () => [...adminKeys.all, "stats"] as const,
-  orders: () => [...adminKeys.all, "orders"] as const,
+  orders: (params?: Record<string, string>) => [...adminKeys.all, "orders", params] as const,
   pendingCount: () => [...adminKeys.all, "orders", "pending-count"] as const,
-  users: () => [...adminKeys.all, "users"] as const,
+  users: (params?: Record<string, string>) => [...adminKeys.all, "users", params] as const,
   userDetail: (id: string) => [...adminKeys.all, "user", id] as const,
   images: (workId: string, chapterId?: string) => [...adminKeys.all, "images", workId, chapterId] as const,
+}
+
+export interface PaginatedResponse<T> {
+  data: T[]
+  total: number
+  page: number
+  limit: number
+}
+
+export interface OrderParams {
+  search?: string
+  status?: string
+  page?: number
+  limit?: number
+}
+
+export interface UserParams {
+  search?: string
+  sortField?: string
+  sortDir?: string
+  page?: number
+  limit?: number
 }
 
 export async function fetchAdminStats(cookie?: string) {
@@ -29,17 +51,13 @@ export function useAdminStats() {
   })
 }
 
-export async function fetchAdminOrders() {
-  const { data } = await api.get<Purchase[]>("/api/nulis/orders")
-  return data
-}
-
 export async function fetchAdminOrdersServer(cookie?: string) {
   return apiFetch<Purchase[]>("/api/nulis/orders", { cookie })
 }
 
-export async function fetchAdminUsers() {
-  const { data } = await api.get<AdminUser[]>("/api/nulis/users")
+export async function fetchAdminUsers(params?: UserParams): Promise<PaginatedResponse<AdminUser>> {
+  const qs = buildQuery(params as Record<string, string | number | undefined>)
+  const { data } = await api.get<PaginatedResponse<AdminUser>>(`/api/nulis/users${qs}`)
   return data
 }
 
@@ -54,6 +72,31 @@ export interface ImageData {
   id: string
   url: string
   order: number
+}
+
+function toQueryParams(params?: Record<string, string | number | undefined>): Record<string, string> | undefined {
+  if (!params) return undefined
+  const result: Record<string, string> = {}
+  for (const [k, v] of Object.entries(params)) {
+    if (v !== undefined && v !== "") result[k] = String(v)
+  }
+  return Object.keys(result).length > 0 ? result : undefined
+}
+
+function buildQuery(params?: Record<string, string | number | undefined>): string {
+  if (!params) return ""
+  const sp = new URLSearchParams()
+  for (const [key, val] of Object.entries(params)) {
+    if (val !== undefined && val !== "") sp.set(key, String(val))
+  }
+  const qs = sp.toString()
+  return qs ? `?${qs}` : ""
+}
+
+export async function fetchAdminOrders(params?: OrderParams): Promise<PaginatedResponse<Purchase>> {
+  const qs = buildQuery(params as Record<string, string | number | undefined>)
+  const { data } = await api.get<PaginatedResponse<Purchase>>(`/api/nulis/orders${qs}`)
+  return data
 }
 
 export async function fetchAdminImages(workId: string, chapterId?: string) {
@@ -92,17 +135,21 @@ export function usePendingOrderCount() {
   })
 }
 
-export function useAdminOrders() {
+export function useAdminOrders(params?: OrderParams) {
+  const keyParams = toQueryParams(params as Record<string, string | number | undefined>)
   return useQuery({
-    queryKey: adminKeys.orders(),
-    queryFn: fetchAdminOrders,
+    queryKey: adminKeys.orders(keyParams),
+    queryFn: () => fetchAdminOrders(params),
+    staleTime: 0,
   })
 }
 
-export function useAdminUsers() {
+export function useAdminUsers(params?: UserParams) {
+  const keyParams = toQueryParams(params as Record<string, string | number | undefined>)
   return useQuery({
-    queryKey: adminKeys.users(),
-    queryFn: fetchAdminUsers,
+    queryKey: adminKeys.users(keyParams),
+    queryFn: () => fetchAdminUsers(params),
+    staleTime: 0,
   })
 }
 

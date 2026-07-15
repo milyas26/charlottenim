@@ -1,26 +1,80 @@
 "use client"
 
 import { useState } from "react"
+import type { ReactNode } from "react"
 import Link from "next/link"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Search, ChevronRight, Loader2 } from "lucide-react"
+import { Search, ChevronRight, Loader2, ArrowUpDown } from "lucide-react"
 import { useAdminUsers } from "@/lib/api/admin"
+import { Pagination } from "@/components/ui/pagination"
 import type { AdminUser } from "@/data/admin-types"
+
+type SortField = "name" | "role" | "totalPurchases" | "totalSpent" | "lastReadWork"
+type SortDir = "asc" | "desc"
+
+function SortableHead({
+  field,
+  sortField,
+  sortDir,
+  onSort,
+  children,
+}: {
+  field: SortField
+  sortField: SortField
+  sortDir: SortDir
+  onSort: (field: SortField) => void
+  children: ReactNode
+}) {
+  return (
+    <TableHead
+      className="cursor-pointer select-none hover:text-foreground transition-colors"
+      onClick={() => onSort(field)}
+    >
+      <span className="inline-flex items-center gap-1">
+        {children}
+        {sortField === field ? (
+          <span className="text-xs">{sortDir === "asc" ? "↑" : "↓"}</span>
+        ) : (
+          <ArrowUpDown className="size-3 text-muted-foreground" />
+        )}
+      </span>
+    </TableHead>
+  )
+}
 
 export default function AdminUsersPage() {
   const [search, setSearch] = useState("")
+  const [page, setPage] = useState(1)
+  const [limit, setLimit] = useState(10)
+  const [sortField, setSortField] = useState<SortField>("totalSpent")
+  const [sortDir, setSortDir] = useState<SortDir>("desc")
 
-  const { data: users = [], isLoading } = useAdminUsers()
+  const params = {
+    ...(search && { search }),
+    sortField,
+    sortDir,
+    page,
+    limit,
+  }
 
-  const filtered = users.filter(
-    (u) =>
-      u.name.toLowerCase().includes(search.toLowerCase()) ||
-      u.email.toLowerCase().includes(search.toLowerCase())
-  )
+  const { data: result, isLoading } = useAdminUsers(params)
+  const users = result?.data ?? []
+  const total = result?.total ?? 0
+  const totalPages = Math.max(1, Math.ceil(total / (limit || 10)))
+
+  const handleSort = (field: SortField) => {
+    if (sortField === field) {
+      setSortDir((d) => (d === "asc" ? "desc" : "asc"))
+    } else {
+      setSortField(field)
+      setSortDir("asc")
+    }
+    setPage(1)
+  }
 
   const getInitials = (name: string) => {
     return name
@@ -46,7 +100,10 @@ export default function AdminUsersPage() {
         <Input
           placeholder="Cari nama atau email..."
           value={search}
-          onChange={(e) => setSearch(e.target.value)}
+          onChange={(e) => {
+            setSearch(e.target.value)
+            setPage(1)
+          }}
           className="pl-9"
         />
       </div>
@@ -55,23 +112,23 @@ export default function AdminUsersPage() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="w-[300px]">Nama</TableHead>
-              <TableHead>Role</TableHead>
-              <TableHead>Pembelian</TableHead>
-              <TableHead>Total Spent</TableHead>
-              <TableHead>Terakhir Baca</TableHead>
+              <SortableHead field="name" sortField={sortField} sortDir={sortDir} onSort={handleSort}>Nama</SortableHead>
+              <SortableHead field="role" sortField={sortField} sortDir={sortDir} onSort={handleSort}>Role</SortableHead>
+              <SortableHead field="totalPurchases" sortField={sortField} sortDir={sortDir} onSort={handleSort}>Pembelian</SortableHead>
+              <SortableHead field="totalSpent" sortField={sortField} sortDir={sortDir} onSort={handleSort}>Total Spent</SortableHead>
+              <SortableHead field="lastReadWork" sortField={sortField} sortDir={sortDir} onSort={handleSort}>Terakhir Baca</SortableHead>
               <TableHead className="w-[60px]"></TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filtered.length === 0 ? (
+            {users.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
                   Tidak ada user ditemukan.
                 </TableCell>
               </TableRow>
             ) : (
-              filtered.map((user) => (
+              users.map((user: AdminUser) => (
                 <TableRow key={user.id}>
                   <TableCell>
                     <div className="flex items-center gap-3">
@@ -115,9 +172,17 @@ export default function AdminUsersPage() {
         </Table>
       </div>
 
-      <div className="flex items-center justify-between text-sm text-muted-foreground">
-        <p>Menampilkan {filtered.length} dari {users.length} user</p>
-      </div>
+      <Pagination
+        page={page}
+        totalPages={totalPages}
+        total={total}
+        limit={limit}
+        onPageChange={(p) => setPage(p)}
+        onLimitChange={(l) => {
+          setLimit(l)
+          setPage(1)
+        }}
+      />
     </div>
   )
 }

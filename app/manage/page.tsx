@@ -13,6 +13,7 @@ import {
   rejectPayment,
   adminKeys,
 } from "@/lib/api/admin";
+import { Pagination } from "@/components/ui/pagination";
 import type { Purchase } from "@/data/admin-types";
 import {
   BookOpen,
@@ -51,16 +52,28 @@ export default function ManagePage() {
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("ALL");
   const [detailPurchase, setDetailPurchase] = useState<Purchase | null>(null);
   const [confirmAction, setConfirmAction] = useState<ConfirmAction>(null);
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10);
+
+  const orderParams = {
+    ...(search && { search }),
+    ...(statusFilter !== "ALL" && { status: statusFilter }),
+    page,
+    limit,
+  };
 
   const { data: stats, isLoading: statsLoading } = useAdminStats();
-  const { data: purchases = [], isLoading: ordersLoading } = useAdminOrders();
+  const { data: result, isLoading: ordersLoading } = useAdminOrders(orderParams);
+  const purchases = result?.data ?? [];
+  const total = result?.total ?? 0;
+  const totalPages = Math.max(1, Math.ceil(total / (limit || 10)));
   const { data: pendingCount = 0 } = usePendingOrderCount();
   const qc = useQueryClient();
 
   const approveMutation = useMutation({
     mutationFn: approvePayment,
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: adminKeys.orders() });
+      qc.invalidateQueries({ queryKey: ["admin", "orders"] });
       qc.invalidateQueries({ queryKey: adminKeys.pendingCount() });
       setConfirmAction(null);
     },
@@ -69,7 +82,7 @@ export default function ManagePage() {
   const rejectMutation = useMutation({
     mutationFn: (id: string) => rejectPayment(id),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: adminKeys.orders() });
+      qc.invalidateQueries({ queryKey: ["admin", "orders"] });
       qc.invalidateQueries({ queryKey: adminKeys.pendingCount() });
       setConfirmAction(null);
     },
@@ -165,13 +178,19 @@ export default function ManagePage() {
           <OrderTab
             purchases={purchases}
             isLoading={ordersLoading}
+            total={total}
             search={search}
-            onSearchChange={setSearch}
+            onSearchChange={(v) => { setSearch(v); setPage(1); }}
             statusFilter={statusFilter}
-            onStatusFilterChange={setStatusFilter}
+            onStatusFilterChange={(v) => { setStatusFilter(v); setPage(1); }}
             onDetailPurchaseChange={setDetailPurchase}
             onConfirmActionChange={setConfirmAction}
             isMutating={approveMutation.isPending || rejectMutation.isPending}
+            page={page}
+            totalPages={totalPages}
+            limit={limit}
+            onPageChange={(p) => setPage(p)}
+            onLimitChange={(l) => { setLimit(l); setPage(1); }}
           />
         )}
       </div>
@@ -319,6 +338,7 @@ function RingkasanTab({
 function OrderTab({
   purchases,
   isLoading,
+  total,
   search,
   onSearchChange,
   statusFilter,
@@ -326,9 +346,15 @@ function OrderTab({
   onDetailPurchaseChange,
   onConfirmActionChange,
   isMutating,
+  page,
+  totalPages,
+  limit,
+  onPageChange,
+  onLimitChange,
 }: {
   purchases: Purchase[];
   isLoading: boolean;
+  total: number;
   search: string;
   onSearchChange: (v: string) => void;
   statusFilter: StatusFilter;
@@ -336,15 +362,12 @@ function OrderTab({
   onDetailPurchaseChange: (p: Purchase | null) => void;
   onConfirmActionChange: (v: ConfirmAction) => void;
   isMutating: boolean;
+  page: number;
+  totalPages: number;
+  limit: number;
+  onPageChange: (p: number) => void;
+  onLimitChange: (l: number) => void;
 }) {
-  const filtered = purchases.filter((p) => {
-    const matchSearch =
-      p.userName.toLowerCase().includes(search.toLowerCase()) ||
-      p.workTitle.toLowerCase().includes(search.toLowerCase()) ||
-      p.targetTitle.toLowerCase().includes(search.toLowerCase());
-    const matchStatus = statusFilter === "ALL" || p.status === statusFilter;
-    return matchSearch && matchStatus;
-  });
 
   if (isLoading) {
     return (
@@ -391,7 +414,7 @@ function OrderTab({
         </select>
       </div>
 
-      {filtered.length === 0 ? (
+      {purchases.length === 0 ? (
         <div className="text-center py-16">
           <p className="text-sm" style={{ color: "var(--muted)" }}>
             Tidak ada order ditemukan.
@@ -399,7 +422,7 @@ function OrderTab({
         </div>
       ) : (
         <div className="flex flex-col">
-          {filtered.map((p, i) => (
+          {purchases.map((p, i) => (
             <div
               key={`${p.createdAt}-${p.userId || i}`}
               role="button"
@@ -409,7 +432,7 @@ function OrderTab({
               className="flex items-center gap-3 py-3 transition-colors hover:bg-[var(--surface)] active:bg-[var(--surface)] -mx-4 px-4 text-left cursor-pointer"
               style={{
                 borderBottom:
-                  i < filtered.length - 1 ? "1px solid var(--border)" : undefined,
+                  i < purchases.length - 1 ? "1px solid var(--border)" : undefined,
               }}
             >
               <div
@@ -506,9 +529,14 @@ function OrderTab({
         </div>
       )}
 
-      <p className="text-[11px] px-4" style={{ color: "var(--muted)" }}>
-        {filtered.length} dari {purchases.length} order
-      </p>
+      <Pagination
+        page={page}
+        totalPages={totalPages}
+        total={total}
+        limit={limit}
+        onPageChange={onPageChange}
+        onLimitChange={onLimitChange}
+      />
     </div>
   );
 }
