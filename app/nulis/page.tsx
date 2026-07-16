@@ -39,7 +39,7 @@ export default async function AdminDashboardPage() {
     { title: "Total Karya", value: stats.totalWorks.toString(), icon: BookOpen, description: `${stats.draftCount} draft · ${stats.ongoingCount} ongoing · ${stats.completedCount} selesai` },
     { title: "Total Chapter", value: stats.totalChapters.toString(), icon: BookMarked, description: `${stats.freeChapters} gratis · ${stats.premiumChapters} premium` },
     { title: "Total Pembaca", value: stats.totalUsers.toString(), icon: Users, description: "User terdaftar" },
-    { title: "Total Revenue", value: `Rp ${stats.totalRevenue.toLocaleString("id-ID")}`, icon: DollarSign, description: `${purchases.filter(p => p.status === "PAID").length} transaksi sukses` },
+    { title: "Total Revenue", value: `Rp ${stats.totalRevenue.toLocaleString("id-ID")}`, icon: DollarSign, description: `${Array.isArray(purchases) ? purchases.filter(p => p.status === "PAID").length : 0} transaksi sukses` },
     { title: "Total Dibaca", value: stats.totalReads.toLocaleString("id-ID"), icon: Eye, description: "Kumulatif semua chapter" },
   ]
 
@@ -122,7 +122,7 @@ export default async function AdminDashboardPage() {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {purchases.slice(0, 5).map((purchase, i) => (
+              {(Array.isArray(purchases) ? purchases.slice(0, 5) : []).map((purchase, i) => (
                 <div key={`${purchase.createdAt}-${i}`} className="flex items-center justify-between">
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium truncate">{purchase.userName}</p>
