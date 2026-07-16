@@ -52,7 +52,7 @@ export function useAdminStats() {
 }
 
 export async function fetchAdminOrdersServer(cookie?: string) {
-  return apiFetch<Purchase[]>("/api/nulis/orders", { cookie })
+  return apiFetch<PaginatedResponse<Purchase>>("/api/nulis/orders", { cookie })
 }
 
 export async function fetchAdminUsers(params?: UserParams): Promise<PaginatedResponse<AdminUser>> {
