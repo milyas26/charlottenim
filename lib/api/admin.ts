@@ -122,6 +122,10 @@ export async function rejectPayment(purchaseId: string, reason?: string) {
   await api.patch(`/api/nulis/orders/${purchaseId}/reject`, { reason })
 }
 
+export function expirePayment(purchaseId: string) {
+  return rejectPayment(purchaseId, "Kedaluwarsa - tidak membayar dalam 1 jam")
+}
+
 export async function fetchPendingOrderCount() {
   const { data } = await api.get<{ count: number }>("/api/nulis/orders/pending-count")
   return data.count

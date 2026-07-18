@@ -1,9 +1,9 @@
 "use client";
 
-import { use, useState } from "react";
+import { use, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { usePurchaseDetail, useUploadPaymentProof } from "@/lib/api/payments";
-import { Loader2, ArrowLeft, Upload, CheckCircle, XCircle, Clock, AlertCircle, Copy } from "lucide-react";
+import { Loader2, ArrowLeft, Upload, CheckCircle, XCircle, Clock, AlertCircle, Copy, Timer } from "lucide-react";
 import BottomNav from "@/components/layout/BottomNav";
 import LoginDialog from "@/components/LoginDialog";
 import { useAuth } from "@/contexts/AuthContext";
@@ -38,6 +38,37 @@ export default function BayarPage({
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
+
+  const expiresAt = purchase
+    ? new Date(purchase.createdAt).getTime() + 3_600_000
+    : 0;
+
+  const [timeLeft, setTimeLeft] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (!purchase || purchase.status !== "PENDING" || purchase.paymentProofUrl) {
+      setTimeLeft(null);
+      return;
+    }
+    const update = () => {
+      const remaining = Math.max(0, expiresAt - Date.now());
+      setTimeLeft(remaining);
+    };
+    update();
+    const interval = setInterval(update, 1000);
+    return () => clearInterval(interval);
+  }, [purchase, expiresAt]);
+
+  const formatTime = (ms: number) => {
+    if (ms <= 0) return "00:00";
+    const totalSec = Math.floor(ms / 1000);
+    const m = Math.floor(totalSec / 60);
+    const s = totalSec % 60;
+    return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+  };
+
+  const showCountdown = purchase && purchase.status === "PENDING" && !purchase.paymentProofUrl && timeLeft !== null;
+  const isExpiredOnPage = timeLeft !== null && timeLeft <= 0;
 
   if (isLoading) {
     return (
@@ -127,6 +158,27 @@ export default function BayarPage({
 
         <div className="text-center my-6">
           {statusBadge()}
+          {showCountdown && (
+            <div className="mt-4">
+              {isExpiredOnPage ? (
+                <div
+                  className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium"
+                  style={{ backgroundColor: "color-mix(in srgb, #ef4444 12%, transparent)", color: "#ef4444" }}
+                >
+                  <XCircle className="size-4" />
+                  Waktu Pembayaran Habis
+                </div>
+              ) : (
+                <div
+                  className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium"
+                  style={{ backgroundColor: "color-mix(in srgb, #f59e0b 12%, transparent)", color: "#f59e0b" }}
+                >
+                  <Timer className="size-4" />
+                  Sisa waktu: {formatTime(timeLeft)}
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         <h1

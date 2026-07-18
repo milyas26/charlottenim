@@ -23,15 +23,24 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
-import { Search, Loader2, Check, X } from "lucide-react"
-import { useAdminOrders, approvePayment, rejectPayment } from "@/lib/api/admin"
+import { Search, Loader2, Check, X, Clock } from "lucide-react"
+import { useAdminOrders, approvePayment, rejectPayment, expirePayment } from "@/lib/api/admin"
 import { adminKeys } from "@/lib/api/admin"
 import { Pagination } from "@/components/ui/pagination"
 import type { Purchase } from "@/data/admin-types"
 
 type StatusFilter = "ALL" | "PAID" | "PENDING" | "FAILED"
 
-type ConfirmAction = { id: string; type: "approve" | "reject" } | null
+type ConfirmAction = { id: string; type: "approve" | "reject" | "expire" } | null
+
+function isPurchaseExpired(p: Purchase): boolean {
+  return (
+    p.status === "PENDING" &&
+    p.paymentMethod === "MANUAL_TRANSFER" &&
+    !p.paymentProofUrl &&
+    Date.now() - new Date(p.createdAt).getTime() > 3_600_000
+  )
+}
 
 export default function AdminOrdersPage() {
   const [search, setSearch] = useState("")
@@ -73,6 +82,15 @@ export default function AdminOrdersPage() {
     },
   })
 
+  const expireMutation = useMutation({
+    mutationFn: (id: string) => expirePayment(id),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["admin", "orders"] })
+      qc.invalidateQueries({ queryKey: adminKeys.pendingCount() })
+      setConfirmAction(null)
+    },
+  })
+
   const statusVariant: Record<string, "default" | "secondary" | "destructive"> = {
     PAID: "default",
     PENDING: "secondary",
@@ -89,6 +107,8 @@ export default function AdminOrdersPage() {
     if (!confirmAction) return
     if (confirmAction.type === "approve") {
       approveMutation.mutate(confirmAction.id)
+    } else if (confirmAction.type === "expire") {
+      expireMutation.mutate(confirmAction.id)
     } else {
       rejectMutation.mutate(confirmAction.id)
     }
@@ -202,7 +222,7 @@ export default function AdminOrdersPage() {
                         <>
                           <button
                             onClick={() => setConfirmAction({ id: p.id, type: "approve" })}
-                            disabled={approveMutation.isPending || rejectMutation.isPending}
+                            disabled={approveMutation.isPending || rejectMutation.isPending || expireMutation.isPending}
                             className="p-1.5 rounded-md hover:bg-green-100 transition-colors text-green-600"
                             title="Setujui"
                           >
@@ -210,13 +230,23 @@ export default function AdminOrdersPage() {
                           </button>
                           <button
                             onClick={() => setConfirmAction({ id: p.id, type: "reject" })}
-                            disabled={approveMutation.isPending || rejectMutation.isPending}
+                            disabled={approveMutation.isPending || rejectMutation.isPending || expireMutation.isPending}
                             className="p-1.5 rounded-md hover:bg-red-100 transition-colors text-red-600"
                             title="Tolak"
                           >
                             <X className="size-4" />
                           </button>
                         </>
+                      )}
+                      {isPurchaseExpired(p) && (
+                        <button
+                          onClick={() => setConfirmAction({ id: p.id, type: "expire" })}
+                          disabled={approveMutation.isPending || rejectMutation.isPending || expireMutation.isPending}
+                          className="p-1.5 rounded-md hover:bg-orange-100 transition-colors text-orange-600"
+                          title="Kedaluwarsa"
+                        >
+                          <Clock className="size-4" />
+                        </button>
                       )}
                     </div>
                   </TableCell>
@@ -335,6 +365,20 @@ export default function AdminOrdersPage() {
                   </button>
                 </div>
               )}
+
+              {isPurchaseExpired(detailPurchase) && (
+                <div className="flex gap-2 pt-2 shrink-0">
+                  <button
+                    onClick={() => {
+                      setDetailPurchase(null)
+                      setConfirmAction({ id: detailPurchase.id, type: "expire" })
+                    }}
+                    className="flex-1 py-2 px-4 rounded-lg bg-orange-600 text-white text-sm font-medium hover:bg-orange-700 transition-colors"
+                  >
+                    Kedaluwarsa
+                  </button>
+                </div>
+              )}
             </>
           )}
         </DialogContent>
@@ -344,10 +388,20 @@ export default function AdminOrdersPage() {
         <AlertDialogContent className="max-w-sm">
           <AlertDialogHeader>
             <AlertDialogTitle>
-              {confirmAction?.type === "approve" ? "Setujui Pembayaran?" : "Tolak Pembayaran?"}
+              {confirmAction?.type === "expire"
+                ? "Kedaluwarsa?"
+                : confirmAction?.type === "approve"
+                  ? "Setujui Pembayaran?"
+                  : "Tolak Pembayaran?"}
             </AlertDialogTitle>
             <AlertDialogDescription>
-              {confirmAction?.type === "approve" ? (
+              {confirmAction?.type === "expire" ? (
+                <span>
+                  Transaksi dari <strong>{selectedConfirmPurchase?.userName}</strong> untuk{" "}
+                  <strong>{selectedConfirmPurchase?.targetTitle}</strong> sudah lebih dari 1 jam tanpa pembayaran.
+                  Batalkan transaksi ini?
+                </span>
+              ) : confirmAction?.type === "approve" ? (
                 <span>
                   Setujui pembayaran dari <strong>{selectedConfirmPurchase?.userName}</strong> untuk{" "}
                   <strong>{selectedConfirmPurchase?.targetTitle}</strong> sebesar{" "}
@@ -366,14 +420,20 @@ export default function AdminOrdersPage() {
             <AlertDialogCancel>Batal</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleConfirm}
-              disabled={approveMutation.isPending || rejectMutation.isPending}
+              disabled={approveMutation.isPending || rejectMutation.isPending || expireMutation.isPending}
               className={
-                confirmAction?.type === "approve"
-                  ? "bg-green-600 hover:bg-green-700"
-                  : "bg-red-600 hover:bg-red-700"
+                confirmAction?.type === "expire"
+                  ? "bg-orange-600 hover:bg-orange-700"
+                  : confirmAction?.type === "approve"
+                    ? "bg-green-600 hover:bg-green-700"
+                    : "bg-red-600 hover:bg-red-700"
               }
             >
-              {confirmAction?.type === "approve" ? "Ya, Setujui" : "Ya, Tolak"}
+              {confirmAction?.type === "expire"
+                ? "Ya, Batalkan"
+                : confirmAction?.type === "approve"
+                  ? "Ya, Setujui"
+                  : "Ya, Tolak"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

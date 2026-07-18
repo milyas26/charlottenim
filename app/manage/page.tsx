@@ -11,6 +11,7 @@ import {
   usePendingOrderCount,
   approvePayment,
   rejectPayment,
+  expirePayment,
   adminKeys,
 } from "@/lib/api/admin";
 import { Pagination } from "@/components/ui/pagination";
@@ -26,10 +27,11 @@ import {
   Check,
   X,
   ChevronRight,
+  Clock,
 } from "lucide-react";
 
 type StatusFilter = "ALL" | "PAID" | "PENDING" | "FAILED";
-type ConfirmAction = { id: string; type: "approve" | "reject" } | null;
+type ConfirmAction = { id: string; type: "approve" | "reject" | "expire" } | null;
 
 const statusLabel: Record<string, string> = {
   PAID: "Berhasil",
@@ -88,10 +90,21 @@ export default function ManagePage() {
     },
   });
 
+  const expireMutation = useMutation({
+    mutationFn: (id: string) => expirePayment(id),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["admin", "orders"] });
+      qc.invalidateQueries({ queryKey: adminKeys.pendingCount() });
+      setConfirmAction(null);
+    },
+  });
+
   const handleConfirm = () => {
     if (!confirmAction) return;
     if (confirmAction.type === "approve") {
       approveMutation.mutate(confirmAction.id);
+    } else if (confirmAction.type === "expire") {
+      expireMutation.mutate(confirmAction.id);
     } else {
       rejectMutation.mutate(confirmAction.id);
     }
@@ -185,7 +198,7 @@ export default function ManagePage() {
             onStatusFilterChange={(v) => { setStatusFilter(v); setPage(1); }}
             onDetailPurchaseChange={setDetailPurchase}
             onConfirmActionChange={setConfirmAction}
-            isMutating={approveMutation.isPending || rejectMutation.isPending}
+            isMutating={approveMutation.isPending || rejectMutation.isPending || expireMutation.isPending}
             page={page}
             totalPages={totalPages}
             limit={limit}
@@ -207,6 +220,10 @@ export default function ManagePage() {
             setDetailPurchase(null);
             setConfirmAction({ id: detailPurchase.id, type: "reject" });
           }}
+          onExpire={() => {
+            setDetailPurchase(null);
+            setConfirmAction({ id: detailPurchase.id, type: "expire" });
+          }}
         />
       )}
 
@@ -216,12 +233,21 @@ export default function ManagePage() {
           purchase={selectedConfirmPurchase}
           onConfirm={handleConfirm}
           onCancel={() => setConfirmAction(null)}
-          isMutating={approveMutation.isPending || rejectMutation.isPending}
+          isMutating={approveMutation.isPending || rejectMutation.isPending || expireMutation.isPending}
         />
       )}
 
       <BottomNav />
     </div>
+  );
+}
+
+function isPurchaseExpired(p: Purchase): boolean {
+  return (
+    p.status === "PENDING" &&
+    p.paymentMethod === "MANUAL_TRANSFER" &&
+    !p.paymentProofUrl &&
+    Date.now() - new Date(p.createdAt).getTime() > 3_600_000
   );
 }
 
@@ -522,6 +548,19 @@ function OrderTab({
                     </div>
                   )}
 
+                {isPurchaseExpired(p) && (
+                  <div className="flex items-center gap-0.5 ml-1" onClick={(e) => e.stopPropagation()}>
+                    <button
+                      onClick={() => onConfirmActionChange({ id: p.id, type: "expire" })}
+                      disabled={isMutating}
+                      className="p-1.5 rounded-lg transition-colors hover:bg-orange-100"
+                      style={{ color: "#ea580c" }}
+                    >
+                      <Clock className="size-3.5" />
+                    </button>
+                  </div>
+                )}
+
                 <ChevronRight className="size-3.5 shrink-0" style={{ color: "var(--muted)", opacity: 0.4 }} />
               </div>
             </div>
@@ -546,11 +585,13 @@ function OrderDetailDialog({
   onClose,
   onApprove,
   onReject,
+  onExpire,
 }: {
   purchase: Purchase;
   onClose: () => void;
   onApprove: () => void;
   onReject: () => void;
+  onExpire: () => void;
 }) {
   return (
     <div
@@ -736,6 +777,18 @@ function OrderDetailDialog({
               </button>
             </div>
           )}
+
+        {isPurchaseExpired(purchase) && (
+          <div className="flex gap-2 mt-4">
+            <button
+              onClick={onExpire}
+              className="flex-1 py-2.5 rounded-xl text-sm font-semibold text-white transition-colors"
+              style={{ backgroundColor: "#ea580c" }}
+            >
+              Kedaluwarsa
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -755,6 +808,7 @@ function ConfirmDialog({
   isMutating: boolean;
 }) {
   const isApprove = action.type === "approve";
+  const isExpire = action.type === "expire";
 
   return (
     <div className="fixed inset-0 z-[70] flex items-center justify-center px-4">
@@ -767,10 +821,16 @@ function ConfirmDialog({
           className="text-base font-bold font-[family-name:var(--font-display)] mb-2"
           style={{ color: "var(--foreground)" }}
         >
-          {isApprove ? "Setujui Pembayaran?" : "Tolak Pembayaran?"}
+          {isExpire ? "Kedaluwarsa?" : isApprove ? "Setujui Pembayaran?" : "Tolak Pembayaran?"}
         </h3>
         <p className="text-sm mb-4" style={{ color: "var(--muted)" }}>
-          {isApprove ? (
+          {isExpire ? (
+            <>
+              Transaksi dari <strong>{purchase.userName}</strong> untuk{" "}
+              <strong>{purchase.targetTitle}</strong> sudah lebih dari 1 jam tanpa pembayaran.
+              Batalkan transaksi ini?
+            </>
+          ) : isApprove ? (
             <>
               Setujui pembayaran dari <strong>{purchase.userName}</strong> untuk{" "}
               <strong>{purchase.targetTitle}</strong> sebesar{" "}
@@ -801,13 +861,13 @@ function ConfirmDialog({
             disabled={isMutating}
             className="flex-1 py-2.5 rounded-xl text-sm font-semibold text-white transition-colors flex items-center justify-center gap-1.5"
             style={{
-              backgroundColor: isApprove ? "#16a34a" : "#dc2626",
+              backgroundColor: isExpire ? "#ea580c" : isApprove ? "#16a34a" : "#dc2626",
             }}
           >
             {isMutating ? (
               <Loader2 className="size-4 animate-spin" />
             ) : null}
-            {isApprove ? "Ya, Setujui" : "Ya, Tolak"}
+            {isExpire ? "Ya, Batalkan" : isApprove ? "Ya, Setujui" : "Ya, Tolak"}
           </button>
         </div>
       </div>
