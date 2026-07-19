@@ -23,7 +23,7 @@ interface Props {
   prevChapter: Chapter | null;
   nextChapter: Chapter | null;
   settings: ReaderSettings;
-  onSettingsChange: (settings: Partial<ReaderSettings>) => void;
+  onSettingsChange: (settings: ReaderSettings) => void;
 }
 
 export default function ReaderBottomNav({

@@ -91,7 +91,7 @@ export default function ShopPage() {
               className="text-base font-bold font-[family-name:var(--font-display)]"
               style={{ color: "var(--foreground)" }}
             >
-              Buku Cetak
+              Buku
             </h2>
           </div>
 
