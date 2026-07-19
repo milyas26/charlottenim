@@ -12,7 +12,7 @@ export default function Footer() {
 
   return (
     <footer className="mt-auto border-t" style={{ borderColor: "var(--border)" }}>
-      <div className="max-w-[480px] mx-auto px-4 pt-10 pb-6 space-y-8">
+      <div className="max-w-[480px] mx-auto px-4 pt-10 pb-20 space-y-8">
         <div className="flex flex-col items-center text-center">
           <Logo href={undefined} className="mb-3" />
           <p className="text-sm leading-relaxed max-w-xs" style={{ color: "var(--muted)" }}>
@@ -55,7 +55,7 @@ export default function Footer() {
           </a>
 
           <a
-            href="tel:+6285159335715"
+            href="tel:+6285830610640"
             className="flex items-center gap-3 text-sm tap-feedback transition-colors hover:opacity-80"
           >
             <div
@@ -71,7 +71,7 @@ export default function Footer() {
               <p className="text-[11px]" style={{ color: "var(--muted)" }}>
                 Telepon
               </p>
-              <p className="text-sm font-medium">+62 851-5933-5715</p>
+              <p className="text-sm font-medium">+62 858-3061-0640</p>
             </div>
           </a>
 

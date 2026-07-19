@@ -233,14 +233,15 @@ export default function BayarPage({
 
             <div className="flex items-center justify-between">
               <p
-                className="text-lg font-mono font-bold tracking-wider"
+                className={`text-lg font-mono font-bold tracking-wider ${isExpiredOnPage ? "opacity-40" : ""}`}
                 style={{ color: "var(--foreground)" }}
               >
                 {purchase.bankAccountNumber}
               </p>
               <button
                 onClick={() => copyToClipboard(purchase.bankAccountNumber)}
-                className="p-2 rounded-lg hover:bg-[var(--border)] transition-colors"
+                className="p-2 rounded-lg hover:bg-[var(--border)] transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                disabled={isExpiredOnPage}
                 style={{ color: "var(--muted)" }}
               >
                 <Copy className="size-4" />
@@ -276,7 +277,7 @@ export default function BayarPage({
 
                 {user ? (
                   <label
-                    className="flex items-center justify-center gap-2 py-3 px-6 rounded-xl text-white font-semibold text-sm transition-opacity hover:opacity-90 tap-feedback cursor-pointer disabled:opacity-60"
+                    className={`flex items-center justify-center gap-2 py-3 px-6 rounded-xl text-white font-semibold text-sm transition-opacity tap-feedback ${isExpiredOnPage ? "opacity-60 cursor-not-allowed" : "hover:opacity-90 cursor-pointer"}`}
                     style={{ backgroundColor: "var(--accent)" }}
                   >
                     <Upload className="size-4" />
@@ -285,14 +286,15 @@ export default function BayarPage({
                       type="file"
                       accept="image/*"
                       onChange={handleFileChange}
-                      disabled={uploadMutation.isPending}
+                      disabled={uploadMutation.isPending || isExpiredOnPage}
                       className="hidden"
                     />
                   </label>
                 ) : (
                   <LoginDialog>
                     <button
-                      className="w-full flex items-center justify-center gap-2 py-3 px-6 rounded-xl text-white font-semibold text-sm transition-opacity hover:opacity-90 tap-feedback"
+                      disabled={isExpiredOnPage}
+                      className="w-full flex items-center justify-center gap-2 py-3 px-6 rounded-xl text-white font-semibold text-sm transition-opacity hover:opacity-90 tap-feedback disabled:opacity-60"
                       style={{ backgroundColor: "var(--accent)" }}
                     >
                       <Upload className="size-4" />
@@ -337,7 +339,7 @@ export default function BayarPage({
                         type="file"
                         accept="image/*"
                         onChange={handleFileChange}
-                        disabled={uploadMutation.isPending}
+                      disabled={uploadMutation.isPending || isExpiredOnPage}
                         className="hidden"
                       />
                     </label>

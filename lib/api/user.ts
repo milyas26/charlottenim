@@ -50,6 +50,7 @@ export const userKeys = {
   purchases: () => [...userKeys.all, "purchases"] as const,
   pendingPayments: () => [...userKeys.all, "pending-payments"] as const,
   progress: (workId: string) => [...userKeys.all, "progress", workId] as const,
+  unlockedChapters: (workId: string) => [...userKeys.all, "unlocked-chapters", workId] as const,
 }
 
 export async function fetchUserPurchases() {
@@ -85,5 +86,18 @@ export function useUserPendingPayments(enabled: boolean) {
     queryKey: userKeys.pendingPayments(),
     queryFn: fetchUserPendingPayments,
     enabled,
+  })
+}
+
+export async function fetchUnlockedChapterIds(workId: string) {
+  return apiFetch<{ chapterIds: string[] }>(`/api/user/unlocked-chapters/${workId}`)
+}
+
+export function useUnlockedChapterIds(workId: string, enabled: boolean) {
+  return useQuery({
+    queryKey: userKeys.unlockedChapters(workId),
+    queryFn: () => fetchUnlockedChapterIds(workId),
+    enabled,
+    select: (data) => data.chapterIds,
   })
 }

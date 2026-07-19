@@ -52,7 +52,7 @@ export default function ContactSupportPage() {
           </a>
 
           <a
-            href="tel:+6285159335715"
+            href="tel:+6285830610640"
             className="flex items-center gap-3 text-sm tap-feedback transition-colors hover:opacity-80"
           >
             <div
@@ -68,7 +68,7 @@ export default function ContactSupportPage() {
               <p className="text-[11px]" style={{ color: "var(--muted)" }}>
                 Telepon
               </p>
-              <p className="text-sm font-medium">+62 851-5933-5715</p>
+              <p className="text-sm font-medium">+62 858-3061-0640</p>
             </div>
           </a>
 

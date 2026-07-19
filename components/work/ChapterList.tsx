@@ -23,15 +23,11 @@ export default function ChapterList({ chapters, workSlug, unlockedChapterIds }: 
       </h2>
 
       <div className="space-y-2">
-        {chapters.map((chapter, i) => {
+        {chapters.map((chapter) => {
           const isUnlocked = unlockedSet.has(chapter.id)
 
           return (
-          <div
-            key={chapter.id}
-            className="animate-fade-in-up"
-            style={{ animationDelay: `${i * 60}ms` }}
-          >
+          <div key={chapter.id}>
           <a
             href={`/baca/${workSlug}/${chapter.slug}`}
             className="flex items-center justify-between px-3.5 py-3 rounded-xl transition-all hover:bg-[var(--surface)] group tap-feedback"
