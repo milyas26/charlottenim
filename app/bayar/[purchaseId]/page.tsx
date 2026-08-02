@@ -3,6 +3,7 @@
 import { use, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { usePurchaseDetail, useUploadPaymentProof } from "@/lib/api/payments";
+import { compressImage, MAX_IMAGE_INPUT_SIZE } from "@/lib/image";
 import { Loader2, ArrowLeft, Upload, CheckCircle, XCircle, Clock, AlertCircle, Copy, Timer } from "lucide-react";
 import BottomNav from "@/components/layout/BottomNav";
 import LoginDialog from "@/components/LoginDialog";
@@ -24,11 +25,10 @@ export default function BayarPage({
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (file.size > 5 * 1024 * 1024) {
-      return;
-    }
+    if (file.size > MAX_IMAGE_INPUT_SIZE) return;
+    const compressed = await compressImage(file);
     uploadMutation.mutate(
-      { purchaseId, file },
+      { purchaseId, file: compressed },
       { onSuccess: () => refetch() }
     );
   };
