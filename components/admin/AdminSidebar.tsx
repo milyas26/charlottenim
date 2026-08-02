@@ -10,6 +10,7 @@ import {
   ShoppingCart,
   MessageSquare,
   Package,
+  Book,
 } from "lucide-react"
 
 import { cn } from "@/lib/utils"
@@ -44,6 +45,11 @@ const sidebarItems = [
     title: "Paket",
     href: "/nulis/paket",
     icon: Package,
+  },
+  {
+    title: "Buku",
+    href: "/nulis/buku",
+    icon: Book,
   },
   {
     title: "Comments",

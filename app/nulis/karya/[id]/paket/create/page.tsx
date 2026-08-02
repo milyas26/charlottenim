@@ -165,7 +165,7 @@ export default function CreateBundlePage({ params }: { params: Promise<{ id: str
       </div>
 
       <div className="grid gap-4 lg:grid-cols-3">
-        <Card className="lg:col-span-1">
+        <Card className="lg:col-span-1 lg:sticky lg:top-[75px] self-start">
           <CardHeader>
             <CardTitle>Info Paket</CardTitle>
           </CardHeader>

@@ -34,7 +34,7 @@ export default function BundleCard({ bundle, isOwned }: Props) {
         </div>
       )}
 
-      <div className="aspect-[3/2] relative overflow-hidden">
+      <div className="aspect-[4/3] relative overflow-hidden">
         {hasCover ? (
           <>
             <img

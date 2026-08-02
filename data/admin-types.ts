@@ -14,7 +14,7 @@ export interface Purchase {
   id: string;
   userId: string;
   userName: string;
-  type: "chapter" | "bundle";
+  type: "chapter" | "bundle" | "book";
   targetTitle: string;
   workTitle: string;
   amount: number;
@@ -27,6 +27,7 @@ export interface Purchase {
   failureReason?: string | null;
   approvedAt?: string | null;
   createdAt: string;
+  shippingAddress?: Record<string, unknown> | null;
 }
 
 export interface AdminComment {

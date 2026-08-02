@@ -137,3 +137,44 @@ export interface ReaderSettings {
   fontFamily: "lora" | "georgia" | "sans";
   readingMode: ReadingMode;
 }
+
+export interface BookListItem {
+  id: string;
+  title: string;
+  slug: string;
+  price: number;
+  coverUrl: string;
+  author: string;
+  stock: number;
+  isActive: boolean;
+  createdAt: string;
+}
+
+export interface Book {
+  id: string;
+  title: string;
+  slug: string;
+  description: string;
+  price: number;
+  coverUrl: string;
+  author: string;
+  stock: number;
+  weight: number;
+  pages: number;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ShippingAddress {
+  recipientName: string;
+  phone: string;
+  address: string;
+  provinceId: string;
+  provinceName: string;
+  regencyId: string;
+  regencyName: string;
+  districtId: string;
+  districtName: string;
+  postalCode: string;
+}

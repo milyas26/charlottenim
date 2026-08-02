@@ -193,8 +193,8 @@ export default function AdminOrdersPage() {
                   <TableCell className="font-medium">{p.userName}</TableCell>
                   <TableCell className="text-muted-foreground">{p.workTitle}</TableCell>
                   <TableCell>
-                    <Badge variant={p.type === "bundle" ? "outline" : "secondary"}>
-                      {p.type === "bundle" ? "Paket" : "Chapter"}
+                    <Badge variant={p.type === "bundle" ? "outline" : p.type === "book" ? "default" : "secondary"}>
+                      {p.type === "bundle" ? "Paket" : p.type === "book" ? "Buku" : "Chapter"}
                     </Badge>
                   </TableCell>
                   <TableCell>
@@ -288,7 +288,7 @@ export default function AdminOrdersPage() {
                   <span>{detailPurchase.workTitle}</span>
 
                   <span className="text-muted-foreground">Tipe</span>
-                  <span>{detailPurchase.type === "bundle" ? "Paket" : "Chapter"}</span>
+                  <span>{detailPurchase.type === "bundle" ? "Paket" : detailPurchase.type === "book" ? "Buku" : "Chapter"}</span>
 
                   <span className="text-muted-foreground">Item</span>
                   <span>{detailPurchase.targetTitle}</span>
@@ -328,6 +328,19 @@ export default function AdminOrdersPage() {
                     </>
                   )}
                 </div>
+
+                {detailPurchase.type === "book" && detailPurchase.shippingAddress && (
+                  <div>
+                    <p className="text-muted-foreground mb-2 font-semibold">Alamat Pengiriman</p>
+                    <div className="rounded-lg border p-3 text-xs space-y-1">
+                      <p><span className="font-medium">{(detailPurchase.shippingAddress as Record<string, string>).recipientName}</span> • {(detailPurchase.shippingAddress as Record<string, string>).phone}</p>
+                      <p className="text-muted-foreground">{(detailPurchase.shippingAddress as Record<string, string>).address}</p>
+                      <p className="text-muted-foreground">
+                        {[(detailPurchase.shippingAddress as Record<string, string>).districtName, (detailPurchase.shippingAddress as Record<string, string>).regencyName, (detailPurchase.shippingAddress as Record<string, string>).provinceName].filter(Boolean).join(", ")} {(detailPurchase.shippingAddress as Record<string, string>).postalCode}
+                      </p>
+                    </div>
+                  </div>
+                )}
 
                 {detailPurchase.paymentProofUrl && (
                   <div>
