@@ -37,12 +37,14 @@ export function useUploadPaymentProof() {
 export interface PurchaseDetail {
   id: string
   amount: number
+  bundleId: string
   bundleTitle: string
   workTitle: string
   workSlug: string
   status: "PENDING" | "PAID" | "FAILED"
   paymentMethod: string
   paymentProofUrl: string | null
+  failureReason: string | null
   bankName: string
   bankAccountNumber: string
   bankAccountHolder: string

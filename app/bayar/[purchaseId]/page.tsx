@@ -3,6 +3,7 @@
 import { use, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { usePurchaseDetail, useUploadPaymentProof } from "@/lib/api/payments";
+import { createManualBundlePayment } from "@/lib/api/bundles";
 import { compressImage, MAX_IMAGE_INPUT_SIZE } from "@/lib/image";
 import { Loader2, ArrowLeft, Upload, CheckCircle, XCircle, Clock, AlertCircle, Copy, Timer } from "lucide-react";
 import BottomNav from "@/components/layout/BottomNav";
@@ -18,9 +19,21 @@ export default function BayarPage({
   const router = useRouter();
   const { user } = useAuth();
   const [copied, setCopied] = useState(false);
+  const [isRestarting, setIsRestarting] = useState(false);
 
   const { data: purchase, isLoading, refetch } = usePurchaseDetail(purchaseId);
   const uploadMutation = useUploadPaymentProof();
+
+  const handleRestart = async () => {
+    if (!purchase) return;
+    setIsRestarting(true);
+    try {
+      const data = await createManualBundlePayment({ bundleId: purchase.bundleId });
+      router.push(`/bayar/${data.purchaseId}`);
+    } catch {
+      setIsRestarting(false);
+    }
+  };
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -276,20 +289,31 @@ export default function BayarPage({
                 )}
 
                 {user ? (
-                  <label
-                    className={`flex items-center justify-center gap-2 py-3 px-6 rounded-xl text-white font-semibold text-sm transition-opacity tap-feedback ${isExpiredOnPage ? "opacity-60 cursor-not-allowed" : "hover:opacity-90 cursor-pointer"}`}
-                    style={{ backgroundColor: "var(--accent)" }}
-                  >
-                    <Upload className="size-4" />
-                    {uploadMutation.isPending ? "Mengupload..." : "Upload Bukti"}
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={handleFileChange}
-                      disabled={uploadMutation.isPending || isExpiredOnPage}
-                      className="hidden"
-                    />
-                  </label>
+                  isExpiredOnPage ? (
+                    <button
+                      onClick={handleRestart}
+                      disabled={isRestarting}
+                      className="w-full flex items-center justify-center gap-2 py-3 px-6 rounded-xl text-white font-semibold text-sm transition-opacity hover:opacity-90 tap-feedback disabled:opacity-60"
+                      style={{ backgroundColor: "var(--accent)" }}
+                    >
+                      {isRestarting ? "Memproses..." : "Buat Transaksi Baru"}
+                    </button>
+                  ) : (
+                    <label
+                      className="flex items-center justify-center gap-2 py-3 px-6 rounded-xl text-white font-semibold text-sm transition-opacity tap-feedback hover:opacity-90 cursor-pointer"
+                      style={{ backgroundColor: "var(--accent)" }}
+                    >
+                      <Upload className="size-4" />
+                      {uploadMutation.isPending ? "Mengupload..." : "Upload Bukti"}
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleFileChange}
+                        disabled={uploadMutation.isPending}
+                        className="hidden"
+                      />
+                    </label>
+                  )
                 ) : (
                   <LoginDialog>
                     <button
@@ -381,9 +405,19 @@ export default function BayarPage({
             <p className="text-sm font-semibold mb-2" style={{ color: "#ef4444" }}>
               Pembayaran Ditolak
             </p>
-            <p className="text-xs" style={{ color: "var(--muted)" }}>
-              Silakan coba lagi atau hubungi admin untuk informasi lebih lanjut.
+            <p className="text-xs mb-4" style={{ color: "var(--muted)" }}>
+              {purchase.failureReason === "Kedaluwarsa - tidak membayar dalam 1 jam"
+                ? "Waktu pembayaran habis. Buat transaksi baru untuk melanjutkan pembelian."
+                : "Silakan coba lagi atau hubungi admin untuk informasi lebih lanjut."}
             </p>
+            <button
+              onClick={handleRestart}
+              disabled={isRestarting}
+              className="py-2.5 px-6 rounded-xl text-white font-semibold text-sm transition-opacity hover:opacity-90 tap-feedback disabled:opacity-60"
+              style={{ backgroundColor: "var(--accent)" }}
+            >
+              {isRestarting ? "Memproses..." : "Buat Transaksi Baru"}
+            </button>
           </div>
         )}
       </div>
