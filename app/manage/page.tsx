@@ -778,6 +778,21 @@ function OrderDetailDialog({
             </div>
           )}
 
+        {purchase.paymentMethod === "MANUAL_TRANSFER" &&
+          purchase.status === "PENDING" &&
+          !purchase.paymentProofUrl &&
+          !isPurchaseExpired(purchase) && (
+            <div className="flex gap-2 mt-4">
+              <button
+                onClick={onApprove}
+                className="flex-1 py-2.5 rounded-xl text-sm font-semibold text-white transition-colors"
+                style={{ backgroundColor: "#16a34a" }}
+              >
+                Approve tanpa bukti pembayaran
+              </button>
+            </div>
+          )}
+
         {isPurchaseExpired(purchase) && (
           <div className="flex gap-2 mt-4">
             <button

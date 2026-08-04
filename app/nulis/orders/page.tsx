@@ -366,6 +366,20 @@ export default function AdminOrdersPage() {
                 </div>
               )}
 
+              {detailPurchase.paymentMethod === "MANUAL_TRANSFER" && detailPurchase.status === "PENDING" && !detailPurchase.paymentProofUrl && !isPurchaseExpired(detailPurchase) && (
+                <div className="flex gap-2 pt-2 shrink-0">
+                  <button
+                    onClick={() => {
+                      setDetailPurchase(null)
+                      setConfirmAction({ id: detailPurchase.id, type: "approve" })
+                    }}
+                    className="flex-1 py-2 px-4 rounded-lg bg-green-600 text-white text-sm font-medium hover:bg-green-700 transition-colors"
+                  >
+                    Approve tanpa bukti pembayaran
+                  </button>
+                </div>
+              )}
+
               {isPurchaseExpired(detailPurchase) && (
                 <div className="flex gap-2 pt-2 shrink-0">
                   <button
