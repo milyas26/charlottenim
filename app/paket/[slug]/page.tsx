@@ -7,7 +7,7 @@ import { useRouter } from "next/navigation"
 import { useAuth } from "@/contexts/AuthContext"
 import LoginDialog from "@/components/LoginDialog"
 import BottomNav from "@/components/layout/BottomNav"
-import { fetchPublicBundleBySlug, createManualBundlePayment } from "@/lib/api/bundles"
+import { fetchPublicBundleBySlug, createBundlePayment } from "@/lib/api/bundles"
 import { fetchUserPurchases } from "@/lib/api/user"
 import { Loader2, Package, ArrowLeft, CheckCircle } from "lucide-react"
 import {
@@ -55,10 +55,14 @@ export default function PublicBundleDetailPage({
     setShowConfirm(false)
     setIsBuying(true)
     try {
-      const data = await createManualBundlePayment({
+      const data = await createBundlePayment({
         bundleId: bundle.id,
+        workSlug: bundle.workSlug,
+        payerEmail: user.email,
       })
-      router.push(`/bayar/${data.purchaseId}`)
+      if (data.paymentUrl) {
+        window.location.href = data.paymentUrl
+      }
     } catch {
       setIsBuying(false)
     }

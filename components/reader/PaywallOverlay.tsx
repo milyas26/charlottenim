@@ -113,14 +113,12 @@ export default function PaywallOverlay({ price, chapterId, workSlug, chapterSlug
       {user ? (
         <>
           <button
-            disabled
-            className="w-full max-w-xs py-3 px-6 rounded-xl text-white font-semibold text-sm disabled:opacity-60"
+            onClick={() => setConfirmOpen(true)}
+            disabled={buyMutation.isPending}
+            className="w-full max-w-xs py-3 px-6 rounded-xl text-white font-semibold text-sm transition-opacity hover:opacity-90 tap-feedback disabled:opacity-60"
             style={{ backgroundColor: "var(--rm-accent)" }}>
-            Beli Chapter &middot; {formattedPrice}
+            {buyMutation.isPending ? "Memproses..." : `Beli Chapter · ${formattedPrice}`}
           </button>
-          <p className="text-xs mt-2 max-w-xs mx-auto text-red-500">
-            Metode pembayaran satuan sedang dalam verifikasi, silakan beli paket.
-          </p>
         </>
       ) : (
         <LoginDialog>
