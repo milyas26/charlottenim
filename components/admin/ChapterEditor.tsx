@@ -97,6 +97,9 @@ export default function ChapterEditor({ content, onChange, placeholder, workId, 
           "prose prose-sm max-w-none h-full focus:outline-none prose-p:mb-3 prose-p:mt-0 prose-p:leading-7 prose-p:text-foreground prose-headings:mb-2 prose-headings:mt-6 prose-headings:font-semibold prose-headings:text-foreground prose-strong:text-foreground prose-em:text-foreground prose-blockquote:text-foreground prose-code:text-foreground prose-ol:text-foreground prose-ul:text-foreground prose-li:text-foreground prose-img:rounded-lg prose-img:max-w-full prose-img:my-4 prose-img:block prose-img:mx-auto",
       },
       handlePaste: (_view, event) => {
+        const html = event.clipboardData?.getData("text/html")
+        const text = event.clipboardData?.getData("text/plain")
+        if (html || text) return false
         const items = event.clipboardData?.items
         if (!items) return false
         for (const item of Array.from(items)) {
