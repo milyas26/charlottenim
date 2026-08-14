@@ -122,8 +122,33 @@ export async function rejectPayment(purchaseId: string, reason?: string) {
   await api.patch(`/api/nulis/orders/${purchaseId}/reject`, { reason })
 }
 
-export function expirePayment(purchaseId: string) {
-  return rejectPayment(purchaseId, "Kedaluwarsa - tidak membayar dalam 1 jam")
+export async function expirePayment(purchaseId: string) {
+  await api.patch(`/api/nulis/orders/${purchaseId}/expire`)
+}
+
+export function isPurchaseExpired(p: Purchase): boolean {
+  const awaitingManualReview = p.paymentMethod === "MANUAL_TRANSFER" && !!p.paymentProofUrl
+  return (
+    p.status === "PENDING" &&
+    !awaitingManualReview &&
+    Date.now() - new Date(p.createdAt).getTime() > 3_600_000
+  )
+}
+
+export interface BulkExpireResult {
+  matched: number
+  succeeded: number
+  failed: number
+}
+
+export async function bulkExpirePendingOrders(): Promise<BulkExpireResult> {
+  const { data } = await fetchAdminOrders({ status: "PENDING", limit: 200 })
+  const stale = data.filter(isPurchaseExpired)
+  if (stale.length === 0) return { matched: 0, succeeded: 0, failed: 0 }
+
+  const results = await Promise.allSettled(stale.map((p) => expirePayment(p.id)))
+  const succeeded = results.filter((r) => r.status === "fulfilled").length
+  return { matched: stale.length, succeeded, failed: stale.length - succeeded }
 }
 
 export async function fetchPendingOrderCount() {

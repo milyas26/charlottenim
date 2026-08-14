@@ -7,7 +7,8 @@ import type { PaginatedResponse } from "@/lib/api/admin"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { BookOpen, Users, DollarSign, Eye, BookMarked } from "lucide-react"
+import { RevenueCard } from "@/components/admin/RevenueCard"
+import { BookOpen, Users, Eye, BookMarked } from "lucide-react"
 import Link from "next/link"
 import { redirect } from "next/navigation"
 
@@ -41,7 +42,6 @@ export default async function AdminDashboardPage() {
     { title: "Total Karya", value: stats.totalWorks.toString(), icon: BookOpen, description: `${stats.draftCount} draft · ${stats.ongoingCount} ongoing · ${stats.completedCount} selesai` },
     { title: "Total Chapter", value: stats.totalChapters.toString(), icon: BookMarked, description: `${stats.freeChapters} gratis · ${stats.premiumChapters} premium` },
     { title: "Total Pembaca", value: stats.totalUsers.toString(), icon: Users, description: "User terdaftar" },
-    { title: "Total Revenue", value: `Rp ${stats.totalRevenue.toLocaleString("id-ID")}`, icon: DollarSign, description: `${purchases.filter(p => p.status === "PAID").length} transaksi sukses` },
     { title: "Total Dibaca", value: stats.totalReads.toLocaleString("id-ID"), icon: Eye, description: "Kumulatif semua chapter" },
   ]
 
@@ -55,6 +55,11 @@ export default async function AdminDashboardPage() {
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+        <RevenueCard
+          totalRevenue={stats.totalRevenue}
+          revenueByMonth={stats.revenueByMonth ?? []}
+          variant="nulis"
+        />
         {statsCards.map((stat) => {
           const Icon = stat.icon
           return (

@@ -41,6 +41,12 @@ export interface AdminComment {
   createdAt: string;
 }
 
+export interface RevenueByMonth {
+  year: number
+  month: number
+  revenue: number
+}
+
 export interface AdminStats {
   totalWorks: number
   totalChapters: number
@@ -52,4 +58,5 @@ export interface AdminStats {
   draftCount: number
   ongoingCount: number
   completedCount: number
+  revenueByMonth: RevenueByMonth[]
 }

@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import BottomNav from "@/components/layout/BottomNav";
 import {
@@ -12,14 +13,16 @@ import {
   approvePayment,
   rejectPayment,
   expirePayment,
+  bulkExpirePendingOrders,
+  isPurchaseExpired,
   adminKeys,
 } from "@/lib/api/admin";
 import { Pagination } from "@/components/ui/pagination";
+import { RevenueCard } from "@/components/admin/RevenueCard";
 import type { Purchase } from "@/data/admin-types";
 import {
   BookOpen,
   Users,
-  DollarSign,
   Eye,
   BookMarked,
   Search,
@@ -54,6 +57,7 @@ export default function ManagePage() {
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("ALL");
   const [detailPurchase, setDetailPurchase] = useState<Purchase | null>(null);
   const [confirmAction, setConfirmAction] = useState<ConfirmAction>(null);
+  const [showBulkExpireConfirm, setShowBulkExpireConfirm] = useState(false);
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
 
@@ -96,6 +100,27 @@ export default function ManagePage() {
       qc.invalidateQueries({ queryKey: ["admin", "orders"] });
       qc.invalidateQueries({ queryKey: adminKeys.pendingCount() });
       setConfirmAction(null);
+    },
+  });
+
+  const bulkExpireMutation = useMutation({
+    mutationFn: bulkExpirePendingOrders,
+    onSuccess: (result) => {
+      qc.invalidateQueries({ queryKey: ["admin", "orders"] });
+      qc.invalidateQueries({ queryKey: adminKeys.pendingCount() });
+      setShowBulkExpireConfirm(false);
+      if (result.matched === 0) {
+        toast.info("Tidak ada order pending yang sudah kedaluwarsa.");
+      } else if (result.failed > 0) {
+        toast.warning(
+          `${result.succeeded} order dibatalkan, ${result.failed} gagal diproses.`
+        );
+      } else {
+        toast.success(`${result.succeeded} order kedaluwarsa berhasil dibatalkan.`);
+      }
+    },
+    onError: () => {
+      toast.error("Gagal memproses order kedaluwarsa.");
     },
   });
 
@@ -199,6 +224,8 @@ export default function ManagePage() {
             onDetailPurchaseChange={setDetailPurchase}
             onConfirmActionChange={setConfirmAction}
             isMutating={approveMutation.isPending || rejectMutation.isPending || expireMutation.isPending}
+            onBulkExpireClick={() => setShowBulkExpireConfirm(true)}
+            isBulkExpiring={bulkExpireMutation.isPending}
             page={page}
             totalPages={totalPages}
             limit={limit}
@@ -237,17 +264,16 @@ export default function ManagePage() {
         />
       )}
 
+      {showBulkExpireConfirm && (
+        <BulkExpireConfirmDialog
+          onConfirm={() => bulkExpireMutation.mutate()}
+          onCancel={() => setShowBulkExpireConfirm(false)}
+          isPending={bulkExpireMutation.isPending}
+        />
+      )}
+
       <BottomNav />
     </div>
-  );
-}
-
-function isPurchaseExpired(p: Purchase): boolean {
-  return (
-    p.status === "PENDING" &&
-    p.paymentMethod === "MANUAL_TRANSFER" &&
-    !p.paymentProofUrl &&
-    Date.now() - new Date(p.createdAt).getTime() > 3_600_000
   );
 }
 
@@ -266,6 +292,11 @@ function RingkasanTab({
     draftCount: number;
     ongoingCount: number;
     completedCount: number;
+    revenueByMonth: {
+      year: number;
+      month: number;
+      revenue: number;
+    }[];
   };
   isLoading: boolean;
 }) {
@@ -307,12 +338,6 @@ function RingkasanTab({
       sub: "User terdaftar",
     },
     {
-      icon: DollarSign,
-      label: "Revenue",
-      value: `Rp ${stats.totalRevenue.toLocaleString("id-ID")}`,
-      sub: "Total pendapatan",
-    },
-    {
       icon: Eye,
       label: "Dibaca",
       value: stats.totalReads.toLocaleString("id-ID"),
@@ -321,7 +346,13 @@ function RingkasanTab({
   ];
 
   return (
-    <div className="grid grid-cols-2 gap-3">
+    <div className="space-y-3">
+      <RevenueCard
+        totalRevenue={stats.totalRevenue}
+        revenueByMonth={stats.revenueByMonth ?? []}
+        variant="manage"
+      />
+      <div className="grid grid-cols-2 gap-3">
       {cards.map((card) => {
         const Icon = card.icon;
         return (
@@ -358,6 +389,7 @@ function RingkasanTab({
         );
       })}
     </div>
+    </div>
   );
 }
 
@@ -372,6 +404,8 @@ function OrderTab({
   onDetailPurchaseChange,
   onConfirmActionChange,
   isMutating,
+  onBulkExpireClick,
+  isBulkExpiring,
   page,
   totalPages,
   limit,
@@ -388,6 +422,8 @@ function OrderTab({
   onDetailPurchaseChange: (p: Purchase | null) => void;
   onConfirmActionChange: (v: ConfirmAction) => void;
   isMutating: boolean;
+  onBulkExpireClick: () => void;
+  isBulkExpiring: boolean;
   page: number;
   totalPages: number;
   limit: number;
@@ -439,6 +475,23 @@ function OrderTab({
           <option value="FAILED">Gagal</option>
         </select>
       </div>
+
+      <button
+        onClick={onBulkExpireClick}
+        disabled={isBulkExpiring}
+        className="w-full flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-xs font-semibold transition-colors disabled:opacity-60"
+        style={{
+          backgroundColor: "color-mix(in srgb, #ea580c 12%, transparent)",
+          color: "#ea580c",
+        }}
+      >
+        {isBulkExpiring ? (
+          <Loader2 className="size-3.5 animate-spin" />
+        ) : (
+          <Clock className="size-3.5" />
+        )}
+        Proses Order Pending Kedaluwarsa (&gt;1 jam)
+      </button>
 
       {purchases.length === 0 ? (
         <div className="text-center py-16">
@@ -883,6 +936,61 @@ function ConfirmDialog({
               <Loader2 className="size-4 animate-spin" />
             ) : null}
             {isExpire ? "Ya, Batalkan" : isApprove ? "Ya, Setujui" : "Ya, Tolak"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function BulkExpireConfirmDialog({
+  onConfirm,
+  onCancel,
+  isPending,
+}: {
+  onConfirm: () => void;
+  onCancel: () => void;
+  isPending: boolean;
+}) {
+  return (
+    <div className="fixed inset-0 z-[70] flex items-center justify-center px-4">
+      <div className="absolute inset-0 bg-black/50" onClick={onCancel} />
+      <div
+        className="relative w-full max-w-sm rounded-2xl p-5"
+        style={{ backgroundColor: "var(--background)" }}
+      >
+        <h3
+          className="text-base font-bold font-[family-name:var(--font-display)] mb-2"
+          style={{ color: "var(--foreground)" }}
+        >
+          Proses Order Kedaluwarsa?
+        </h3>
+        <p className="text-sm mb-4" style={{ color: "var(--muted)" }}>
+          Sistem akan mencari semua order dengan status <strong>Menunggu</strong> (transfer
+          manual maupun Duitku, kecuali yang sudah upload bukti bayar dan menunggu review) yang
+          sudah lebih dari 1 jam sejak dibuat, lalu menandainya sebagai <strong>Gagal</strong>{" "}
+          karena kedaluwarsa. Lanjutkan?
+        </p>
+        <div className="flex gap-2">
+          <button
+            onClick={onCancel}
+            disabled={isPending}
+            className="flex-1 py-2.5 rounded-xl text-sm font-semibold transition-colors"
+            style={{
+              backgroundColor: "var(--surface)",
+              color: "var(--foreground)",
+            }}
+          >
+            Batal
+          </button>
+          <button
+            onClick={onConfirm}
+            disabled={isPending}
+            className="flex-1 py-2.5 rounded-xl text-sm font-semibold text-white transition-colors flex items-center justify-center gap-1.5"
+            style={{ backgroundColor: "#ea580c" }}
+          >
+            {isPending ? <Loader2 className="size-4 animate-spin" /> : null}
+            Ya, Proses
           </button>
         </div>
       </div>
