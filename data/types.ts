@@ -34,6 +34,7 @@ export interface Chapter {
   status: ChapterStatus;
   deletedAt?: string | null;
   bundleTitle?: string | null;
+  locked?: boolean;
 }
 
 export interface BundleInfo {

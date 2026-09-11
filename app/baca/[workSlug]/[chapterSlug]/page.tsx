@@ -1,19 +1,26 @@
 import { notFound } from "next/navigation"
 import { cookies } from "next/headers"
 import { apiFetch } from "@/lib/axios"
+import { buildPreviewContent } from "@/lib/preview"
 import type { Work, Chapter } from "@/data/types"
 import type { DbUser } from "@/lib/cookies"
 import ReaderPage from "./ReaderPage"
 
-async function getDbUserFromCookie(): Promise<DbUser | null> {
+async function getAuthContext(): Promise<{ cookie: string; dbUser: DbUser | null }> {
   try {
     const jar = await cookies()
     const raw = jar.get("user-data")?.value
-    if (!raw) return null
-    const parsed = JSON.parse(decodeURIComponent(raw))
-    return parsed as DbUser
+    let dbUser: DbUser | null = null
+    if (raw) {
+      try {
+        dbUser = JSON.parse(decodeURIComponent(raw)) as DbUser
+      } catch {
+        dbUser = null
+      }
+    }
+    return { cookie: jar.toString(), dbUser }
   } catch {
-    return null
+    return { cookie: "", dbUser: null }
   }
 }
 
@@ -23,12 +30,14 @@ export default async function BacaChapterPage({
   params: Promise<{ workSlug: string; chapterSlug: string }>
 }) {
   const { workSlug, chapterSlug } = await params
+  const { cookie, dbUser } = await getAuthContext()
 
   const work = await apiFetch<Work>(`/api/works/${workSlug}`).catch(() => null)
   if (!work) notFound()
 
   const chapter = await apiFetch<Chapter>(
-    `/api/chapters/by-slug/${workSlug}/${chapterSlug}`
+    `/api/chapters/by-slug/${workSlug}/${chapterSlug}`,
+    { cookie }
   ).catch(() => null)
   if (!chapter) notFound()
 
@@ -40,16 +49,14 @@ export default async function BacaChapterPage({
   let isUnlocked = !chapter.isPremium
 
   if (!isUnlocked) {
-    const dbUser = await getDbUserFromCookie()
     if (dbUser) {
       if (dbUser.role === "ADMIN") {
         isUnlocked = true
       } else {
         try {
-          const cookieStr = `user-data=${encodeURIComponent(JSON.stringify(dbUser))}`
           const result = await apiFetch<{ purchased: boolean }>(
             `/api/chapters/${chapter.id}/purchased`,
-            { cookie: cookieStr }
+            { cookie }
           )
           isUnlocked = result.purchased
         } catch {
@@ -57,6 +64,10 @@ export default async function BacaChapterPage({
         }
       }
     }
+  }
+
+  if (!isUnlocked) {
+    chapter.content = buildPreviewContent(chapter.content)
   }
 
   return (

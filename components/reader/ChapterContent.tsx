@@ -35,9 +35,6 @@ export default function ChapterContent({
   isUnlocked,
   previewOnly = false,
 }: Props) {
-  const previewParagraphs = getPreviewParagraphs(content);
-  const displayContent =
-    isPremium && !isUnlocked && previewOnly ? previewParagraphs : content;
   const showDropCap = !(isPremium && !isUnlocked && previewOnly);
 
   return (
@@ -51,25 +48,8 @@ export default function ChapterContent({
     >
       <div
         className={showDropCap ? "reader-content" : "reader-content-preview"}
-        dangerouslySetInnerHTML={{ __html: displayContent }}
+        dangerouslySetInnerHTML={{ __html: content }}
       />
     </article>
   );
-}
-
-function getPreviewParagraphs(html: string): string {
-  const match = html.match(/<p>[\s\S]*?<\/p>/g);
-  if (!match || match.length === 0) return html;
-  let preview = match.slice(0, 3).join("");
-  preview = limitImages(preview, 1);
-  return preview;
-}
-
-function limitImages(html: string, maxImages: number): string {
-  let count = 0;
-  return html.replace(/<img[\s\S]*?>/gi, (m) => {
-    count++;
-    if (count > maxImages) return "";
-    return m;
-  });
 }
