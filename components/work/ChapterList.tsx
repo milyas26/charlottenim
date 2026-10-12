@@ -3,8 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { Chapter } from "@/data/types";
-import { formatCompactNumber } from "@/lib/formatNumber";
-import { ArrowDownUp, CheckCircle2, Lock, MessageCircle, Eye } from "lucide-react";
+import { ArrowDownUp, CheckCircle2, Lock, MessageCircle } from "lucide-react";
 
 interface Props {
   chapters: Chapter[];
@@ -66,12 +65,8 @@ export default function ChapterList({ chapters, workSlug, unlockedChapterIds }: 
                   </p>
                   <p className="flex items-center gap-2.5 text-[11px] mt-0.5" style={{ color: "var(--muted)" }}>
                     <span className="inline-flex items-center gap-1">
-                      <Eye className="size-3" />
-                      {formatCompactNumber(chapter.readCount)}
-                    </span>
-                    <span className="inline-flex items-center gap-1">
                       <MessageCircle className="size-3" />
-                      {chapter.commentCount.toLocaleString("id-ID")}
+                      {chapter.commentCount.toLocaleString("id-ID")} komentar
                     </span>
                   </p>
                 </div>

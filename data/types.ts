@@ -29,7 +29,7 @@ export interface Chapter {
   content: string;
   isPremium: boolean;
   price: number;
-  readCount: number;
+  readCount?: number;
   commentCount: number;
   status: ChapterStatus;
   deletedAt?: string | null;

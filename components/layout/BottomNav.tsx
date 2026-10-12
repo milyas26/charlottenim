@@ -45,7 +45,7 @@ export default function BottomNav() {
             <Link
               key={item.href}
               href={item.href}
-              className={`flex flex-1 flex-col items-center justify-center gap-1 h-full tap-feedback ${item.href === "/manage" ? "md:hidden" : ""}`}
+              className={`flex flex-1 flex-col items-center justify-center gap-1 h-full tap-feedback`}
               onClick={hapticTap}
               style={{ color: active ? "var(--accent)" : "var(--muted)" }}
             >

@@ -182,7 +182,7 @@ export default function AdminWorkDetailPage({ params }: { params: Promise<{ id: 
     },
   })
 
-  const totalReads = chapters.reduce((sum, ch) => sum + ch.readCount, 0)
+  const totalReads = chapters.reduce((sum, ch) => sum + (ch.readCount ?? 0), 0)
 
   useEffect(() => {
     if (!work) return
@@ -581,7 +581,7 @@ export default function AdminWorkDetailPage({ params }: { params: Promise<{ id: 
                         )}
                       </TableCell>
                       <TableCell className="text-right text-muted-foreground tabular-nums">
-                        {ch.readCount.toLocaleString("id-ID")}
+                        {(ch.readCount ?? 0).toLocaleString("id-ID")}
                       </TableCell>
                       <TableCell>
                         <DropdownMenu>
