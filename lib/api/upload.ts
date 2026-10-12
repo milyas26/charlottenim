@@ -1,7 +1,13 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import api from "@/lib/axios"
 
-export async function uploadFile(file: File, type: "CONTENT" | "COVER", workId: string, chapterId?: string) {
+export async function uploadFile(
+  file: File,
+  type: "CONTENT" | "COVER",
+  workId: string,
+  chapterId?: string,
+  onProgress?: (percent: number) => void,
+) {
   const formData = new FormData()
   formData.append("file", file)
   formData.append("type", type)
@@ -10,6 +16,11 @@ export async function uploadFile(file: File, type: "CONTENT" | "COVER", workId: 
 
   const { data } = await api.post<{ url: string }>("/api/nulis/upload", formData, {
     headers: { "Content-Type": "multipart/form-data" },
+    onUploadProgress: onProgress
+      ? (e) => {
+          if (e.total) onProgress(Math.round((e.loaded / e.total) * 100))
+        }
+      : undefined,
   })
   return data.url
 }

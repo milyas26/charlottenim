@@ -1,6 +1,6 @@
 "use client"
 
-import { useCallback, useMemo, useRef, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import {
   Dialog,
@@ -9,8 +9,8 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { useAdminImages, deleteAdminImage, adminKeys } from "@/lib/api/admin"
-import { uploadMultipleFiles } from "@/lib/api/upload"
-import { Check, Loader2, Plus, Trash2 } from "lucide-react"
+import { uploadFile } from "@/lib/api/upload"
+import { AlertCircle, Check, Loader2, Plus, RotateCw, Trash2, X } from "lucide-react"
 import { toast } from "sonner"
 
 interface ImageData {
@@ -18,6 +18,28 @@ interface ImageData {
   url: string
   order: number
 }
+
+interface PendingUpload {
+  tempId: string
+  file: File
+  previewUrl: string
+  progress: number
+  status: "uploading" | "error"
+}
+
+const MAX_FILE_SIZE = 2 * 1024 * 1024
+
+// Animasi linear progress indeterminate ala Material UI
+const LINEAR_INDETERMINATE_CSS = `
+@keyframes bucket-linear-indeterminate-1 {
+  0% { left: -35%; right: 100%; }
+  60%, 100% { left: 100%; right: -90%; }
+}
+@keyframes bucket-linear-indeterminate-2 {
+  0% { left: -200%; right: 100%; }
+  60%, 100% { left: 107%; right: -8%; }
+}
+`
 
 interface ImageBucketModalProps {
   open: boolean
@@ -106,6 +128,93 @@ function GalleryImage({
   )
 }
 
+function PendingImage({
+  upload,
+  index,
+  onRetry,
+  onDismiss,
+}: {
+  upload: PendingUpload
+  index: number
+  onRetry: () => void
+  onDismiss: () => void
+}) {
+  const failed = upload.status === "error"
+  return (
+    <div
+      className={`relative rounded-[16px] bg-secondary overflow-hidden aspect-square ${
+        failed ? "ring-2 ring-inset ring-destructive" : ""
+      }`}
+    >
+      <div className="absolute top-1.5 left-1.5 z-10">
+        <span className="bg-card/90 text-[11px] font-semibold tabular-nums px-2 py-0.5 rounded-full shadow-sm select-none">
+          {index + 1}
+        </span>
+      </div>
+      {failed && (
+        <div className="absolute top-1.5 right-1.5 z-10 flex items-center gap-0.5">
+          <button
+            onClick={onRetry}
+            className="size-7 inline-flex items-center justify-center rounded-full bg-card/90 shadow-sm hover:bg-primary hover:text-primary-foreground transition-colors"
+            title="Upload ulang"
+          >
+            <RotateCw className="size-3.5" />
+          </button>
+          <button
+            onClick={onDismiss}
+            className="size-7 inline-flex items-center justify-center rounded-full bg-card/90 shadow-sm hover:bg-destructive hover:text-destructive-foreground transition-colors"
+            title="Batalkan"
+          >
+            <X className="size-3.5" />
+          </button>
+        </div>
+      )}
+      <img
+        src={upload.previewUrl}
+        alt={upload.file.name}
+        className="w-full h-full object-contain p-2 opacity-50"
+      />
+      <div className="absolute inset-x-3 bottom-3 z-10">
+        {failed ? (
+          <div className="flex items-center justify-center gap-1 bg-destructive text-destructive-foreground text-[11px] font-semibold px-2 py-1 rounded-full shadow-sm select-none">
+            <AlertCircle className="size-3" />
+            Gagal upload
+          </div>
+        ) : (
+          <div className="bg-card/90 rounded-full p-1 shadow-sm">
+            <div
+              role="progressbar"
+              aria-label="Mengupload"
+              aria-valuenow={upload.progress}
+              aria-valuemin={0}
+              aria-valuemax={100}
+              className="relative h-1.5 w-full rounded-full bg-foreground/10 overflow-hidden"
+            >
+              <style href="bucket-linear-indeterminate" precedence="default">
+                {LINEAR_INDETERMINATE_CSS}
+              </style>
+              <div
+                className="absolute inset-y-0 rounded-full bg-foreground/35"
+                style={{
+                  animation:
+                    "bucket-linear-indeterminate-1 2.1s cubic-bezier(0.65, 0.815, 0.735, 0.395) infinite",
+                }}
+              />
+              <div
+                className="absolute inset-y-0 rounded-full bg-foreground/35"
+                style={{
+                  animation:
+                    "bucket-linear-indeterminate-2 2.1s cubic-bezier(0.165, 0.84, 0.44, 1) 1.15s infinite",
+                }}
+              />
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
 export default function ImageBucketModal({
   open,
   onOpenChange,
@@ -126,20 +235,44 @@ export default function ImageBucketModal({
 
   const { data: images = [], isLoading } = useAdminImages(workId, chapterId, open)
 
-  const uploadMutation = useMutation({
-    mutationFn: ({ files }: { files: FileList }) => uploadMultipleFiles(files, workId, chapterId),
-    onSuccess: (success: number) => {
-      if (success > 0) {
-        toast.success(`${success} gambar berhasil diupload`)
-        queryClient.invalidateQueries({ queryKey: adminKeys.images(workId, chapterId) })
+  const [pendingUploads, setPendingUploads] = useState<PendingUpload[]>([])
+  const pendingRef = useRef(pendingUploads)
+  pendingRef.current = pendingUploads
+
+  useEffect(
+    () => () => pendingRef.current.forEach((u) => URL.revokeObjectURL(u.previewUrl)),
+    [],
+  )
+
+  const updatePending = useCallback((tempId: string, patch: Partial<PendingUpload>) => {
+    setPendingUploads((prev) => prev.map((u) => (u.tempId === tempId ? { ...u, ...patch } : u)))
+  }, [])
+
+  const removePending = useCallback((tempId: string) => {
+    setPendingUploads((prev) => {
+      const target = prev.find((u) => u.tempId === tempId)
+      if (target) URL.revokeObjectURL(target.previewUrl)
+      return prev.filter((u) => u.tempId !== tempId)
+    })
+  }, [])
+
+  const startUpload = useCallback(
+    async (tempId: string, file: File) => {
+      updatePending(tempId, { status: "uploading", progress: 0 })
+      try {
+        await uploadFile(file, "CONTENT", workId, chapterId, (progress) =>
+          updatePending(tempId, { progress }),
+        )
+        // Tunggu daftar gambar ter-refetch dulu supaya tidak ada kedipan saat preview diganti
+        await queryClient.invalidateQueries({ queryKey: adminKeys.images(workId, chapterId) })
+        removePending(tempId)
+      } catch {
+        updatePending(tempId, { status: "error" })
+        toast.error(`Gagal upload ${file.name}`)
       }
-      if (fileInputRef.current) fileInputRef.current.value = ""
     },
-    onError: () => {
-      toast.error("Gagal upload gambar")
-      if (fileInputRef.current) fileInputRef.current.value = ""
-    },
-  })
+    [workId, chapterId, queryClient, updatePending, removePending],
+  )
 
   const deleteMutation = useMutation({
     mutationFn: deleteAdminImage,
@@ -195,11 +328,34 @@ export default function ImageBucketModal({
 
   const handleUpload = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
-      const files = e.target.files
-      if (!files || files.length === 0) return
-      uploadMutation.mutate({ files })
+      const files = Array.from(e.target.files ?? [])
+      e.target.value = ""
+      if (files.length === 0) return
+
+      const valid: PendingUpload[] = []
+      for (const file of files) {
+        if (!file.type.startsWith("image/")) {
+          toast.error(`${file.name} bukan file gambar`)
+          continue
+        }
+        if (file.size > MAX_FILE_SIZE) {
+          toast.error(`${file.name} melebihi 2MB`)
+          continue
+        }
+        valid.push({
+          tempId: crypto.randomUUID(),
+          file,
+          previewUrl: URL.createObjectURL(file),
+          progress: 0,
+          status: "uploading",
+        })
+      }
+      if (valid.length === 0) return
+
+      setPendingUploads((prev) => [...prev, ...valid])
+      valid.forEach((u) => startUpload(u.tempId, u.file))
     },
-    [uploadMutation],
+    [startUpload],
   )
 
   const handleAddSelectedToEditor = useCallback(() => {
@@ -233,14 +389,9 @@ export default function ImageBucketModal({
         <div className="shrink-0 px-5 py-1 flex gap-1.5">
           <button
             onClick={() => fileInputRef.current?.click()}
-            disabled={uploadMutation.isPending}
             className="inline-flex items-center gap-1.5 h-8 px-3.5 rounded-full bg-secondary text-[13px] font-medium text-foreground hover:brightness-95 transition disabled:opacity-50"
           >
-            {uploadMutation.isPending ? (
-              <Loader2 className="size-3.5 animate-spin" />
-            ) : (
-              <Plus className="size-3.5" />
-            )}
+            <Plus className="size-3.5" />
             Upload
           </button>
           {images.length > 0 && (
@@ -279,6 +430,15 @@ export default function ImageBucketModal({
                   onToggle={() => handleToggle(img.id)}
                   onDelete={(id) => deleteMutation.mutate(id)}
                   deleting={deleteMutation.isPending && deleteMutation.variables === img.id}
+                />
+              ))}
+              {pendingUploads.map((upload, idx) => (
+                <PendingImage
+                  key={upload.tempId}
+                  upload={upload}
+                  index={images.length + idx}
+                  onRetry={() => startUpload(upload.tempId, upload.file)}
+                  onDismiss={() => removePending(upload.tempId)}
                 />
               ))}
             </div>
