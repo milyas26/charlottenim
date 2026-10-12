@@ -24,7 +24,8 @@ interface PendingUpload {
   file: File
   previewUrl: string
   progress: number
-  status: "uploading" | "error"
+  status: "queued" | "uploading" | "error" | "done"
+  url?: string
 }
 
 const MAX_FILE_SIZE = 2 * 1024 * 1024
@@ -40,6 +41,16 @@ const LINEAR_INDETERMINATE_CSS = `
   60%, 100% { left: 107%; right: -8%; }
 }
 `
+
+// Upload yang sudah selesai tetap di slotnya sampai semua upload sebelumnya juga
+// selesai/dibatalkan, baru dilepas ke daftar gambar utama — posisinya tidak lompat
+function flushDone(list: PendingUpload[]) {
+  const firstUnfinished = list.findIndex((u) => u.status !== "done")
+  const flushCount = firstUnfinished === -1 ? list.length : firstUnfinished
+  if (flushCount === 0) return list
+  list.slice(0, flushCount).forEach((u) => URL.revokeObjectURL(u.previewUrl))
+  return list.slice(flushCount)
+}
 
 interface ImageBucketModalProps {
   open: boolean
@@ -140,6 +151,7 @@ function PendingImage({
   onDismiss: () => void
 }) {
   const failed = upload.status === "error"
+  const done = upload.status === "done"
   return (
     <div
       className={`relative rounded-[16px] bg-secondary overflow-hidden aspect-square ${
@@ -172,8 +184,9 @@ function PendingImage({
       <img
         src={upload.previewUrl}
         alt={upload.file.name}
-        className="w-full h-full object-contain p-2 opacity-50"
+        className={`w-full h-full object-contain p-2 ${done ? "" : "opacity-50"}`}
       />
+      {!done && (
       <div className="absolute inset-x-3 bottom-3 z-10">
         {failed ? (
           <div className="flex items-center justify-center gap-1 bg-destructive text-destructive-foreground text-[11px] font-semibold px-2 py-1 rounded-full shadow-sm select-none">
@@ -211,6 +224,7 @@ function PendingImage({
           </div>
         )}
       </div>
+      )}
     </div>
   )
 }
@@ -245,34 +259,63 @@ export default function ImageBucketModal({
   )
 
   const updatePending = useCallback((tempId: string, patch: Partial<PendingUpload>) => {
-    setPendingUploads((prev) => prev.map((u) => (u.tempId === tempId ? { ...u, ...patch } : u)))
+    setPendingUploads((prev) =>
+      flushDone(prev.map((u) => (u.tempId === tempId ? { ...u, ...patch } : u))),
+    )
   }, [])
 
   const removePending = useCallback((tempId: string) => {
     setPendingUploads((prev) => {
       const target = prev.find((u) => u.tempId === tempId)
       if (target) URL.revokeObjectURL(target.previewUrl)
-      return prev.filter((u) => u.tempId !== tempId)
+      return flushDone(prev.filter((u) => u.tempId !== tempId))
     })
   }, [])
 
-  const startUpload = useCallback(
-    async (tempId: string, file: File) => {
-      updatePending(tempId, { status: "uploading", progress: 0 })
-      try {
-        await uploadFile(file, "CONTENT", workId, chapterId, (progress) =>
-          updatePending(tempId, { progress }),
-        )
-        // Tunggu daftar gambar ter-refetch dulu supaya tidak ada kedipan saat preview diganti
-        await queryClient.invalidateQueries({ queryKey: adminKeys.images(workId, chapterId) })
-        removePending(tempId)
-      } catch (error) {
-        updatePending(tempId, { status: "error" })
-        toast.error(`Gagal upload ${file.name}`, { description: getUploadErrorMessage(error) })
+  // Upload dijalankan berurutan (satu per satu) supaya urutan gambar di server
+  // sama dengan urutan file yang dipilih
+  const queueRef = useRef<{ tempId: string; file: File }[]>([])
+  const runningRef = useRef(false)
+
+  const runQueue = useCallback(async () => {
+    if (runningRef.current) return
+    runningRef.current = true
+    try {
+      let next: { tempId: string; file: File } | undefined
+      while ((next = queueRef.current.shift())) {
+        const { tempId, file } = next
+        updatePending(tempId, { status: "uploading", progress: 0 })
+        try {
+          const url = await uploadFile(file, "CONTENT", workId, chapterId, (progress) =>
+            updatePending(tempId, { progress }),
+          )
+          // Tunggu daftar gambar ter-refetch dulu supaya tidak ada kedipan saat preview diganti
+          await queryClient.invalidateQueries({ queryKey: adminKeys.images(workId, chapterId) })
+          updatePending(tempId, { status: "done", progress: 100, url })
+        } catch (error) {
+          updatePending(tempId, { status: "error" })
+          toast.error(`Gagal upload ${file.name}`, { description: getUploadErrorMessage(error) })
+        }
       }
+    } finally {
+      runningRef.current = false
+    }
+  }, [workId, chapterId, queryClient, updatePending])
+
+  const enqueueUpload = useCallback(
+    (tempId: string, file: File) => {
+      updatePending(tempId, { status: "queued", progress: 0 })
+      queueRef.current.push({ tempId, file })
+      runQueue()
     },
-    [workId, chapterId, queryClient, updatePending, removePending],
+    [updatePending, runQueue],
   )
+
+  // Gambar yang masih "ditahan" di slot pending disembunyikan dari daftar utama agar tidak dobel
+  const visibleImages = useMemo(() => {
+    const heldUrls = new Set(pendingUploads.flatMap((u) => (u.url ? [u.url] : [])))
+    return heldUrls.size > 0 ? images.filter((img) => !heldUrls.has(img.url)) : images
+  }, [images, pendingUploads])
 
   const deleteMutation = useMutation({
     mutationFn: deleteAdminImage,
@@ -347,15 +390,18 @@ export default function ImageBucketModal({
           file,
           previewUrl: URL.createObjectURL(file),
           progress: 0,
-          status: "uploading",
+          status: "queued",
         })
       }
       if (valid.length === 0) return
 
       setPendingUploads((prev) => [...prev, ...valid])
-      valid.forEach((u) => startUpload(u.tempId, u.file))
+      valid.forEach((u) => {
+        queueRef.current.push({ tempId: u.tempId, file: u.file })
+      })
+      runQueue()
     },
-    [startUpload],
+    [runQueue],
   )
 
   const handleAddSelectedToEditor = useCallback(() => {
@@ -420,7 +466,7 @@ export default function ImageBucketModal({
             </div>
           ) : (
             <div className="grid grid-cols-3 gap-3">
-              {images.map((img, idx) => (
+              {visibleImages.map((img, idx) => (
                 <GalleryImage
                   key={img.id}
                   image={img}
@@ -436,8 +482,8 @@ export default function ImageBucketModal({
                 <PendingImage
                   key={upload.tempId}
                   upload={upload}
-                  index={images.length + idx}
-                  onRetry={() => startUpload(upload.tempId, upload.file)}
+                  index={visibleImages.length + idx}
+                  onRetry={() => enqueueUpload(upload.tempId, upload.file)}
                   onDismiss={() => removePending(upload.tempId)}
                 />
               ))}

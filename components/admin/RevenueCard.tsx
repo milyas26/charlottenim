@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ChevronLeft, ChevronRight, DollarSign } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import type { RevenueByMonth } from "@/data/admin-types";
 
 const MONTH_NAMES = [
@@ -29,8 +29,34 @@ function getRevenueForMonth(
   );
 }
 
-function formatRp(n: number): string {
-  return `Rp ${n.toLocaleString("id-ID")}`;
+function EmvChip() {
+  return (
+    <svg viewBox="0 0 48 36" className="h-8 w-[42px] drop-shadow-[0_1px_1px_rgba(0,0,0,0.5)]" aria-hidden="true">
+      <defs>
+        <linearGradient id="rc-chip" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stopColor="#F7E3A1" />
+          <stop offset="45%" stopColor="#C9A24A" />
+          <stop offset="100%" stopColor="#8A6A23" />
+        </linearGradient>
+      </defs>
+      <rect x="0.5" y="0.5" width="47" height="35" rx="6" fill="url(#rc-chip)" stroke="#6B5118" strokeOpacity="0.5" />
+      <g fill="none" stroke="#6B5118" strokeOpacity="0.55" strokeWidth="1">
+        <path d="M0 12h14M0 24h14M34 12h14M34 24h14" />
+        <path d="M14 0v36M34 0v36" />
+        <rect x="18" y="9" width="12" height="18" rx="3" />
+      </g>
+    </svg>
+  );
+}
+
+function ContactlessIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="size-6 text-white/70" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden="true">
+      <path d="M8.5 9.5a4 4 0 0 1 0 5" />
+      <path d="M12 7.5a7 7 0 0 1 0 9" />
+      <path d="M15.5 5.5a10 10 0 0 1 0 13" />
+    </svg>
+  );
 }
 
 interface RevenueCardProps {
@@ -58,7 +84,7 @@ export function RevenueCard({
     ? totalRevenue
     : getRevenueForMonth(revenueByMonth, cursor.year, cursor.month);
   const label = allTime
-    ? "Total pendapatan"
+    ? "Sejak awal"
     : `${MONTH_NAMES[cursor.month - 1]} ${cursor.year}`;
 
   const prevMonth = () => {
@@ -79,168 +105,150 @@ export function RevenueCard({
     );
   };
 
-  const chevronBase =
-    "p-1 rounded-md transition-colors hover:bg-[var(--surface)] disabled:opacity-40 disabled:pointer-events-none";
-  const chevronClass = allTime ? "disabled:opacity-40" : "";
+  const isNulis = variant === "nulis";
+  const rp = value.toLocaleString("id-ID");
+  const validThru = allTime
+    ? "∞/∞"
+    : `${String(cursor.month).padStart(2, "0")}/${String(cursor.year).slice(-2)}`;
 
-  const monthSwitcher = (
-    <div className="flex items-center justify-between w-full gap-2">
-      <div className="flex items-center gap-0.5">
-        <button
-          type="button"
-          onClick={prevMonth}
-          disabled={allTime}
-          className={`${chevronBase} ${chevronClass}`}
-          aria-label="Bulan sebelumnya"
-        >
-          <ChevronLeft className="size-3.5" style={{ color: "var(--accent)" }} />
-        </button>
-        <span
-          className="text-[10px] font-medium whitespace-nowrap"
-          style={{ color: "var(--muted)" }}
-        >
-          {label}
-        </span>
-        <button
-          type="button"
-          onClick={nextMonth}
-          disabled={allTime || isCurrentMonth}
-          className={`${chevronBase} ${chevronClass}`}
-          aria-label="Bulan berikutnya"
-        >
-          <ChevronRight className="size-3.5" style={{ color: "var(--accent)" }} />
-        </button>
-      </div>
-      <button
-        type="button"
-        onClick={() => setAllTime((v) => !v)}
-        className="text-[10px] font-semibold px-2 py-0.5 rounded-full transition-colors shrink-0"
-        style={
-          allTime
-            ? { backgroundColor: "var(--accent)", color: "var(--primary-foreground)" }
-            : {
-                backgroundColor: "var(--surface)",
-                color: "var(--muted)",
-                border: "1px solid var(--border)",
-              }
-        }
-      >
-        {allTime ? "Bulan" : "All Time"}
-      </button>
-    </div>
-  );
-
-  if (variant === "nulis") {
-    const rp = value.toLocaleString("id-ID");
-    return (
-      <div
-        className="relative overflow-hidden rounded-[24px] p-6 text-[#171717] h-full flex flex-col"
-        style={{ background: "linear-gradient(125deg, #F2B27C 0%, #F6D9BD 52%, #E3E4EA 100%)" }}
-      >
-        <div
-          aria-hidden="true"
-          className="pointer-events-none absolute -right-16 -top-20 size-64 rounded-full"
-          style={{ background: "radial-gradient(circle, rgba(255,255,255,0.45) 0%, transparent 70%)" }}
-        />
-        <div className="relative flex items-center justify-between gap-3">
-          <span className="text-[13px] font-semibold text-[#171717]/70">
-            {allTime ? "Total pendapatan" : "Pendapatan bulan ini"}
-          </span>
-          <div className="flex items-center rounded-full bg-white/55 p-0.5 backdrop-blur-sm text-[12px] font-semibold">
-            <button
-              type="button"
-              onClick={() => setAllTime(false)}
-              className={`h-7 px-3 rounded-full transition-colors ${!allTime ? "bg-white shadow-sm" : "text-[#171717]/60"}`}
-            >
-              Bulanan
-            </button>
-            <button
-              type="button"
-              onClick={() => setAllTime(true)}
-              className={`h-7 px-3 rounded-full transition-colors ${allTime ? "bg-white shadow-sm" : "text-[#171717]/60"}`}
-            >
-              All time
-            </button>
-          </div>
-        </div>
-
-        <p className="relative mt-6 font-semibold tracking-[-0.03em] tabular-nums leading-none">
-          <span className="text-xl align-top mr-1 text-[#171717]/70">Rp</span>
-          <span className="text-[44px]">{rp}</span>
-        </p>
-
-        <div className="relative mt-auto pt-6 flex items-center gap-1">
-          <button
-            type="button"
-            onClick={prevMonth}
-            disabled={allTime}
-            aria-label="Bulan sebelumnya"
-            className="size-8 rounded-full bg-white/55 backdrop-blur-sm flex items-center justify-center transition hover:bg-white/80 disabled:opacity-40 disabled:pointer-events-none"
-          >
-            <ChevronLeft className="size-4" />
-          </button>
-          <span className="min-w-[132px] text-center text-[13px] font-semibold">
-            {allTime ? "Sejak awal" : label}
-          </span>
-          <button
-            type="button"
-            onClick={nextMonth}
-            disabled={allTime || isCurrentMonth}
-            aria-label="Bulan berikutnya"
-            className="size-8 rounded-full bg-white/55 backdrop-blur-sm flex items-center justify-center transition hover:bg-white/80 disabled:opacity-40 disabled:pointer-events-none"
-          >
-            <ChevronRight className="size-4" />
-          </button>
-        </div>
-      </div>
-    );
-  }
+  const chevronClass =
+    "size-7 rounded-full flex items-center justify-center bg-white/10 text-white/80 ring-1 ring-white/15 backdrop-blur-sm transition hover:bg-white/20 hover:text-white disabled:opacity-30 disabled:pointer-events-none";
 
   return (
     <div
-      className="rounded-2xl p-4"
+      className={`group relative isolate overflow-hidden text-white flex flex-col select-none ${
+        isNulis ? "rounded-[24px] p-6 h-full min-h-[220px]" : "rounded-[20px] p-5 aspect-[1.586/1] w-full"
+      }`}
       style={{
         background:
-          "linear-gradient(135deg, color-mix(in srgb, var(--accent) 16%, var(--card)) 0%, var(--card) 70%)",
-        border: "1px solid color-mix(in srgb, var(--accent) 22%, var(--border))",
+          "linear-gradient(135deg, #0B0B10 0%, #17161D 42%, #2A1C14 78%, #3B2416 100%)",
+        boxShadow:
+          "0 18px 40px -18px rgba(0,0,0,0.65), inset 0 1px 0 rgba(255,255,255,0.08), inset 0 0 0 1px rgba(255,255,255,0.06)",
       }}
     >
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <span
-            className="size-7 rounded-full flex items-center justify-center"
-            style={{
-              backgroundColor: "color-mix(in srgb, var(--accent) 16%, transparent)",
-              color: "var(--accent)",
-            }}
-          >
-            <DollarSign className="size-3.5" />
-          </span>
-          <span className="text-[13px] font-medium" style={{ color: "var(--muted)" }}>
-            Pendapatan
-          </span>
-        </div>
-        <span
-          className="text-[10px] font-semibold px-2 py-0.5 rounded-full"
-          style={{
-            backgroundColor: allTime
-              ? "var(--accent)"
-              : "color-mix(in srgb, var(--accent) 12%, transparent)",
-            color: allTime
-              ? "var(--primary-foreground)"
-              : "var(--accent)",
-          }}
-        >
-          {allTime ? "All Time" : "Bulanan"}
-        </span>
-      </div>
+      {/* Glow */}
       <div
-        className="text-[1.75rem] font-bold leading-tight mt-3 tabular-nums"
-        style={{ color: "var(--foreground)" }}
-      >
-        {formatRp(value)}
+        aria-hidden="true"
+        className="pointer-events-none absolute -right-20 -top-24 size-72 rounded-full -z-10"
+        style={{ background: "radial-gradient(circle, rgba(242,178,124,0.38) 0%, transparent 65%)" }}
+      />
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute -left-24 -bottom-28 size-72 rounded-full -z-10"
+        style={{ background: "radial-gradient(circle, rgba(120,110,255,0.18) 0%, transparent 65%)" }}
+      />
+      {/* Engraved stripes */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 -z-10 opacity-[0.07]"
+        style={{
+          backgroundImage:
+            "repeating-linear-gradient(115deg, #fff 0px, #fff 1px, transparent 1px, transparent 9px)",
+          maskImage: "linear-gradient(90deg, transparent 0%, #000 55%, #000 100%)",
+          WebkitMaskImage: "linear-gradient(90deg, transparent 0%, #000 55%, #000 100%)",
+        }}
+      />
+      {/* Holographic sheen */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 -z-10 opacity-40 mix-blend-overlay transition-transform duration-700 ease-out -translate-x-1/3 group-hover:translate-x-1/3"
+        style={{
+          background:
+            "linear-gradient(105deg, transparent 30%, rgba(255,255,255,0.35) 45%, rgba(255,200,150,0.25) 52%, transparent 65%)",
+        }}
+      />
+
+      {/* Top row: brand + mode */}
+      <div className="flex items-start justify-between gap-3">
+        <div className="leading-none">
+          <p className="text-[11px] font-black uppercase tracking-[0.32em] text-white/90">
+            Charlottenim
+          </p>
+          <p className="mt-1.5 text-[9px] font-semibold uppercase tracking-[0.28em] text-[#F2B27C]/80">
+            {allTime ? "Revenue · Black" : "Revenue · Monthly"}
+          </p>
+        </div>
+        <div className="flex items-center rounded-full bg-white/10 p-0.5 ring-1 ring-white/15 backdrop-blur-sm text-[10px] font-bold uppercase tracking-wider">
+          <button
+            type="button"
+            onClick={() => setAllTime(false)}
+            className={`h-6 px-2.5 rounded-full transition-colors ${!allTime ? "bg-white text-[#0B0B10]" : "text-white/60 hover:text-white"}`}
+          >
+            Bulanan
+          </button>
+          <button
+            type="button"
+            onClick={() => setAllTime(true)}
+            className={`h-6 px-2.5 rounded-full transition-colors ${allTime ? "bg-white text-[#0B0B10]" : "text-white/60 hover:text-white"}`}
+          >
+            All time
+          </button>
+        </div>
       </div>
-      <div className="mt-2">{monthSwitcher}</div>
+
+      {/* Chip + contactless */}
+      <div className={`flex items-center gap-2 ${isNulis ? "mt-5" : "mt-4"}`}>
+        <EmvChip />
+        <ContactlessIcon />
+      </div>
+
+      {/* Amount — embossed like a card number */}
+      <p
+        className={`font-mono font-semibold tabular-nums leading-none tracking-[0.05em] text-[#E6DDD3] ${isNulis ? "mt-5" : "mt-auto pt-3"}`}
+        style={{
+          textShadow: "0 1px 0 rgba(0,0,0,0.5), 0 2px 6px rgba(0,0,0,0.35)",
+        }}
+      >
+        <span className={`${isNulis ? "text-lg" : "text-sm"} align-top mr-1.5 text-[#F2B27C]/80`}>Rp</span>
+        <span className={isNulis ? "text-[40px]" : "text-[28px]"}>{rp}</span>
+      </p>
+
+      {/* Bottom row: period switcher + brand mark */}
+      <div className={`flex items-end justify-between gap-3 ${isNulis ? "mt-auto pt-5" : "mt-3"}`}>
+        <div className="flex items-end gap-4">
+          <div className="leading-none">
+            <p className="text-[8px] font-semibold uppercase tracking-[0.22em] text-white/45">
+              Periode
+            </p>
+            <div className="mt-1.5 flex items-center gap-1.5">
+              <button
+                type="button"
+                onClick={prevMonth}
+                disabled={allTime}
+                aria-label="Bulan sebelumnya"
+                className={chevronClass}
+              >
+                <ChevronLeft className="size-3.5" />
+              </button>
+              <span className="min-w-[108px] text-center text-[12px] font-semibold uppercase tracking-[0.12em] text-white/90">
+                {label}
+              </span>
+              <button
+                type="button"
+                onClick={nextMonth}
+                disabled={allTime || isCurrentMonth}
+                aria-label="Bulan berikutnya"
+                className={chevronClass}
+              >
+                <ChevronRight className="size-3.5" />
+              </button>
+            </div>
+          </div>
+          <div className="hidden sm:block leading-none">
+            <p className="text-[8px] font-semibold uppercase tracking-[0.22em] text-white/45">
+              Valid thru
+            </p>
+            <p className="mt-1.5 h-7 flex items-center font-mono text-[13px] font-semibold tracking-widest text-white/85">
+              {validThru}
+            </p>
+          </div>
+        </div>
+
+        <div className="flex shrink-0 items-center" aria-hidden="true">
+          <span className="size-7 rounded-full bg-[#EB5A2A]/90" />
+          <span className="-ml-3 size-7 rounded-full bg-[#F2B27C]/85 mix-blend-screen" />
+        </div>
+      </div>
     </div>
   );
 }
