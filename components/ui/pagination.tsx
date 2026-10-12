@@ -2,6 +2,7 @@
 
 import { ChevronLeft, ChevronRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { cn } from "@/lib/utils"
 import {
   Select,
   SelectContent,
@@ -45,13 +46,15 @@ export function Pagination({
   const pages = getPageNumbers(page, totalPages)
 
   return (
-    <div className="flex items-center justify-between gap-4">
-      <div className="flex items-center gap-2">
+    <div className="flex flex-wrap items-center justify-between gap-3">
+      <div className="flex items-center gap-1.5">
         <Button
-          variant="outline"
-          size="sm"
+          variant="secondary"
+          size="icon"
+          className="size-8"
           onClick={() => onPageChange(page - 1)}
           disabled={page <= 1}
+          aria-label="Halaman sebelumnya"
         >
           <ChevronLeft className="size-4" />
         </Button>
@@ -59,14 +62,19 @@ export function Pagination({
         <div className="hidden sm:flex items-center gap-1">
           {pages.map((p, i) =>
             p === "..." ? (
-              <span key={`ellipsis-${i}`} className="px-1 text-muted-foreground text-sm select-none">
-                ...
+              <span key={`ellipsis-${i}`} className="w-6 text-center text-muted-foreground text-sm select-none">
+                …
               </span>
             ) : (
               <Button
                 key={p}
                 variant={p === page ? "default" : "ghost"}
-                size="xs"
+                size="icon"
+                className={cn(
+                  "size-8 text-[13px] tabular-nums",
+                  p !== page && "font-medium text-muted-foreground hover:text-foreground"
+                )}
+                aria-current={p === page ? "page" : undefined}
                 onClick={() => onPageChange(p as number)}
               >
                 {p}
@@ -75,22 +83,24 @@ export function Pagination({
           )}
         </div>
 
-        <span className="sm:hidden text-sm text-muted-foreground">
+        <span className="sm:hidden px-1 text-[13px] text-muted-foreground tabular-nums">
           Hal {page} / {totalPages}
         </span>
 
         <Button
-          variant="outline"
-          size="sm"
+          variant="secondary"
+          size="icon"
+          className="size-8"
           onClick={() => onPageChange(page + 1)}
           disabled={page >= totalPages}
+          aria-label="Halaman berikutnya"
         >
           <ChevronRight className="size-4" />
         </Button>
       </div>
 
-      <div className="flex items-center gap-3 text-sm text-muted-foreground">
-        <span className="hidden sm:inline whitespace-nowrap">
+      <div className="flex items-center gap-3 text-[13px] text-muted-foreground">
+        <span className="hidden sm:inline whitespace-nowrap tabular-nums">
           {start}–{end} dari {total}
         </span>
 
@@ -98,7 +108,7 @@ export function Pagination({
           value={String(limit)}
           onValueChange={(v) => onLimitChange(Number(v))}
         >
-          <SelectTrigger className="h-8 w-[70px]">
+          <SelectTrigger className="h-8 w-[78px] rounded-full bg-secondary border-transparent text-[13px] font-medium text-foreground shadow-none">
             <SelectValue />
           </SelectTrigger>
           <SelectContent align="end">

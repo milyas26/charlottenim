@@ -1,7 +1,10 @@
 "use client"
 
+import { StatusPill, workStatusTone, workStatusLabel } from "@/components/admin/tint"
+import { Panel, TablePanel, EmptyState, PageLoader, InfoRow } from "@/components/admin/ui"
+import { AdminPageTitle } from "@/components/admin/AdminPageTitle"
 import { use, useState, useCallback, useEffect } from "react"
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
+import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { useAdminHeaderActions } from "@/components/admin/AdminHeader"
 import type { WorkStatus, Chapter } from "@/data/types"
 import Link from "next/link"
@@ -12,8 +15,6 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Separator } from "@/components/ui/separator"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import {
   DropdownMenu,
@@ -41,7 +42,6 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 import {
-  ArrowLeft,
   PlusCircle,
   MoreHorizontal,
   Edit,
@@ -55,6 +55,8 @@ import {
   Upload,
   Loader2,
   Package,
+  BookOpen,
+  BookMarked,
 } from "lucide-react"
 import { GENRES } from "@/lib/constants"
 import {
@@ -69,17 +71,6 @@ import {
   reorderChapters as reorderChaptersApi,
 } from "@/lib/api/chapters"
 import { uploadFile as uploadFileApi } from "@/lib/api/upload"
-type WorkDetail = {
-  id: string
-  title: string
-  slug: string
-  synopsis: string
-  coverUrl: string
-  genres: string[]
-  status: WorkStatus
-  totalChapters: number
-  deletedAt: string | null
-}
 
 export default function AdminWorkDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params)
@@ -213,13 +204,17 @@ export default function AdminWorkDetailPage({ params }: { params: Promise<{ id: 
           </Button>
           <Button size="sm" disabled={!editTitle || !editSynopsis || saveMutation.isPending} onClick={() => saveMutation.mutate()}>
             {saveMutation.isPending ? <Loader2 className="size-4 animate-spin" /> : <Save className="size-4" />}
-            Simpan Perubahan
+            Simpan perubahan
           </Button>
         </>
       )
     } else {
       setActions(
         <>
+          <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive" onClick={() => setDeleteWorkOpen(true)}>
+            <Trash2 className="size-4" />
+            Hapus
+          </Button>
           <Button variant="outline" size="sm" onClick={() => {
             if (!work) return
             setEditTitle(work.title)
@@ -231,18 +226,18 @@ export default function AdminWorkDetailPage({ params }: { params: Promise<{ id: 
             setIsEditing(true)
           }}>
             <Edit className="size-4" />
-            Edit Karya
+            Edit karya
           </Button>
           <Button variant="outline" size="sm" asChild>
             <Link href={`/nulis/karya/${work.id}/paket/create`}>
               <Package className="size-4" />
-              Buat Paket
+              Buat paket
             </Link>
           </Button>
           <Button size="sm" asChild>
             <Link href={`/nulis/karya/${work.id}/chapter/create`}>
               <PlusCircle className="size-4" />
-              Tambah Chapter
+              Tambah chapter
             </Link>
           </Button>
         </>
@@ -322,54 +317,39 @@ export default function AdminWorkDetailPage({ params }: { params: Promise<{ id: 
     setDropIndex(null)
   }, [])
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center py-20">
-        <Loader2 className="size-8 animate-spin text-muted-foreground" />
-      </div>
-    )
-  }
+  if (isLoading) return <PageLoader />
 
   if (!work) {
     return (
-      <div className="p-4 text-center text-muted-foreground">Karya tidak ditemukan.</div>
+      <div className="px-6 pb-10">
+        <EmptyState icon={BookOpen} title="Karya tidak ditemukan." />
+      </div>
     )
   }
 
   return (
-    <div className="space-y-4 p-4">
-      <div className="flex items-center gap-3">
-        <Button variant="ghost" size="icon" asChild>
-          <Link href="/nulis/karya">
-            <ArrowLeft className="size-4" />
-          </Link>
-        </Button>
-        <div className="flex-1">
-          <h1 className="text-2xl font-bold tracking-tight">{work.title}</h1>
-        </div>
-        <Button variant="outline" size="sm" onClick={() => setDeleteWorkOpen(true)}>
-          <Trash2 className="size-4" />
-          Hapus
-        </Button>
-      </div>
+    <div className="space-y-5 px-6 pb-10">
+      <AdminPageTitle
+        title={work.title}
+        description={isEditing ? "Mode edit · simpan atau batalkan lewat tombol di kanan atas" : `/${work.slug}`}
+        backHref="/nulis/karya"
+      />
 
       <div className="grid gap-4 lg:grid-cols-3">
-        <Card className="lg:col-span-1">
-          <CardHeader>
-            <CardTitle>Info Karya</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
+        <Panel title="Info karya" className="lg:col-span-1 self-start" bodyClassName="space-y-4">
             {isEditing ? (
               <>
                 <div className="flex items-center justify-center w-full">
-                  <label className="flex flex-col items-center justify-center w-full aspect-[10/15] border-2 border-dashed rounded-lg cursor-pointer border-input hover:border-primary/50 hover:bg-accent/5 transition-colors relative overflow-hidden">
+                  <label className="relative flex flex-col items-center justify-center w-full aspect-[10/15] rounded-[18px] border-2 border-dashed border-input bg-secondary/40 hover:bg-secondary cursor-pointer transition-colors overflow-hidden">
                     {editCoverPreview ? (
+                      // eslint-disable-next-line @next/next/no-img-element
                       <img
                         src={editCoverPreview}
                         alt={editTitle || work.title}
                         className="absolute inset-0 w-full h-full object-cover"
                       />
                     ) : (work.coverUrl.startsWith("http") || work.coverUrl.startsWith("data:")) ? (
+                      // eslint-disable-next-line @next/next/no-img-element
                       <img
                         src={work.coverUrl}
                         alt={work.title}
@@ -405,7 +385,7 @@ export default function AdminWorkDetailPage({ params }: { params: Promise<{ id: 
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="edit-title">Judul Karya</Label>
+                  <Label htmlFor="edit-title">Judul karya</Label>
                   <Input
                     id="edit-title"
                     placeholder="Masukkan judul karya..."
@@ -414,7 +394,7 @@ export default function AdminWorkDetailPage({ params }: { params: Promise<{ id: 
                   />
                   {editTitle && (
                     <p className="text-xs text-muted-foreground">
-                      Slug: <code className="text-accent">/{editSlug}</code>
+                      Slug: <code className="text-primary">/{editSlug}</code>
                     </p>
                   )}
                 </div>
@@ -461,10 +441,10 @@ export default function AdminWorkDetailPage({ params }: { params: Promise<{ id: 
                           type="button"
                           onClick={() => toggleGenre(genre)}
                           disabled={!isSelected && editGenres.length >= 5}
-                          className={`inline-flex items-center rounded-md border px-3 py-1.5 text-sm font-medium transition-colors ${
+                          className={`inline-flex items-center h-8 rounded-full px-3.5 text-[13px] font-medium transition-colors ${
                             isSelected
-                              ? "border-primary bg-primary text-primary-foreground"
-                              : "border-input bg-background hover:bg-accent hover:text-accent-foreground disabled:opacity-40"
+                              ? "bg-primary text-primary-foreground"
+                              : "bg-secondary text-foreground hover:brightness-95 disabled:opacity-40"
                           }`}
                         >
                           {genre}
@@ -482,35 +462,29 @@ export default function AdminWorkDetailPage({ params }: { params: Promise<{ id: 
             ) : (
               <>
                 {(work.coverUrl.startsWith("http") || work.coverUrl.startsWith("data:")) ? (
-                  <img src={work.coverUrl} alt={work.title} className="w-full aspect-[10/15] rounded-lg object-cover" />
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={work.coverUrl} alt={work.title} className="w-full aspect-[10/15] rounded-[18px] object-cover" />
                 ) : (
-                  <div className="w-full aspect-[3/4] rounded-lg bg-gradient-to-br from-accent/40 to-accent/10 flex items-center justify-center">
-                    <span className="text-4xl font-bold text-accent/40">{work.title.charAt(0)}</span>
+                  <div className="w-full aspect-[10/15] rounded-[18px] bg-secondary flex items-center justify-center">
+                    <span className="text-4xl font-semibold text-muted-foreground">{work.title.charAt(0)}</span>
                   </div>
                 )}
 
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-muted-foreground">Status</span>
-                    <Badge variant={work.status === "DRAFT" ? "secondary" : work.status === "ONGOING" ? "default" : "outline"}>
-                      {work.status === "DRAFT" ? "Draft" : work.status === "ONGOING" ? "Ongoing" : "Selesai"}
-                    </Badge>
-                  </div>
-                  <Separator />
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-muted-foreground">Chapter</span>
-                    <span className="text-sm font-medium">{chapters.length}</span>
-                  </div>
-                  <Separator />
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-muted-foreground">Total Dibaca</span>
-                    <span className="text-sm font-medium">{totalReads.toLocaleString("id-ID")}</span>
-                  </div>
+                <div className="divide-y divide-border">
+                  <InfoRow label="Status">
+                    <StatusPill tone={workStatusTone[work.status]}>{workStatusLabel[work.status]}</StatusPill>
+                  </InfoRow>
+                  <InfoRow label="Chapter">
+                    <span className="tabular-nums">{chapters.length}</span>
+                  </InfoRow>
+                  <InfoRow label="Total dibaca">
+                    <span className="tabular-nums">{totalReads.toLocaleString("id-ID")}</span>
+                  </InfoRow>
                 </div>
 
                 <div>
-                  <span className="text-sm text-muted-foreground">Genre</span>
-                  <div className="flex flex-wrap gap-1 mt-1.5">
+                  <span className="text-[13px] text-muted-foreground">Genre</span>
+                  <div className="flex flex-wrap gap-1.5 mt-2">
                     {work.genres.map((g) => (
                       <Badge key={g} variant="secondary" className="text-xs">{g}</Badge>
                     ))}
@@ -518,22 +492,20 @@ export default function AdminWorkDetailPage({ params }: { params: Promise<{ id: 
                 </div>
 
                 <div>
-                  <span className="text-sm text-muted-foreground">Sinopsis</span>
-                  <p className="text-sm mt-1 leading-relaxed">{work.synopsis}</p>
+                  <span className="text-[13px] text-muted-foreground">Sinopsis</span>
+                  <p className="text-sm mt-1.5 leading-relaxed">{work.synopsis}</p>
                 </div>
               </>
             )}
-          </CardContent>
-        </Card>
+        </Panel>
 
-        <Card className="lg:col-span-2">
-          <CardHeader className="flex flex-row items-center justify-between">
-            <div>
-              <CardTitle>Daftar Chapter</CardTitle>
-              <CardDescription>{chapters.length} chapter · Geser handle untuk mengurutkan.</CardDescription>
-            </div>
-          </CardHeader>
-          <CardContent>
+        <Panel
+          title="Daftar chapter"
+          description={`${chapters.length} chapter · Geser handle untuk mengurutkan.`}
+          className="lg:col-span-2 self-start overflow-hidden"
+          bodyClassName="p-0 pt-4"
+        >
+          <TablePanel className="rounded-none border-0 shadow-none">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -549,8 +521,8 @@ export default function AdminWorkDetailPage({ params }: { params: Promise<{ id: 
               <TableBody>
                   {chapters.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
-                        Belum ada chapter. Tambah chapter pertama.
+                      <TableCell colSpan={7}>
+                        <EmptyState icon={BookMarked} title="Belum ada chapter." description="Tambah chapter pertama." />
                       </TableCell>
                     </TableRow>
                   ) : (
@@ -569,38 +541,38 @@ export default function AdminWorkDetailPage({ params }: { params: Promise<{ id: 
                           : ""
                       } ${
                         dragOverIndex === index && dragIndex !== index
-                          ? "border-t-2 border-primary bg-primary/5"
+                          ? "[&>td]:bg-primary/5 [&>td]:shadow-[inset_0_2px_0_var(--primary)]"
                           : ""
                       }`}
                     >
                       <TableCell>
                         <GripVertical className="size-4 text-muted-foreground cursor-grab active:cursor-grabbing" />
                       </TableCell>
-                      <TableCell className="font-medium">{ch.chapterNumber}</TableCell>
+                      <TableCell className="font-semibold tabular-nums">{ch.chapterNumber}</TableCell>
                       <TableCell>
                         <div>
-                          <Link href={`/nulis/karya/${work.id}/chapter/${ch.id}`} className="font-medium hover:text-primary transition-colors">
+                          <Link href={`/nulis/karya/${work.id}/chapter/${ch.id}`} className="text-[15px] font-semibold hover:text-primary transition-colors">
                             {ch.title}
                           </Link>
-                          <p className="text-xs text-muted-foreground">/{ch.slug}</p>
+                          <p className="text-[13px] text-muted-foreground">/{ch.slug}</p>
                         </div>
                       </TableCell>
                       <TableCell>
                         {ch.isPremium ? (
-                          <Badge variant="secondary" className="gap-1">
+                          <StatusPill tone="amber">
                             <Lock className="size-3" />
                             Premium · Rp {ch.price.toLocaleString("id-ID")}
-                          </Badge>
+                          </StatusPill>
                         ) : (
-                          <Badge variant="outline" className="gap-1">
+                          <StatusPill tone="green">
                             <LockOpen className="size-3" />
                             Gratis
-                          </Badge>
+                          </StatusPill>
                         )}
                       </TableCell>
                       <TableCell>
                         {ch.bundleTitle ? (
-                          <Badge variant="outline" className="gap-1 text-xs">
+                          <Badge variant="secondary" className="gap-1 text-xs">
                             <Package className="size-3" />
                             {ch.bundleTitle}
                           </Badge>
@@ -608,13 +580,13 @@ export default function AdminWorkDetailPage({ params }: { params: Promise<{ id: 
                           <span className="text-xs text-muted-foreground">-</span>
                         )}
                       </TableCell>
-                      <TableCell className="text-right text-muted-foreground">
+                      <TableCell className="text-right text-muted-foreground tabular-nums">
                         {ch.readCount.toLocaleString("id-ID")}
                       </TableCell>
                       <TableCell>
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon" className="size-8">
+                            <Button variant="ghost" size="icon" className="size-8 rounded-full">
                               <MoreHorizontal className="size-4" />
                             </Button>
                           </DropdownMenuTrigger>
@@ -642,14 +614,14 @@ export default function AdminWorkDetailPage({ params }: { params: Promise<{ id: 
                 )}
               </TableBody>
             </Table>
-          </CardContent>
-        </Card>
+          </TablePanel>
+        </Panel>
       </div>
 
       <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Konfirmasi Pengurutan</DialogTitle>
+            <DialogTitle>Konfirmasi pengurutan</DialogTitle>
             <DialogDescription>
               Apakah kamu yakin ingin mengubah urutan chapter? Nomor chapter akan diperbarui secara otomatis sesuai urutan baru.
             </DialogDescription>
@@ -660,7 +632,7 @@ export default function AdminWorkDetailPage({ params }: { params: Promise<{ id: 
             </Button>
             <Button onClick={confirmReorder} disabled={reorderMutation.isPending}>
               {reorderMutation.isPending ? <Loader2 className="size-4 animate-spin" /> : null}
-              Ya, Urutkan
+              Ya, urutkan
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -669,7 +641,7 @@ export default function AdminWorkDetailPage({ params }: { params: Promise<{ id: 
       <AlertDialog open={!!deleteChapterTarget} onOpenChange={(open) => !open && setDeleteChapterTarget(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Hapus Chapter</AlertDialogTitle>
+            <AlertDialogTitle>Hapus chapter</AlertDialogTitle>
             <AlertDialogDescription>
               Yakin ingin menghapus chapter &ldquo;{deleteChapterTarget?.title}&rdquo;?
             </AlertDialogDescription>
@@ -686,7 +658,7 @@ export default function AdminWorkDetailPage({ params }: { params: Promise<{ id: 
       <AlertDialog open={deleteWorkOpen} onOpenChange={setDeleteWorkOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Hapus Karya</AlertDialogTitle>
+            <AlertDialogTitle>Hapus karya</AlertDialogTitle>
             <AlertDialogDescription>
               Yakin ingin menghapus &ldquo;{work.title}&rdquo; beserta semua chapternya?
             </AlertDialogDescription>

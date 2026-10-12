@@ -1,10 +1,10 @@
 "use client"
 
+import { StatusPill, orderStatusTone, tint, tones } from "@/components/admin/tint"
+import { TablePanel, SearchInput, FilterPills, Toolbar, EmptyState, PageLoader, InfoRow } from "@/components/admin/ui"
+import { AdminPageTitle } from "@/components/admin/AdminPageTitle"
 import { useState } from "react"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
-import { Badge } from "@/components/ui/badge"
-import { Input } from "@/components/ui/input"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import {
   Dialog,
@@ -23,7 +23,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
-import { Search, Loader2, Check, X, Clock } from "lucide-react"
+import { Check, X, Clock, ShoppingCart, type LucideIcon } from "lucide-react"
 import { useAdminOrders, approvePayment, rejectPayment, expirePayment } from "@/lib/api/admin"
 import { adminKeys } from "@/lib/api/admin"
 import { Pagination } from "@/components/ui/pagination"
@@ -32,6 +32,68 @@ import type { Purchase } from "@/data/admin-types"
 type StatusFilter = "ALL" | "PAID" | "PENDING" | "FAILED"
 
 type ConfirmAction = { id: string; type: "approve" | "reject" | "expire" } | null
+
+const STATUS_OPTIONS: { value: StatusFilter; label: string }[] = [
+  { value: "ALL", label: "Semua" },
+  { value: "PAID", label: "Berhasil" },
+  { value: "PENDING", label: "Menunggu" },
+  { value: "FAILED", label: "Gagal" },
+]
+
+const actionTone = { approve: "green", reject: "rose", expire: "orange" } as const
+
+function RowAction({
+  icon: Icon,
+  tone,
+  title,
+  disabled,
+  onClick,
+}: {
+  icon: LucideIcon
+  tone: "green" | "rose" | "orange"
+  title: string
+  disabled: boolean
+  onClick: () => void
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      title={title}
+      aria-label={title}
+      className="size-8 inline-flex items-center justify-center rounded-full transition hover:brightness-95 disabled:opacity-50 disabled:pointer-events-none"
+      style={tint(tone)}
+    >
+      <Icon className="size-4" />
+    </button>
+  )
+}
+
+function SolidPill({
+  tone,
+  onClick,
+  children,
+}: {
+  tone: "green" | "rose" | "orange"
+  onClick: () => void
+  children: React.ReactNode
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="flex-1 h-10 px-5 rounded-full text-white text-sm font-semibold transition hover:brightness-95"
+      style={{ backgroundColor: tones[tone] }}
+    >
+      {children}
+    </button>
+  )
+}
+
+function formatDateTime(iso: string) {
+  return new Date(iso).toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit" })
+}
 
 function isPurchaseExpired(p: Purchase): boolean {
   return (
@@ -57,7 +119,7 @@ export default function AdminOrdersPage() {
     limit,
   }
 
-  const { data: result, isLoading } = useAdminOrders(params)
+  const { data: result, isLoading, isFetching } = useAdminOrders(params)
   const purchases = result?.data ?? []
   const total = result?.total ?? 0
   const totalPages = Math.max(1, Math.ceil(total / (limit || 10)))
@@ -91,12 +153,6 @@ export default function AdminOrdersPage() {
     },
   })
 
-  const statusVariant: Record<string, "default" | "secondary" | "destructive"> = {
-    PAID: "default",
-    PENDING: "secondary",
-    FAILED: "destructive",
-  }
-
   const statusLabel: Record<string, string> = {
     PAID: "Berhasil",
     PENDING: "Menunggu",
@@ -123,53 +179,37 @@ export default function AdminOrdersPage() {
     setPage(1)
   }
 
-  const handleStatusChange = (value: string) => {
-    setStatusFilter(value as StatusFilter)
+  const handleStatusChange = (value: StatusFilter) => {
+    setStatusFilter(value)
     setPage(1)
   }
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center py-20">
-        <Loader2 className="size-8 animate-spin text-muted-foreground" />
-      </div>
-    )
-  }
+  // Only the very first load replaces the page; later searches keep the input mounted.
+  if (isLoading && !result) return <PageLoader />
+
+  const anyPending = approveMutation.isPending || rejectMutation.isPending || expireMutation.isPending
 
   return (
-    <div className="space-y-4 p-4">
-      <div className="flex items-center gap-3">
-        <div className="relative flex-1 max-w-sm">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
-          <Input
-            placeholder="Cari user, karya, atau chapter..."
-            value={search}
-            onChange={(e) => handleSearchChange(e.target.value)}
-            className="pl-9"
-          />
-        </div>
-        <Select value={statusFilter} onValueChange={handleStatusChange}>
-          <SelectTrigger className="w-[150px]">
-            <SelectValue placeholder="Semua Status" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="ALL">Semua Status</SelectItem>
-            <SelectItem value="PAID">Berhasil</SelectItem>
-            <SelectItem value="PENDING">Menunggu</SelectItem>
-            <SelectItem value="FAILED">Gagal</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
+    <div className="space-y-5 px-6 pb-10">
+      <AdminPageTitle title="Orders" description={`${total} transaksi · verifikasi pembayaran manual di sini`} />
+      <Toolbar>
+        <SearchInput
+          placeholder="Cari user, karya, atau chapter..."
+          value={search}
+          loading={isFetching && !isLoading}
+          onChange={handleSearchChange}
+        />
+        <FilterPills value={statusFilter} onChange={handleStatusChange} options={STATUS_OPTIONS} />
+      </Toolbar>
 
-      <div className="rounded-md border">
+      <TablePanel>
         <Table>
           <TableHeader>
             <TableRow>
               <TableHead>User</TableHead>
-              <TableHead>Karya</TableHead>
+              <TableHead>Karya / item</TableHead>
               <TableHead>Tipe</TableHead>
               <TableHead>Metode</TableHead>
-              <TableHead>Item</TableHead>
               <TableHead className="text-right">Jumlah</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Tanggal</TableHead>
@@ -179,74 +219,74 @@ export default function AdminOrdersPage() {
           <TableBody>
             {purchases.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={9} className="text-center py-8 text-muted-foreground">
-                  Tidak ada pembelian ditemukan.
+                <TableCell colSpan={8}>
+                  <EmptyState
+                    icon={ShoppingCart}
+                    tone="green"
+                    title="Tidak ada pembelian ditemukan"
+                    description={search || statusFilter !== "ALL" ? "Coba ubah pencarian atau filter status." : undefined}
+                  />
                 </TableCell>
               </TableRow>
             ) : (
               purchases.map((p: Purchase, i: number) => (
                 <TableRow
                   key={`${p.createdAt}-${p.userId || i}`}
-                  className="cursor-pointer hover:bg-muted/50"
+                  className="cursor-pointer"
                   onClick={() => setDetailPurchase(p)}
                 >
-                  <TableCell className="font-medium">{p.userName}</TableCell>
-                  <TableCell className="text-muted-foreground">{p.workTitle}</TableCell>
+                  <TableCell className="text-[15px] font-semibold">{p.userName}</TableCell>
+                  <TableCell className="max-w-[260px]">
+                    <p className="text-sm font-medium truncate">{p.workTitle}</p>
+                    <p className="text-[13px] text-muted-foreground truncate">{p.targetTitle}</p>
+                  </TableCell>
                   <TableCell>
-                    <Badge variant={p.type === "bundle" ? "outline" : "secondary"}>
+                    <StatusPill tone={p.type === "bundle" ? "indigo" : "neutral"}>
                       {p.type === "bundle" ? "Paket" : "Chapter"}
-                    </Badge>
+                    </StatusPill>
                   </TableCell>
                   <TableCell>
-                    {p.paymentMethod === "MANUAL_TRANSFER" ? (
-                      <Badge variant="outline" className="text-xs">
-                        Manual Transfer
-                      </Badge>
-                    ) : (
-                      <Badge variant="secondary" className="text-xs">
-                        Duitku
-                      </Badge>
-                    )}
+                    <StatusPill tone={p.paymentMethod === "MANUAL_TRANSFER" ? "neutral" : "blue"}>
+                      {p.paymentMethod === "MANUAL_TRANSFER" ? "Manual transfer" : "Duitku"}
+                    </StatusPill>
                   </TableCell>
-                  <TableCell className="text-muted-foreground">{p.targetTitle}</TableCell>
-                  <TableCell className="text-right">Rp {p.amount.toLocaleString("id-ID")}</TableCell>
+                  <TableCell className="text-right font-semibold tabular-nums whitespace-nowrap">
+                    Rp {p.amount.toLocaleString("id-ID")}
+                  </TableCell>
                   <TableCell>
-                    <Badge variant={statusVariant[p.status]}>
+                    <StatusPill tone={orderStatusTone[p.status] ?? "neutral"}>
                       {statusLabel[p.status]}
-                    </Badge>
+                    </StatusPill>
                   </TableCell>
-                  <TableCell className="text-muted-foreground">{new Date(p.createdAt).toLocaleDateString("id-ID")}</TableCell>
+                  <TableCell className="text-muted-foreground whitespace-nowrap">{new Date(p.createdAt).toLocaleDateString("id-ID")}</TableCell>
                   <TableCell onClick={(e) => e.stopPropagation()}>
-                    <div className="flex items-center gap-1">
+                    <div className="flex items-center gap-1.5">
                       {p.paymentMethod === "MANUAL_TRANSFER" && p.status === "PENDING" && p.paymentProofUrl && (
                         <>
-                          <button
-                            onClick={() => setConfirmAction({ id: p.id, type: "approve" })}
-                            disabled={approveMutation.isPending || rejectMutation.isPending || expireMutation.isPending}
-                            className="p-1.5 rounded-md hover:bg-green-100 transition-colors text-green-600"
+                          <RowAction
+                            icon={Check}
+                            tone={actionTone.approve}
                             title="Setujui"
-                          >
-                            <Check className="size-4" />
-                          </button>
-                          <button
-                            onClick={() => setConfirmAction({ id: p.id, type: "reject" })}
-                            disabled={approveMutation.isPending || rejectMutation.isPending || expireMutation.isPending}
-                            className="p-1.5 rounded-md hover:bg-red-100 transition-colors text-red-600"
+                            disabled={anyPending}
+                            onClick={() => setConfirmAction({ id: p.id, type: "approve" })}
+                          />
+                          <RowAction
+                            icon={X}
+                            tone={actionTone.reject}
                             title="Tolak"
-                          >
-                            <X className="size-4" />
-                          </button>
+                            disabled={anyPending}
+                            onClick={() => setConfirmAction({ id: p.id, type: "reject" })}
+                          />
                         </>
                       )}
                       {isPurchaseExpired(p) && (
-                        <button
-                          onClick={() => setConfirmAction({ id: p.id, type: "expire" })}
-                          disabled={approveMutation.isPending || rejectMutation.isPending || expireMutation.isPending}
-                          className="p-1.5 rounded-md hover:bg-orange-100 transition-colors text-orange-600"
+                        <RowAction
+                          icon={Clock}
+                          tone={actionTone.expire}
                           title="Kedaluwarsa"
-                        >
-                          <Clock className="size-4" />
-                        </button>
+                          disabled={anyPending}
+                          onClick={() => setConfirmAction({ id: p.id, type: "expire" })}
+                        />
                       )}
                     </div>
                   </TableCell>
@@ -255,7 +295,7 @@ export default function AdminOrdersPage() {
             )}
           </TableBody>
         </Table>
-      </div>
+      </TablePanel>
 
       <Pagination
         page={page}
@@ -270,73 +310,55 @@ export default function AdminOrdersPage() {
       />
 
       <Dialog open={!!detailPurchase} onOpenChange={(open) => !open && setDetailPurchase(null)}>
-        <DialogContent className="max-w-md max-h-[85vh] flex flex-col">
+        <DialogContent className="max-w-md max-h-[85vh] flex flex-col rounded-[24px]">
           <DialogHeader className="shrink-0">
-            <DialogTitle>Detail Order</DialogTitle>
+            <DialogTitle>Detail order</DialogTitle>
             <DialogDescription>
               Informasi lengkap pembelian
             </DialogDescription>
           </DialogHeader>
           {detailPurchase && (
             <>
-              <div className="overflow-y-auto flex-1 -mx-6 px-6 text-sm space-y-4">
-                <div className="grid grid-cols-[100px_1fr] gap-y-2">
-                  <span className="text-muted-foreground">User</span>
-                  <span className="font-medium">{detailPurchase.userName}</span>
-
-                  <span className="text-muted-foreground">Karya</span>
-                  <span>{detailPurchase.workTitle}</span>
-
-                  <span className="text-muted-foreground">Tipe</span>
-                  <span>{detailPurchase.type === "bundle" ? "Paket" : "Chapter"}</span>
-
-                  <span className="text-muted-foreground">Item</span>
-                  <span>{detailPurchase.targetTitle}</span>
-
-                  <span className="text-muted-foreground">Metode</span>
-                  <span>{detailPurchase.paymentMethod === "MANUAL_TRANSFER" ? "Manual Transfer" : "Duitku"}</span>
-
-                  <span className="text-muted-foreground">Jumlah</span>
-                  <span className="font-semibold">Rp {detailPurchase.amount.toLocaleString("id-ID")}</span>
-
-                  <span className="text-muted-foreground">Status</span>
-                  <Badge variant={statusVariant[detailPurchase.status]}>
-                    {statusLabel[detailPurchase.status]}
-                  </Badge>
-
-                  <span className="text-muted-foreground">Tanggal</span>
-                  <span>{new Date(detailPurchase.createdAt).toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit" })}</span>
-
-                  {detailPurchase.paidAt && (
-                    <>
-                      <span className="text-muted-foreground">Dibayar</span>
-                      <span>{new Date(detailPurchase.paidAt).toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit" })}</span>
-                    </>
-                  )}
-
+              <div className="overflow-y-auto flex-1 -mx-6 px-6 space-y-4">
+                <div className="divide-y divide-border">
+                  <InfoRow label="User">{detailPurchase.userName}</InfoRow>
+                  <InfoRow label="Karya">{detailPurchase.workTitle}</InfoRow>
+                  <InfoRow label="Tipe">{detailPurchase.type === "bundle" ? "Paket" : "Chapter"}</InfoRow>
+                  <InfoRow label="Item">{detailPurchase.targetTitle}</InfoRow>
+                  <InfoRow label="Metode">
+                    {detailPurchase.paymentMethod === "MANUAL_TRANSFER" ? "Manual transfer" : "Duitku"}
+                  </InfoRow>
+                  <InfoRow label="Jumlah">
+                    <span className="font-semibold tabular-nums">Rp {detailPurchase.amount.toLocaleString("id-ID")}</span>
+                  </InfoRow>
+                  <InfoRow label="Status">
+                    <StatusPill tone={orderStatusTone[detailPurchase.status] ?? "neutral"}>
+                      {statusLabel[detailPurchase.status]}
+                    </StatusPill>
+                  </InfoRow>
+                  <InfoRow label="Tanggal">{formatDateTime(detailPurchase.createdAt)}</InfoRow>
+                  {detailPurchase.paidAt && <InfoRow label="Dibayar">{formatDateTime(detailPurchase.paidAt)}</InfoRow>}
                   {detailPurchase.approvedAt && (
-                    <>
-                      <span className="text-muted-foreground">Disetujui</span>
-                      <span>{new Date(detailPurchase.approvedAt).toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit" })}</span>
-                    </>
+                    <InfoRow label="Disetujui">{formatDateTime(detailPurchase.approvedAt)}</InfoRow>
                   )}
-
                   {detailPurchase.failureReason && (
-                    <>
-                      <span className="text-muted-foreground">Alasan Gagal</span>
-                      <span className="text-red-600">{detailPurchase.failureReason}</span>
-                    </>
+                    <InfoRow label="Alasan gagal">
+                      <span className="whitespace-normal" style={{ color: "var(--destructive)" }}>
+                        {detailPurchase.failureReason}
+                      </span>
+                    </InfoRow>
                   )}
                 </div>
 
                 {detailPurchase.paymentProofUrl && (
                   <div>
-                    <p className="text-muted-foreground mb-2">Bukti Pembayaran</p>
+                    <p className="text-[13px] font-medium text-muted-foreground mb-2">Bukti pembayaran</p>
                     <a href={detailPurchase.paymentProofUrl} target="_blank" rel="noopener noreferrer">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
                         src={detailPurchase.paymentProofUrl}
                         alt="Bukti Pembayaran"
-                        className="w-full rounded-lg border"
+                        className="w-full rounded-[18px] border border-border"
                       />
                     </a>
                   </div>
@@ -345,52 +367,52 @@ export default function AdminOrdersPage() {
 
               {detailPurchase.paymentMethod === "MANUAL_TRANSFER" && detailPurchase.status === "PENDING" && detailPurchase.paymentProofUrl && (
                 <div className="flex gap-2 pt-2 shrink-0">
-                  <button
+                  <SolidPill
+                    tone="green"
                     onClick={() => {
                       setDetailPurchase(null)
                       setConfirmAction({ id: detailPurchase.id, type: "approve" })
                     }}
-                    className="flex-1 py-2 px-4 rounded-lg bg-green-600 text-white text-sm font-medium hover:bg-green-700 transition-colors"
                   >
                     Setujui
-                  </button>
-                  <button
+                  </SolidPill>
+                  <SolidPill
+                    tone="rose"
                     onClick={() => {
                       setDetailPurchase(null)
                       setConfirmAction({ id: detailPurchase.id, type: "reject" })
                     }}
-                    className="flex-1 py-2 px-4 rounded-lg bg-red-600 text-white text-sm font-medium hover:bg-red-700 transition-colors"
                   >
                     Tolak
-                  </button>
+                  </SolidPill>
                 </div>
               )}
 
               {detailPurchase.paymentMethod === "MANUAL_TRANSFER" && detailPurchase.status === "PENDING" && !detailPurchase.paymentProofUrl && !isPurchaseExpired(detailPurchase) && (
                 <div className="flex gap-2 pt-2 shrink-0">
-                  <button
+                  <SolidPill
+                    tone="green"
                     onClick={() => {
                       setDetailPurchase(null)
                       setConfirmAction({ id: detailPurchase.id, type: "approve" })
                     }}
-                    className="flex-1 py-2 px-4 rounded-lg bg-green-600 text-white text-sm font-medium hover:bg-green-700 transition-colors"
                   >
                     Approve tanpa bukti pembayaran
-                  </button>
+                  </SolidPill>
                 </div>
               )}
 
               {isPurchaseExpired(detailPurchase) && (
                 <div className="flex gap-2 pt-2 shrink-0">
-                  <button
+                  <SolidPill
+                    tone="orange"
                     onClick={() => {
                       setDetailPurchase(null)
                       setConfirmAction({ id: detailPurchase.id, type: "expire" })
                     }}
-                    className="flex-1 py-2 px-4 rounded-lg bg-orange-600 text-white text-sm font-medium hover:bg-orange-700 transition-colors"
                   >
                     Kedaluwarsa
-                  </button>
+                  </SolidPill>
                 </div>
               )}
             </>
@@ -399,14 +421,14 @@ export default function AdminOrdersPage() {
       </Dialog>
 
       <AlertDialog open={!!confirmAction} onOpenChange={(open) => !open && setConfirmAction(null)}>
-        <AlertDialogContent className="max-w-sm">
+        <AlertDialogContent className="max-w-sm rounded-[24px]">
           <AlertDialogHeader>
             <AlertDialogTitle>
               {confirmAction?.type === "expire"
                 ? "Kedaluwarsa?"
                 : confirmAction?.type === "approve"
-                  ? "Setujui Pembayaran?"
-                  : "Tolak Pembayaran?"}
+                  ? "Setujui pembayaran?"
+                  : "Tolak pembayaran?"}
             </AlertDialogTitle>
             <AlertDialogDescription>
               {confirmAction?.type === "expire" ? (
@@ -431,17 +453,12 @@ export default function AdminOrdersPage() {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Batal</AlertDialogCancel>
+            <AlertDialogCancel className="rounded-full">Batal</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleConfirm}
-              disabled={approveMutation.isPending || rejectMutation.isPending || expireMutation.isPending}
-              className={
-                confirmAction?.type === "expire"
-                  ? "bg-orange-600 hover:bg-orange-700"
-                  : confirmAction?.type === "approve"
-                    ? "bg-green-600 hover:bg-green-700"
-                    : "bg-red-600 hover:bg-red-700"
-              }
+              disabled={anyPending}
+              className="rounded-full text-white hover:brightness-95"
+              style={{ backgroundColor: tones[actionTone[confirmAction?.type ?? "approve"]] }}
             >
               {confirmAction?.type === "expire"
                 ? "Ya, Batalkan"

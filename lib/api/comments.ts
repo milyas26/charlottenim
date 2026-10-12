@@ -1,4 +1,4 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
+import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query"
 import api from "@/lib/axios"
 import type { Comment } from "@/data/types"
 import type { AdminComment } from "@/data/admin-types"
@@ -69,5 +69,6 @@ export function useAdminComments(page: number, limit: number, search: string) {
   return useQuery({
     queryKey: commentsKeys.admin(page, limit, search),
     queryFn: () => fetchAdminComments(page, limit, search),
+    placeholderData: keepPreviousData,
   })
 }

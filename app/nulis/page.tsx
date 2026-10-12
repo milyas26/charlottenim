@@ -4,11 +4,19 @@ import type { AdminStats } from "@/data/admin-types"
 import type { Work } from "@/data/types"
 import type { Purchase } from "@/data/admin-types"
 import type { PaginatedResponse } from "@/lib/api/admin"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { RevenueCard } from "@/components/admin/RevenueCard"
-import { BookOpen, Users, Eye, BookMarked } from "lucide-react"
+import { AdminPageTitle } from "@/components/admin/AdminPageTitle"
+import { Panel, StatTile, EmptyState } from "@/components/admin/ui"
+import {
+  IconBubble,
+  StatusPill,
+  orderStatusLabel,
+  orderStatusTone,
+  workStatusLabel,
+  workStatusTone,
+  type Tone,
+} from "@/components/admin/tint"
+import { BookOpen, Users, Eye, BookMarked, ChevronRight, Package, ShoppingCart } from "lucide-react"
 import Link from "next/link"
 import { redirect } from "next/navigation"
 
@@ -27,6 +35,28 @@ async function getAdminCookie(): Promise<string | null> {
   }
 }
 
+function greeting() {
+  const hour = Number(
+    new Intl.DateTimeFormat("en-US", { hour: "numeric", hour12: false, timeZone: "Asia/Jakarta" }).format(new Date())
+  )
+  if (hour < 11) return "Selamat pagi"
+  if (hour < 15) return "Selamat siang"
+  if (hour < 19) return "Selamat sore"
+  return "Selamat malam"
+}
+
+function timeAgo(iso: string) {
+  const diff = Date.now() - new Date(iso).getTime()
+  const min = Math.floor(diff / 60_000)
+  if (min < 1) return "baru saja"
+  if (min < 60) return `${min} menit lalu`
+  const h = Math.floor(min / 60)
+  if (h < 24) return `${h} jam lalu`
+  const d = Math.floor(h / 24)
+  if (d < 7) return `${d} hari lalu`
+  return new Date(iso).toLocaleDateString("id-ID", { day: "numeric", month: "short", timeZone: "Asia/Jakarta" })
+}
+
 export default async function AdminDashboardPage() {
   const adminCookie = await getAdminCookie()
   if (!adminCookie) redirect("/")
@@ -37,115 +67,138 @@ export default async function AdminDashboardPage() {
     apiFetch<PaginatedResponse<Purchase>>("/api/nulis/orders", { cookie: adminCookie }),
   ])
   const purchases = ordersResult?.data ?? []
+  const pending = purchases.filter((p) => p.status === "PENDING").length
 
-  const statsCards = [
-    { title: "Total Karya", value: stats.totalWorks.toString(), icon: BookOpen, description: `${stats.draftCount} draft · ${stats.ongoingCount} ongoing · ${stats.completedCount} selesai` },
-    { title: "Total Chapter", value: stats.totalChapters.toString(), icon: BookMarked, description: `${stats.freeChapters} gratis · ${stats.premiumChapters} premium` },
-    { title: "Total Pembaca", value: stats.totalUsers.toString(), icon: Users, description: "User terdaftar" },
-    { title: "Total Dibaca", value: stats.totalReads.toLocaleString("id-ID"), icon: Eye, description: "Kumulatif semua chapter" },
+  const statsCards: { title: string; value: string; icon: typeof BookOpen; tone: Tone; description: string }[] = [
+    { title: "Karya", value: stats.totalWorks.toLocaleString("id-ID"), icon: BookOpen, tone: "orange", description: `${stats.ongoingCount} ongoing · ${stats.completedCount} selesai · ${stats.draftCount} draft` },
+    { title: "Chapter", value: stats.totalChapters.toLocaleString("id-ID"), icon: BookMarked, tone: "teal", description: `${stats.freeChapters} gratis · ${stats.premiumChapters} premium` },
+    { title: "Pembaca", value: stats.totalUsers.toLocaleString("id-ID"), icon: Users, tone: "blue", description: "User terdaftar" },
+    { title: "Dibaca", value: stats.totalReads.toLocaleString("id-ID"), icon: Eye, tone: "indigo", description: "Kumulatif semua chapter" },
   ]
 
   const recentWorks = works.slice(0, 5)
 
   return (
-    <div className="space-y-4 p-4">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">Dashboard</h1>
-        <p className="text-muted-foreground mt-1">Selamat datang kembali, Charlotte.</p>
+    <div className="space-y-5 px-6 pb-10">
+      <AdminPageTitle
+        title={`${greeting()}, Charlotte.`}
+        description={
+          pending > 0
+            ? `Ada ${pending} transaksi menunggu verifikasi di antara order terbaru.`
+            : "Semua aman. Ini ringkasan cerita dan transaksi terbaru."
+        }
+      />
+
+      <div className="grid gap-4 xl:grid-cols-5">
+        <div className="xl:col-span-2 min-h-[220px]">
+          <RevenueCard
+            totalRevenue={stats.totalRevenue}
+            revenueByMonth={stats.revenueByMonth ?? []}
+            variant="nulis"
+          />
+        </div>
+
+        <div className="xl:col-span-3 grid gap-4 grid-cols-2">
+          {statsCards.map((stat) => (
+            <StatTile
+              key={stat.title}
+              icon={stat.icon}
+              tone={stat.tone}
+              label={stat.title}
+              value={stat.value}
+              hint={stat.description}
+            />
+          ))}
+        </div>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
-        <RevenueCard
-          totalRevenue={stats.totalRevenue}
-          revenueByMonth={stats.revenueByMonth ?? []}
-          variant="nulis"
-        />
-        {statsCards.map((stat) => {
-          const Icon = stat.icon
-          return (
-            <Card key={stat.title}>
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                  {stat.title}
-                </CardTitle>
-                <Icon className="size-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{stat.value}</div>
-                <p className="text-xs text-muted-foreground mt-1">{stat.description}</p>
-              </CardContent>
-            </Card>
-          )
-        })}
-      </div>
+      <div className="grid gap-4 xl:grid-cols-5">
+        <Panel
+          title="Karya terbaru"
+          description="5 karya terakhir yang ditambahkan"
+          href="/nulis/karya"
+          className="xl:col-span-3"
+        >
+          {recentWorks.length === 0 ? (
+            <EmptyState icon={BookOpen} title="Belum ada karya" description="Karya baru akan muncul di sini." />
+          ) : (
+            <ul className="space-y-1.5">
+              {recentWorks.map((work) => {
+                const hasCover = work.coverUrl.startsWith("http") || work.coverUrl.startsWith("data:")
+                return (
+                  <li key={work.id}>
+                    <Link
+                      href={`/nulis/karya/${work.id}`}
+                      className="flex items-center gap-3.5 rounded-[18px] p-2.5 transition-colors hover:bg-secondary"
+                    >
+                      {hasCover ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={work.coverUrl} alt="" className="w-10 h-14 rounded-lg object-cover shrink-0" />
+                      ) : (
+                        <span className="w-10 h-14 rounded-lg shrink-0 bg-secondary flex items-center justify-center text-sm font-semibold text-muted-foreground">
+                          {work.title.charAt(0)}
+                        </span>
+                      )}
+                      <div className="min-w-0 flex-1">
+                        <p className="text-[15px] font-semibold truncate">{work.title}</p>
+                        <p className="text-[13px] text-muted-foreground mt-0.5">
+                          {work.totalChapters} chapter · {(work.totalReads ?? 0).toLocaleString("id-ID")} dibaca
+                        </p>
+                      </div>
+                      <StatusPill tone={workStatusTone[work.status]}>{workStatusLabel[work.status]}</StatusPill>
+                      <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
+                    </Link>
+                  </li>
+                )
+              })}
+            </ul>
+          )}
+        </Panel>
 
-      <div className="grid gap-4 lg:grid-cols-7">
-        <Card className="lg:col-span-4">
-          <CardHeader className="flex flex-row items-center justify-between">
-            <div>
-              <CardTitle>Karya Terbaru</CardTitle>
-              <CardDescription>5 karya terakhir yang ditambahkan</CardDescription>
-            </div>
-            <Link href="/nulis/karya" className="text-sm text-primary hover:underline">
-              Lihat semua
-            </Link>
-          </CardHeader>
-          <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Judul</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Chapter</TableHead>
-                  <TableHead className="text-right">Total Dibaca</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {recentWorks.map((work) => (
-                  <TableRow key={work.id}>
-                    <TableCell className="font-medium">
-                      <Link href={`/nulis/karya/${work.id}`} className="hover:text-primary transition-colors">
-                        {work.title}
-                      </Link>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant={work.status === "DRAFT" ? "secondary" : work.status === "ONGOING" ? "default" : "outline"}>
-                        {work.status === "DRAFT" ? "Draft" : work.status === "ONGOING" ? "Ongoing" : "Selesai"}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-muted-foreground">{work.totalChapters}</TableCell>
-                    <TableCell className="text-right text-muted-foreground">{(work.totalReads ?? 0).toLocaleString("id-ID")}</TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
-
-        <Card className="lg:col-span-3">
-          <CardHeader>
-            <CardTitle>Transaksi Terakhir</CardTitle>
-            <CardDescription>Pembelian chapter terbaru</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {purchases.slice(0, 5).map((purchase, i) => (
-                <div key={`${purchase.createdAt}-${i}`} className="flex items-center justify-between">
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium truncate">{purchase.userName}</p>
-                    <p className="text-xs text-muted-foreground truncate">{purchase.workTitle} — {purchase.targetTitle}</p>
-                  </div>
-                  <div className="ml-3 text-right">
-                    <p className="text-sm font-medium">Rp {purchase.amount.toLocaleString("id-ID")}</p>
-                    <Badge variant={purchase.status === "PAID" ? "default" : purchase.status === "FAILED" ? "destructive" : "secondary"} className="text-[10px]">
-                      {purchase.status === "PAID" ? "Sukses" : purchase.status === "FAILED" ? "Gagal" : "Pending"}
-                    </Badge>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+        <Panel
+          title="Transaksi terakhir"
+          description="Pembelian chapter & paket terbaru"
+          href="/nulis/orders"
+          className="xl:col-span-2"
+        >
+          {purchases.length === 0 ? (
+            <EmptyState icon={ShoppingCart} title="Belum ada transaksi" tone="green" />
+          ) : (
+            <ul className="space-y-1.5">
+              {purchases.slice(0, 6).map((purchase, i) => {
+                const tone = orderStatusTone[purchase.status] ?? "neutral"
+                const Icon = purchase.type === "bundle" ? Package : ShoppingCart
+                return (
+                  <li
+                    key={`${purchase.createdAt}-${i}`}
+                    className="flex items-center gap-3 rounded-[18px] p-2.5 transition-colors hover:bg-secondary"
+                  >
+                    <IconBubble tone={tone}>
+                      <Icon className="size-[18px]" />
+                    </IconBubble>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-[15px] font-semibold truncate">{purchase.userName}</p>
+                      <p className="text-[13px] text-muted-foreground truncate">
+                        {purchase.targetTitle} · {timeAgo(purchase.createdAt)}
+                      </p>
+                    </div>
+                    <div className="text-right shrink-0">
+                      <p
+                        className="text-[15px] font-semibold tabular-nums"
+                        style={{ color: purchase.status === "FAILED" ? "var(--destructive)" : undefined }}
+                      >
+                        Rp {purchase.amount.toLocaleString("id-ID")}
+                      </p>
+                      <StatusPill tone={tone} className="mt-1 px-2 text-[11px]">
+                        {orderStatusLabel[purchase.status] ?? purchase.status}
+                      </StatusPill>
+                    </div>
+                  </li>
+                )
+              })}
+            </ul>
+          )}
+        </Panel>
       </div>
     </div>
   )

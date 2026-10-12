@@ -49,7 +49,7 @@ function ToolbarButton({
       pressed={active}
       onPressedChange={onClick}
       size="xs"
-      className="data-[state=on]:bg-accent data-[state=on]:text-accent-foreground"
+      className="size-8 rounded-full text-muted-foreground hover:bg-card/70 hover:text-foreground data-[state=on]:bg-card data-[state=on]:shadow-sm data-[state=on]:text-foreground"
     >
       {children}
     </Toggle>
@@ -57,7 +57,7 @@ function ToolbarButton({
 }
 
 function ToolbarDivider() {
-  return <Separator orientation="vertical" className="h-6 mx-0.5" />
+  return <Separator orientation="vertical" className="h-5 mx-1 bg-border" />
 }
 
 export default function ChapterEditor({ content, onChange, placeholder, workId, chapterId }: ChapterEditorProps) {
@@ -129,115 +129,117 @@ export default function ChapterEditor({ content, onChange, placeholder, workId, 
   if (!editor) return null
 
   return (
-    <div className="rounded-lg border border-input bg-background flex flex-col h-full">
-      <div className="flex flex-wrap items-center gap-0.5 px-2.5 py-2 border-b border-input shrink-0">
-        <ToolbarButton
-          onClick={() => editor.chain().focus().toggleBold().run()}
-          active={editor.isActive("bold")}
-        >
-          <Bold className="size-4" />
-        </ToolbarButton>
-
-        <ToolbarButton
-          onClick={() => editor.chain().focus().toggleItalic().run()}
-          active={editor.isActive("italic")}
-        >
-          <Italic className="size-4" />
-        </ToolbarButton>
-
-        <ToolbarButton
-          onClick={() => editor.chain().focus().toggleStrike().run()}
-          active={editor.isActive("strike")}
-        >
-          <Strikethrough className="size-4" />
-        </ToolbarButton>
-
-        <ToolbarDivider />
-
-        <ToolbarButton
-          onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
-          active={editor.isActive("heading", { level: 1 })}
-        >
-          <Heading1 className="size-4" />
-        </ToolbarButton>
-
-        <ToolbarButton
-          onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
-          active={editor.isActive("heading", { level: 2 })}
-        >
-          <Heading2 className="size-4" />
-        </ToolbarButton>
-
-        <ToolbarButton
-          onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
-          active={editor.isActive("heading", { level: 3 })}
-        >
-          <Heading3 className="size-4" />
-        </ToolbarButton>
-
-        <ToolbarDivider />
-
-        <ToolbarButton
-          onClick={() => editor.chain().focus().toggleBulletList().run()}
-          active={editor.isActive("bulletList")}
-        >
-          <List className="size-4" />
-        </ToolbarButton>
-
-        <ToolbarButton
-          onClick={() => editor.chain().focus().toggleOrderedList().run()}
-          active={editor.isActive("orderedList")}
-        >
-          <ListOrdered className="size-4" />
-        </ToolbarButton>
-
-        <ToolbarButton
-          onClick={() => editor.chain().focus().toggleBlockquote().run()}
-          active={editor.isActive("blockquote")}
-        >
-          <Quote className="size-4" />
-        </ToolbarButton>
-
-        <ToolbarButton
-          onClick={() => editor.chain().focus().toggleCodeBlock().run()}
-          active={editor.isActive("codeBlock")}
-        >
-          <Code2 className="size-4" />
-        </ToolbarButton>
-
-        <ToolbarButton
-          onClick={() => editor.chain().focus().setHorizontalRule().run()}
-        >
-          <Minus className="size-4" />
-        </ToolbarButton>
-
-        <ToolbarDivider />
-
-        <ToolbarButton
-          onClick={() => {
-            const parser = new DOMParser()
-            const doc = parser.parseFromString(editor.getHTML(), "text/html")
-            const urls = Array.from(doc.querySelectorAll("img")).map((img) => img.getAttribute("src") ?? "").filter(Boolean)
-            setExistingImageUrls(urls)
-            setImageBucketOpen(true)
-          }}
-        >
-          <ImageIcon className="size-4" />
-        </ToolbarButton>
-
-        <ToolbarDivider />
-
-        <div className="ml-auto flex items-center gap-0.5">
-          <ToolbarButton onClick={() => editor.chain().focus().undo().run()}>
-            <Undo2 className="size-4" />
+    <div className="rounded-[20px] border border-border bg-card shadow-[var(--shadow-card)] flex flex-col h-full overflow-hidden">
+      <div className="sticky top-0 z-10 shrink-0 px-3 pt-3 pb-2 bg-card">
+        <div className="flex flex-wrap items-center gap-0.5 rounded-full bg-secondary p-1">
+          <ToolbarButton
+            onClick={() => editor.chain().focus().toggleBold().run()}
+            active={editor.isActive("bold")}
+          >
+            <Bold className="size-4" />
           </ToolbarButton>
 
-          <ToolbarButton onClick={() => editor.chain().focus().redo().run()}>
-            <Redo2 className="size-4" />
+          <ToolbarButton
+            onClick={() => editor.chain().focus().toggleItalic().run()}
+            active={editor.isActive("italic")}
+          >
+            <Italic className="size-4" />
           </ToolbarButton>
+
+          <ToolbarButton
+            onClick={() => editor.chain().focus().toggleStrike().run()}
+            active={editor.isActive("strike")}
+          >
+            <Strikethrough className="size-4" />
+          </ToolbarButton>
+
+          <ToolbarDivider />
+
+          <ToolbarButton
+            onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
+            active={editor.isActive("heading", { level: 1 })}
+          >
+            <Heading1 className="size-4" />
+          </ToolbarButton>
+
+          <ToolbarButton
+            onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
+            active={editor.isActive("heading", { level: 2 })}
+          >
+            <Heading2 className="size-4" />
+          </ToolbarButton>
+
+          <ToolbarButton
+            onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
+            active={editor.isActive("heading", { level: 3 })}
+          >
+            <Heading3 className="size-4" />
+          </ToolbarButton>
+
+          <ToolbarDivider />
+
+          <ToolbarButton
+            onClick={() => editor.chain().focus().toggleBulletList().run()}
+            active={editor.isActive("bulletList")}
+          >
+            <List className="size-4" />
+          </ToolbarButton>
+
+          <ToolbarButton
+            onClick={() => editor.chain().focus().toggleOrderedList().run()}
+            active={editor.isActive("orderedList")}
+          >
+            <ListOrdered className="size-4" />
+          </ToolbarButton>
+
+          <ToolbarButton
+            onClick={() => editor.chain().focus().toggleBlockquote().run()}
+            active={editor.isActive("blockquote")}
+          >
+            <Quote className="size-4" />
+          </ToolbarButton>
+
+          <ToolbarButton
+            onClick={() => editor.chain().focus().toggleCodeBlock().run()}
+            active={editor.isActive("codeBlock")}
+          >
+            <Code2 className="size-4" />
+          </ToolbarButton>
+
+          <ToolbarButton
+            onClick={() => editor.chain().focus().setHorizontalRule().run()}
+          >
+            <Minus className="size-4" />
+          </ToolbarButton>
+
+          <ToolbarDivider />
+
+          <ToolbarButton
+            onClick={() => {
+              const parser = new DOMParser()
+              const doc = parser.parseFromString(editor.getHTML(), "text/html")
+              const urls = Array.from(doc.querySelectorAll("img")).map((img) => img.getAttribute("src") ?? "").filter(Boolean)
+              setExistingImageUrls(urls)
+              setImageBucketOpen(true)
+            }}
+          >
+            <ImageIcon className="size-4" />
+          </ToolbarButton>
+
+          <ToolbarDivider />
+
+          <div className="ml-auto flex items-center gap-0.5">
+            <ToolbarButton onClick={() => editor.chain().focus().undo().run()}>
+              <Undo2 className="size-4" />
+            </ToolbarButton>
+
+            <ToolbarButton onClick={() => editor.chain().focus().redo().run()}>
+              <Redo2 className="size-4" />
+            </ToolbarButton>
+          </div>
         </div>
       </div>
-      <div className="flex-1 overflow-y-auto px-6 py-4">
+      <div className="flex-1 overflow-y-auto px-8 py-5">
         <EditorContent editor={editor} className="h-full" />
       </div>
 

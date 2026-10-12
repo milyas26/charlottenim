@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { ChevronLeft, ChevronRight, DollarSign } from "lucide-react";
 import type { RevenueByMonth } from "@/data/admin-types";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 const MONTH_NAMES = [
   "Januari",
@@ -132,19 +131,68 @@ export function RevenueCard({
   );
 
   if (variant === "nulis") {
+    const rp = value.toLocaleString("id-ID");
     return (
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between pb-2">
-          <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-            Total Revenue
-          </CardTitle>
-          <DollarSign className="size-4 text-muted-foreground" />
-        </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold">{formatRp(value)}</div>
-          <div className="mt-2">{monthSwitcher}</div>
-        </CardContent>
-      </Card>
+      <div
+        className="relative overflow-hidden rounded-[24px] p-6 text-[#171717] h-full flex flex-col"
+        style={{ background: "linear-gradient(125deg, #F2B27C 0%, #F6D9BD 52%, #E3E4EA 100%)" }}
+      >
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute -right-16 -top-20 size-64 rounded-full"
+          style={{ background: "radial-gradient(circle, rgba(255,255,255,0.45) 0%, transparent 70%)" }}
+        />
+        <div className="relative flex items-center justify-between gap-3">
+          <span className="text-[13px] font-semibold text-[#171717]/70">
+            {allTime ? "Total pendapatan" : "Pendapatan bulan ini"}
+          </span>
+          <div className="flex items-center rounded-full bg-white/55 p-0.5 backdrop-blur-sm text-[12px] font-semibold">
+            <button
+              type="button"
+              onClick={() => setAllTime(false)}
+              className={`h-7 px-3 rounded-full transition-colors ${!allTime ? "bg-white shadow-sm" : "text-[#171717]/60"}`}
+            >
+              Bulanan
+            </button>
+            <button
+              type="button"
+              onClick={() => setAllTime(true)}
+              className={`h-7 px-3 rounded-full transition-colors ${allTime ? "bg-white shadow-sm" : "text-[#171717]/60"}`}
+            >
+              All time
+            </button>
+          </div>
+        </div>
+
+        <p className="relative mt-6 font-semibold tracking-[-0.03em] tabular-nums leading-none">
+          <span className="text-xl align-top mr-1 text-[#171717]/70">Rp</span>
+          <span className="text-[44px]">{rp}</span>
+        </p>
+
+        <div className="relative mt-auto pt-6 flex items-center gap-1">
+          <button
+            type="button"
+            onClick={prevMonth}
+            disabled={allTime}
+            aria-label="Bulan sebelumnya"
+            className="size-8 rounded-full bg-white/55 backdrop-blur-sm flex items-center justify-center transition hover:bg-white/80 disabled:opacity-40 disabled:pointer-events-none"
+          >
+            <ChevronLeft className="size-4" />
+          </button>
+          <span className="min-w-[132px] text-center text-[13px] font-semibold">
+            {allTime ? "Sejak awal" : label}
+          </span>
+          <button
+            type="button"
+            onClick={nextMonth}
+            disabled={allTime || isCurrentMonth}
+            aria-label="Bulan berikutnya"
+            className="size-8 rounded-full bg-white/55 backdrop-blur-sm flex items-center justify-center transition hover:bg-white/80 disabled:opacity-40 disabled:pointer-events-none"
+          >
+            <ChevronRight className="size-4" />
+          </button>
+        </div>
+      </div>
     );
   }
 

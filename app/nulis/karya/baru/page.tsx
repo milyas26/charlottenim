@@ -1,5 +1,6 @@
 "use client"
 
+import { AdminPageTitle } from "@/components/admin/AdminPageTitle"
 import { useState, useEffect, useRef, useCallback } from "react"
 import { useMutation } from "@tanstack/react-query"
 import { useAdminHeaderActions } from "@/components/admin/AdminHeader"
@@ -10,8 +11,8 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { ArrowLeft, Save, X, Upload, Loader2 } from "lucide-react"
+import { Panel } from "@/components/admin/ui"
+import { Save, X, Upload, Loader2 } from "lucide-react"
 import { GENRES } from "@/lib/constants"
 import { WorkStatus } from "@/data/types"
 import { createWork } from "@/lib/api/works"
@@ -92,10 +93,11 @@ export default function AdminNewWorkPage() {
           title={!title || !synopsis ? "Judul dan sinopsis wajib diisi" : undefined}
         >
           {saveMutation.isPending ? <Loader2 className="size-4 animate-spin" /> : <Save className="size-4" />}
-          Simpan Karya
+          Simpan karya
         </Button>
       </>
     )
+    return () => setActions(null)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [setActions, saveMutation.isPending, handleSave])
 
@@ -128,28 +130,14 @@ export default function AdminNewWorkPage() {
   }
 
   return (
-    <div className="space-y-4 p-4">
-      <div className="flex items-center gap-3">
-        <Button variant="ghost" size="icon" asChild>
-          <Link href="/nulis/karya">
-            <ArrowLeft className="size-4" />
-          </Link>
-        </Button>
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">Tambah Karya Baru</h1>
-        </div>
-      </div>
+    <div className="space-y-5 px-6 pb-10">
+      <AdminPageTitle title="Tambah karya baru" backHref="/nulis/karya" />
 
       <div className="grid gap-4 lg:grid-cols-5">
         <div className="lg:col-span-3 space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Informasi Karya</CardTitle>
-              <CardDescription>Data utama karya yang akan ditampilkan ke pembaca.</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
+          <Panel title="Informasi karya" description="Data utama karya yang akan ditampilkan ke pembaca." bodyClassName="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="title">Judul Karya</Label>
+                <Label htmlFor="title">Judul karya</Label>
                 <Input
                   id="title"
                   placeholder="Masukkan judul karya..."
@@ -158,7 +146,7 @@ export default function AdminNewWorkPage() {
                 />
                 {title && (
                   <p className="text-xs text-muted-foreground">
-                    Slug: <code className="text-accent">/{slug}</code>
+                    Slug: <code className="text-primary">/{slug}</code>
                   </p>
                 )}
               </div>
@@ -193,15 +181,9 @@ export default function AdminNewWorkPage() {
                   {status === "COMPLETED" && "Tampil dengan label Selesai."}
                 </p>
               </div>
-            </CardContent>
-          </Card>
+          </Panel>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Genre</CardTitle>
-              <CardDescription>Pilih maksimal 5 genre yang sesuai.</CardDescription>
-            </CardHeader>
-            <CardContent>
+          <Panel title="Genre" description="Pilih maksimal 5 genre yang sesuai.">
               <div className="flex flex-wrap gap-2">
                 {GENRES.map((genre) => {
                   const isSelected = selectedGenres.includes(genre)
@@ -211,10 +193,10 @@ export default function AdminNewWorkPage() {
                       type="button"
                       onClick={() => toggleGenre(genre)}
                       disabled={!isSelected && selectedGenres.length >= 5}
-                      className={`inline-flex items-center rounded-md border px-3 py-1.5 text-sm font-medium transition-colors ${
+                      className={`inline-flex items-center h-8 rounded-full px-3.5 text-[13px] font-medium transition-colors ${
                         isSelected
-                          ? "border-primary bg-primary text-primary-foreground"
-                          : "border-input bg-background hover:bg-accent hover:text-accent-foreground disabled:opacity-40"
+                          ? "bg-primary text-primary-foreground"
+                          : "bg-secondary text-foreground hover:brightness-95 disabled:opacity-40"
                       }`}
                     >
                       {genre}
@@ -226,19 +208,13 @@ export default function AdminNewWorkPage() {
               {selectedGenres.length >= 5 && (
                 <p className="text-xs text-muted-foreground mt-2">Maksimal 5 genre.</p>
               )}
-            </CardContent>
-          </Card>
+          </Panel>
         </div>
 
         <div className="lg:col-span-2">
-          <Card className="sticky top-[72px]">
-            <CardHeader>
-              <CardTitle>Cover Karya</CardTitle>
-              <CardDescription>Upload cover JPG/PNG, maks 2MB.</CardDescription>
-            </CardHeader>
-            <CardContent>
+          <Panel title="Cover karya" description="Upload cover JPG/PNG, maks 2MB." className="sticky top-[72px]">
               <div className="flex items-center justify-center w-full">
-                <label className="relative flex flex-col items-center justify-center w-full aspect-[10/15] border-2 border-dashed rounded-lg cursor-pointer border-input hover:border-primary/50 hover:bg-accent/5 transition-colors overflow-hidden">
+                <label className="relative flex flex-col items-center justify-center w-full aspect-[10/15] rounded-[18px] border-2 border-dashed border-input bg-secondary/40 hover:bg-secondary cursor-pointer transition-colors overflow-hidden">
                   <input
                     ref={fileInputRef}
                     type="file"
@@ -248,6 +224,7 @@ export default function AdminNewWorkPage() {
                   />
                   {coverPreview ? (
                     <>
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
                         src={coverPreview}
                         alt="Cover preview"
@@ -268,8 +245,7 @@ export default function AdminNewWorkPage() {
                   )}
                 </label>
               </div>
-            </CardContent>
-          </Card>
+          </Panel>
         </div>
       </div>
     </div>

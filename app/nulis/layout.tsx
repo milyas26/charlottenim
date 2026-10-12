@@ -1,6 +1,7 @@
 import type { Metadata } from "next"
 import AdminGuard from "@/components/admin/AdminGuard"
-import { AdminSidebar } from "@/components/admin/AdminSidebar"
+import { NulisTheme } from "@/components/admin/NulisTheme"
+import { AdminSidebar, AdminContent } from "@/components/admin/AdminSidebar"
 import { AdminHeader, AdminHeaderActionsProvider } from "@/components/admin/AdminHeader"
 
 export const metadata: Metadata = {
@@ -11,16 +12,17 @@ export const metadata: Metadata = {
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   return (
     <AdminGuard>
-      <div className="min-h-screen bg-background">
+      <NulisTheme />
+      <div className="nulis-theme font-ui min-h-screen bg-background text-foreground">
         <AdminSidebar />
-        <div className="ml-60 min-h-screen">
+        <AdminContent>
           <AdminHeaderActionsProvider>
             <AdminHeader />
             <main>
               <div className="min-h-[calc(100vh-64px)]">{children}</div>
             </main>
           </AdminHeaderActionsProvider>
-        </div>
+        </AdminContent>
       </div>
     </AdminGuard>
   )

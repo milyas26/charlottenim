@@ -9,6 +9,9 @@
   --color-border: var(--border);
   --color-muted: var(--muted);
   --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground, var(--foreground));
+  --color-muted-foreground: var(--muted-foreground, var(--muted));
+  --color-brand: var(--brand, var(--accent));
   --color-primary: var(--primary);
   --color-primary-foreground: var(--primary-foreground);
   --color-secondary: var(--secondary);
@@ -380,4 +383,121 @@ body::before {
 
 .dark .book-cover {
   box-shadow: 0 8px 20px -6px rgba(0, 0, 0, 0.6);
+}
+
+/* ── Nulis (admin dashboard) ───────────────────────────────
+   Scoped theme from .agents/skills/dashboard-admin-design.
+   Applied to <html> while /nulis is mounted so portals
+   (dialogs, selects, dropdowns) pick it up too. */
+
+.nulis-theme {
+  /* Warm, soft neutrals: calm like paper, not stark black-on-white. */
+  --background: #FBFAF8;
+  --foreground: #23201C;
+  --surface: #F4F1EC;
+  --border: #ECE7E0;
+  --muted: #7A736B;
+  --muted-foreground: #7A736B;
+  --brand: #A8714A;
+  --accent: #F1EDE7;
+  --accent-foreground: #23201C;
+  --primary: #9C6642;
+  --primary-foreground: #FFFFFF;
+  --secondary: #F1EDE7;
+  --secondary-foreground: #23201C;
+  --card: #FFFFFF;
+  --card-foreground: #23201C;
+  --popover: #FFFFFF;
+  --popover-foreground: #23201C;
+  --destructive: #D93C5B;
+  --destructive-foreground: #FFFFFF;
+  --input: #E6E0D8;
+  --ring: rgba(156, 102, 66, 0.28);
+  --radius: 0.875rem;
+  --sidebar: #F6F3EF;
+  --sidebar-foreground: #23201C;
+  --sidebar-primary: #9C6642;
+  --sidebar-primary-foreground: #FFFFFF;
+  --sidebar-accent: #FFFFFF;
+  --sidebar-accent-foreground: #23201C;
+  --sidebar-border: #ECE7E0;
+  --sidebar-ring: rgba(156, 102, 66, 0.28);
+  --shadow-card: 0 1px 2px rgba(60, 40, 20, 0.04), 0 6px 20px rgba(60, 40, 20, 0.05);
+}
+
+html.nulis-theme body {
+  background: var(--background);
+  font-family: var(--font-jakarta), -apple-system, system-ui, "Segoe UI", Roboto, sans-serif;
+}
+
+html.nulis-theme body::before {
+  display: none;
+}
+
+.nulis-theme h1 {
+  letter-spacing: -0.025em;
+}
+
+.nulis-theme [data-slot="card"] {
+  border-radius: 20px;
+  border-color: var(--border);
+  box-shadow: var(--shadow-card);
+}
+
+.nulis-theme [data-slot="badge"] {
+  border-radius: 999px;
+}
+
+.nulis-theme [data-slot="input"],
+.nulis-theme [data-slot="select-trigger"],
+.nulis-theme [data-slot="textarea"] {
+  border-color: var(--input);
+  box-shadow: none;
+}
+
+.nulis-theme [data-slot="input"],
+.nulis-theme [data-slot="select-trigger"] {
+  border-radius: 999px;
+  background: var(--surface);
+  border-color: transparent;
+  padding-left: 1rem;
+}
+
+.nulis-theme [data-slot="input"]:focus-visible,
+.nulis-theme [data-slot="select-trigger"]:focus-visible {
+  background: var(--background);
+  border-color: var(--input);
+}
+
+/* Inputs with a leading search icon keep room for it. */
+.nulis-theme .pl-9[data-slot="input"] {
+  padding-left: 2.5rem;
+}
+
+/* Overlays inside /nulis (portals get the theme via html.nulis-theme). */
+html.nulis-theme [data-slot="dialog-overlay"],
+html.nulis-theme [data-slot="alert-dialog-overlay"] {
+  background: rgba(35, 32, 28, 0.28);
+  backdrop-filter: blur(4px);
+}
+
+html.nulis-theme [data-slot="dialog-content"],
+html.nulis-theme [data-slot="alert-dialog-content"] {
+  border-radius: 24px;
+  border-color: var(--border);
+  box-shadow: 0 24px 60px -12px rgba(60, 40, 20, 0.22);
+  font-family: var(--font-jakarta), system-ui, sans-serif;
+}
+
+html.nulis-theme [data-slot="dropdown-menu-content"],
+html.nulis-theme [data-slot="select-content"] {
+  border-radius: 16px;
+  border-color: var(--border);
+  padding: 4px;
+  box-shadow: 0 12px 32px -8px rgba(60, 40, 20, 0.18);
+}
+
+html.nulis-theme [data-slot="dropdown-menu-item"],
+html.nulis-theme [data-slot="select-item"] {
+  border-radius: 10px;
 }

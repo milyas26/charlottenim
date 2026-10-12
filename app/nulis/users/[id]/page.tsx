@@ -1,29 +1,20 @@
 "use client"
 
+import { IconBubble, StatusPill, orderStatusLabel, orderStatusTone, tint } from "@/components/admin/tint"
+import { AdminPageTitle } from "@/components/admin/AdminPageTitle"
+import { Panel, EmptyState, InfoRow, PageLoader } from "@/components/admin/ui"
 import { use } from "react"
-import Link from "next/link"
 import { notFound } from "next/navigation"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Separator } from "@/components/ui/separator"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { ArrowLeft, Mail, Calendar, ShoppingBag, BookOpen, Loader2 } from "lucide-react"
-import { useAdminUserDetail, type UserDetail } from "@/lib/api/admin"
+import { ShoppingBag, ShoppingCart, Package, Wallet } from "lucide-react"
+import { useAdminUserDetail } from "@/lib/api/admin"
 
 export default function AdminUserDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params)
 
   const { data: user, isLoading } = useAdminUserDetail(id)
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center py-20">
-        <Loader2 className="size-8 animate-spin text-muted-foreground" />
-      </div>
-    )
-  }
+  if (isLoading) return <PageLoader />
 
   if (!user) notFound()
 
@@ -37,109 +28,97 @@ export default function AdminUserDetailPage({ params }: { params: Promise<{ id: 
   }
 
   return (
-    <div className="space-y-4 p-4">
-      <div className="flex items-center gap-3">
-        <Button variant="ghost" size="icon" asChild>
-          <Link href="/nulis/users">
-            <ArrowLeft className="size-4" />
-          </Link>
-        </Button>
-        <h1 className="text-2xl font-bold tracking-tight">Detail User</h1>
-      </div>
+    <div className="space-y-5 px-6 pb-10">
+      <AdminPageTitle title="Detail user" backHref="/nulis/users" />
 
-      <div className="grid gap-4 lg:grid-cols-3">
-        <Card className="lg:col-span-1">
-          <CardHeader className="text-center">
-            <Avatar className="size-20 mx-auto">
+      <div className="grid gap-4 lg:grid-cols-3 items-start">
+        <Panel className="lg:col-span-1">
+          <div className="flex flex-col items-center text-center pt-2">
+            <Avatar className="size-20">
               <AvatarImage src={user.avatarUrl ?? undefined} alt="" referrerPolicy="no-referrer" crossOrigin="anonymous" />
-              <AvatarFallback className="bg-primary/10 text-primary text-xl font-bold">
+              <AvatarFallback className="text-xl font-semibold" style={tint("brown")}>
                 {getInitials(user.name)}
               </AvatarFallback>
             </Avatar>
-            <CardTitle className="mt-3">{user.name}</CardTitle>
-            <CardDescription>
-              <Badge variant={user.role === "ADMIN" ? "default" : "secondary"}>
-                {user.role === "ADMIN" ? "Admin" : "Reader"}
-              </Badge>
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <div className="flex items-center gap-2 text-sm">
-              <Mail className="size-4 text-muted-foreground" />
-              <span className="text-muted-foreground">{user.email}</span>
-            </div>
-            <div className="flex items-center gap-2 text-sm">
-              <Calendar className="size-4 text-muted-foreground" />
-              <span className="text-muted-foreground">Bergabung: {new Date(user.joinedAt).toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" })}</span>
-            </div>
-            <Separator />
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2 text-sm">
-                <ShoppingBag className="size-4 text-muted-foreground" />
-                <span className="text-muted-foreground">Total Pembelian</span>
-              </div>
-              <span className="font-medium">{user.totalPurchases}</span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-muted-foreground ml-6">Total Spent</span>
-              <span className="font-medium">Rp {user.totalSpent.toLocaleString("id-ID")}</span>
-            </div>
-            {user.lastReadWork && (
-              <div className="flex items-center gap-2 text-sm">
-                <BookOpen className="size-4 text-muted-foreground" />
-                <span className="text-muted-foreground">Terakhir baca: {user.lastReadWork}</span>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+            <h2 className="mt-3 text-[20px] font-semibold tracking-[-0.02em]">{user.name}</h2>
+            <p className="text-[13px] text-muted-foreground mt-0.5 break-all">{user.email}</p>
+            <StatusPill tone={user.role === "ADMIN" ? "brown" : "neutral"} className="mt-2.5">
+              {user.role === "ADMIN" ? "Admin" : "Reader"}
+            </StatusPill>
+          </div>
 
-        <Card className="lg:col-span-2">
-          <CardHeader>
-            <CardTitle>Riwayat Pembelian ({user.purchases.length})</CardTitle>
-          </CardHeader>
-          <CardContent className="pt-4">
-            {user.purchases.length === 0 ? (
-              <p className="text-center py-8 text-muted-foreground text-sm">
-                Belum ada riwayat pembelian.
+          <div className="mt-5 grid grid-cols-2 gap-2.5">
+            <div className="rounded-[18px] bg-secondary p-3.5">
+              <IconBubble tone="blue" className="size-8">
+                <ShoppingBag className="size-4" />
+              </IconBubble>
+              <p className="mt-2.5 text-[20px] font-semibold leading-none tabular-nums">{user.totalPurchases}</p>
+              <p className="mt-1 text-[12px] text-muted-foreground">Pembelian</p>
+            </div>
+            <div className="rounded-[18px] bg-secondary p-3.5">
+              <IconBubble tone="green" className="size-8">
+                <Wallet className="size-4" />
+              </IconBubble>
+              <p className="mt-2.5 text-[20px] font-semibold leading-none tabular-nums truncate">
+                <span className="text-[13px] font-medium text-muted-foreground mr-0.5">Rp</span>
+                {user.totalSpent.toLocaleString("id-ID")}
               </p>
-            ) : (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Karya</TableHead>
-                    <TableHead>Tipe</TableHead>
-                    <TableHead>Item</TableHead>
-                    <TableHead>Jumlah</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead className="text-right">Tanggal</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {user.purchases.map((p) => (
-                    <TableRow key={p.createdAt + p.userId + p.targetTitle}>
-                      <TableCell className="font-medium">{p.workTitle}</TableCell>
-                      <TableCell>
-                        <Badge variant={p.type === "bundle" ? "outline" : "secondary"}>
-                          {p.type === "bundle" ? "Paket" : "Chapter"}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-muted-foreground">{p.targetTitle}</TableCell>
-                      <TableCell>Rp {p.amount.toLocaleString("id-ID")}</TableCell>
-                      <TableCell>
-                        <Badge variant={p.status === "PAID" ? "default" : p.status === "FAILED" ? "destructive" : "secondary"}>
-                          {p.status === "PAID" ? "Sukses" : p.status === "FAILED" ? "Gagal" : "Pending"}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-right text-muted-foreground">
+              <p className="mt-1 text-[12px] text-muted-foreground">Total spent</p>
+            </div>
+          </div>
+
+          <div className="mt-4 divide-y divide-border">
+            <InfoRow label="Bergabung">
+              {new Date(user.joinedAt).toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" })}
+            </InfoRow>
+            <InfoRow label="Terakhir baca">{user.lastReadWork || "-"}</InfoRow>
+          </div>
+        </Panel>
+
+        <Panel
+          title="Riwayat pembelian"
+          description={`${user.purchases.length} transaksi`}
+          className="lg:col-span-2"
+        >
+          {user.purchases.length === 0 ? (
+            <EmptyState icon={ShoppingCart} tone="green" title="Belum ada riwayat pembelian" />
+          ) : (
+            <ul className="space-y-1.5">
+              {user.purchases.map((p) => {
+                const tone = orderStatusTone[p.status] ?? "neutral"
+                const Icon = p.type === "bundle" ? Package : ShoppingCart
+                return (
+                  <li
+                    key={p.createdAt + p.userId + p.targetTitle}
+                    className="flex items-center gap-3 rounded-[18px] p-2.5 transition-colors hover:bg-secondary"
+                  >
+                    <IconBubble tone={tone}>
+                      <Icon className="size-[18px]" />
+                    </IconBubble>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-[15px] font-semibold truncate">{p.workTitle}</p>
+                      <p className="text-[13px] text-muted-foreground truncate">
+                        {p.type === "bundle" ? "Paket" : "Chapter"} · {p.targetTitle} ·{" "}
                         {new Date(p.createdAt).toLocaleDateString("id-ID")}
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            )}
-          </CardContent>
-        </Card>
+                      </p>
+                    </div>
+                    <div className="text-right shrink-0">
+                      <p
+                        className="text-[15px] font-semibold tabular-nums"
+                        style={{ color: p.status === "FAILED" ? "var(--destructive)" : undefined }}
+                      >
+                        Rp {p.amount.toLocaleString("id-ID")}
+                      </p>
+                      <StatusPill tone={tone} className="mt-1 px-2 text-[11px]">
+                        {orderStatusLabel[p.status] ?? p.status}
+                      </StatusPill>
+                    </div>
+                  </li>
+                )
+              })}
+            </ul>
+          )}
+        </Panel>
       </div>
     </div>
   )

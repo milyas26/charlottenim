@@ -46,9 +46,9 @@ function GalleryImage({
   deleting: boolean
 }) {
   return (
-    <div className="relative group rounded-lg border border-border bg-muted/30 overflow-hidden">
+    <div className="relative group rounded-[16px] bg-secondary overflow-hidden">
       <div className="absolute top-1.5 left-1.5 z-10 flex items-center gap-1">
-        <span className="bg-background/80 text-xs font-mono px-1.5 py-0.5 rounded shadow select-none">
+        <span className="bg-card/90 text-[11px] font-semibold tabular-nums px-2 py-0.5 rounded-full shadow-sm select-none">
           {index + 1}
         </span>
       </div>
@@ -59,7 +59,7 @@ function GalleryImage({
             onDelete(image.id)
           }}
           disabled={deleting}
-          className="p-1 rounded bg-background/80 hover:bg-destructive hover:text-destructive-foreground transition-colors"
+          className="size-7 inline-flex items-center justify-center rounded-full bg-card/90 shadow-sm hover:bg-destructive hover:text-destructive-foreground transition-colors"
           title="Hapus gambar"
         >
           {deleting ? (
@@ -71,11 +71,11 @@ function GalleryImage({
       </div>
       <button
         onClick={onToggle}
-        className={`block w-full aspect-square cursor-pointer relative transition-all ${
+        className={`block w-full aspect-square cursor-pointer relative rounded-[16px] transition-all ${
           selected
-            ? "ring-2 ring-offset-1 ring-offset-background ring-emerald-500"
+            ? "ring-2 ring-inset ring-primary"
             : alreadyUsed
-              ? "ring-2 ring-offset-1 ring-offset-background ring-sky-400"
+              ? "ring-2 ring-inset ring-sky-400"
               : "ring-1 ring-transparent"
         }`}
         title="Klik untuk pilih"
@@ -88,15 +88,15 @@ function GalleryImage({
         />
         {selected && (
           <>
-            <div className="absolute top-1.5 left-8 z-10 flex items-center justify-center size-5 rounded-full bg-emerald-500 shadow">
-              <Check className="size-3 text-white" strokeWidth={3} />
+            <div className="absolute top-1.5 left-8 z-10 flex items-center justify-center size-5 rounded-full bg-primary shadow-sm">
+              <Check className="size-3 text-primary-foreground" strokeWidth={3} />
             </div>
-            <div className="absolute inset-0 bg-emerald-500/10" />
+            <div className="absolute inset-0 bg-primary/10" />
           </>
         )}
         {alreadyUsed && (
           <div className="absolute bottom-1.5 right-1.5 z-10">
-            <span className="bg-slate-500/80 text-white text-[10px] font-medium px-1.5 py-0.5 rounded shadow select-none">
+            <span className="bg-foreground/70 text-background text-[10px] font-semibold px-2 py-0.5 rounded-full shadow-sm select-none">
               Used
             </span>
           </div>
@@ -214,27 +214,27 @@ export default function ImageBucketModal({
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="w-[720px] h-[580px] max-w-none max-h-none flex flex-col p-0 gap-2">
-        <DialogHeader className="px-4 pt-4 pb-0 shrink-0 mb-0">
+      <DialogContent className="w-[720px] h-[580px] max-w-none max-h-none flex flex-col p-0 gap-2 rounded-[24px] overflow-hidden">
+        <DialogHeader className="px-5 pt-5 pb-0 shrink-0 mb-0">
           <div className="flex items-center justify-between pr-8">
-            <DialogTitle>Bucket Gambar</DialogTitle>
+            <DialogTitle className="text-[17px] font-semibold tracking-[-0.02em]">Bucket gambar</DialogTitle>
             {selected.size > 0 && (
               <button
                 onClick={handleAddSelectedToEditor}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-colors shrink-0"
+                className="inline-flex items-center gap-1.5 h-8 px-3.5 rounded-full bg-primary text-primary-foreground text-[13px] font-semibold hover:bg-primary/90 transition-colors shrink-0"
               >
                 <Check className="size-3.5" />
-                Tambah ke Editor ({selected.size})
+                Tambah ke editor ({selected.size})
               </button>
             )}
           </div>
         </DialogHeader>
 
-        <div className="shrink-0 px-4 py-2 flex gap-1">
+        <div className="shrink-0 px-5 py-1 flex gap-1.5">
           <button
             onClick={() => fileInputRef.current?.click()}
             disabled={uploadMutation.isPending}
-            className="inline-flex items-center gap-1 px-2.5 py-1 rounded text-xs text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+            className="inline-flex items-center gap-1.5 h-8 px-3.5 rounded-full bg-secondary text-[13px] font-medium text-foreground hover:brightness-95 transition disabled:opacity-50"
           >
             {uploadMutation.isPending ? (
               <Loader2 className="size-3.5 animate-spin" />
@@ -246,7 +246,7 @@ export default function ImageBucketModal({
           {images.length > 0 && (
             <button
               onClick={() => setSelected(new Set())}
-              className="inline-flex items-center gap-1 px-2.5 py-1 rounded text-xs text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+              className="inline-flex items-center gap-1.5 h-8 px-3.5 rounded-full bg-secondary text-[13px] font-medium text-foreground hover:brightness-95 transition disabled:opacity-50"
             >
               Clear
             </button>
@@ -262,13 +262,13 @@ export default function ImageBucketModal({
           className="hidden"
         />
 
-        <div className="flex-1 overflow-y-auto px-4 pb-4">
+        <div className="flex-1 overflow-y-auto px-5 pb-5">
           {isLoading ? (
             <div className="flex items-center justify-center h-full">
               <Loader2 className="size-6 animate-spin text-muted-foreground" />
             </div>
           ) : (
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-3 gap-3">
               {images.map((img, idx) => (
                 <GalleryImage
                   key={img.id}

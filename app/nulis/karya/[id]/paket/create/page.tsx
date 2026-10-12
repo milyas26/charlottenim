@@ -1,10 +1,14 @@
 "use client"
 
+import { AdminPageTitle } from "@/components/admin/AdminPageTitle"
 import { use, useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { useQuery } from "@tanstack/react-query"
 import { useAdminHeaderActions } from "@/components/admin/AdminHeader"
+import { EmptyState, InfoRow, PageLoader, Panel } from "@/components/admin/ui"
+import { StatusPill, tones } from "@/components/admin/tint"
+import { cn } from "@/lib/utils"
 import { useAdminWork, useAdminWorkChapters } from "@/lib/api/works"
 import { useCreateBundle, useAdminBundlesByWork, checkBundleSlug } from "@/lib/api/bundles"
 import { useDebounce } from "@/hooks/useDebounce"
@@ -12,7 +16,6 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -23,7 +26,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
-import { ArrowLeft, Save, Loader2, X, Check, AlertCircle } from "lucide-react"
+import { Save, Loader2, X, Check, AlertCircle, BookLock } from "lucide-react"
 import { toast } from "sonner"
 
 function slugify(text: string) {
@@ -114,7 +117,7 @@ export default function CreateBundlePage({ params }: { params: Promise<{ id: str
           onClick={() => setConfirmOpen(true)}
         >
           {createMutation.isPending ? <Loader2 className="size-4 animate-spin" /> : <Save className="size-4" />}
-          Simpan Paket
+          Simpan paket
         </Button>
       </>
     )
@@ -129,15 +132,11 @@ export default function CreateBundlePage({ params }: { params: Promise<{ id: str
   }
 
   if (workLoading || chaptersLoading) {
-    return (
-      <div className="flex items-center justify-center py-20">
-        <Loader2 className="size-8 animate-spin text-muted-foreground" />
-      </div>
-    )
+    return <PageLoader />
   }
 
   if (!work) {
-    return <div className="p-4 text-center text-muted-foreground">Karya tidak ditemukan.</div>
+    return <EmptyState icon={BookLock} tone="neutral" title="Karya tidak ditemukan" />
   }
 
   const totalChapterPrice = chapters
@@ -151,169 +150,146 @@ export default function CreateBundlePage({ params }: { params: Promise<{ id: str
     : "-"
 
   return (
-    <div className="space-y-4 p-4">
-      <div className="flex items-center gap-3">
-        <Button variant="ghost" size="icon" asChild>
-          <Link href={`/nulis/karya/${id}`}>
-            <ArrowLeft className="size-4" />
-          </Link>
-        </Button>
-        <div className="flex-1">
-          <h1 className="text-2xl font-bold tracking-tight">Buat Paket</h1>
-          <p className="text-sm text-muted-foreground">Karya: {work.title}</p>
-        </div>
-      </div>
+    <div className="space-y-5 px-6 pb-10">
+      <AdminPageTitle title="Buat paket" description={`Karya: ${work.title}`} backHref={`/nulis/karya/${id}`} />
 
       <div className="grid gap-4 lg:grid-cols-3">
-        <Card className="lg:col-span-1">
-          <CardHeader>
-            <CardTitle>Info Paket</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="bundle-title">Judul Paket</Label>
+        <Panel title="Info paket" className="lg:col-span-1" bodyClassName="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="bundle-title">Judul paket</Label>
+            <Input
+              id="bundle-title"
+              placeholder="Masukkan judul paket..."
+              value={title}
+              onChange={(e) => {
+                setTitle(e.target.value)
+                if (!slugEdited) {
+                  setSlug(slugify(e.target.value))
+                }
+              }}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="bundle-slug">Slug</Label>
+            <div className="relative">
               <Input
-                id="bundle-title"
-                placeholder="Masukkan judul paket..."
-                value={title}
+                id="bundle-slug"
+                placeholder="slug-paket"
+                value={slug}
                 onChange={(e) => {
-                  setTitle(e.target.value)
-                  if (!slugEdited) {
-                    setSlug(slugify(e.target.value))
-                  }
+                  setSlug(slugify(e.target.value))
+                  setSlugEdited(true)
                 }}
               />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="bundle-slug">Slug</Label>
-              <div className="relative">
-                <Input
-                  id="bundle-slug"
-                  placeholder="slug-paket"
-                  value={slug}
-                  onChange={(e) => {
-                    setSlug(slugify(e.target.value))
-                    setSlugEdited(true)
-                  }}
-                />
-                {slug.length > 0 && (
-                  <div className="absolute right-2.5 top-1/2 -translate-y-1/2">
-                    {slugChecking ? (
-                      <Loader2 className="size-4 animate-spin text-muted-foreground" />
-                    ) : isSlugAvailable ? (
-                      <Check className="size-4 text-green-500" />
-                    ) : (
-                      <AlertCircle className="size-4 text-destructive" />
-                    )}
-                  </div>
-                )}
-              </div>
-              {slug.length > 0 && !slugChecking && !isSlugAvailable && (
-                <p className="text-xs text-destructive">Slug sudah digunakan</p>
-              )}
-              {slug.length > 0 && !slugChecking && isSlugAvailable && (
-                <p className="text-xs text-green-600">Slug tersedia</p>
+              {slug.length > 0 && (
+                <div className="absolute right-3.5 top-1/2 -translate-y-1/2">
+                  {slugChecking ? (
+                    <Loader2 className="size-4 animate-spin text-muted-foreground" />
+                  ) : isSlugAvailable ? (
+                    <Check className="size-4" style={{ color: tones.green }} />
+                  ) : (
+                    <AlertCircle className="size-4" style={{ color: tones.rose }} />
+                  )}
+                </div>
               )}
             </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="bundle-desc">Deskripsi (opsional)</Label>
-              <Textarea
-                id="bundle-desc"
-                placeholder="Deskripsi singkat paket..."
-                rows={4}
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="bundle-price">Harga Paket (IDR)</Label>
-              <Input
-                id="bundle-price"
-                type="number"
-                min={1000}
-                step={500}
-                placeholder="Min Rp 1.000"
-                value={price}
-                onChange={(e) => setPrice(e.target.value)}
-              />
-              {price && parseInt(price, 10) < 1000 && (
-                <p className="text-xs text-destructive">Harga minimal Rp 1.000</p>
-              )}
-            </div>
-
-            <div className="rounded-md border p-3 space-y-2">
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-muted-foreground">Chapter dipilih</span>
-                <span className="font-medium">{selectedChapters.length}</span>
-              </div>
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-muted-foreground">Total harga chapter</span>
-                <span className="font-medium">Rp {totalChapterPrice.toLocaleString("id-ID")}</span>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="lg:col-span-2">
-          <CardHeader>
-            <CardTitle>Pilih Chapter</CardTitle>
-            <CardDescription>
-              {premiumChapters.length} chapter premium tersedia. Centang untuk memasukkan ke paket.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            {premiumChapters.length === 0 ? (
-              <p className="text-center py-8 text-muted-foreground text-sm">
-                Tidak ada chapter premium. Buat chapter premium terlebih dahulu.
-              </p>
-            ) : (
-              <div className="space-y-2">
-                {premiumChapters.map((ch) => (
-                  <label
-                    key={ch.id}
-                    className={`flex items-center gap-3 p-3 rounded-md border cursor-pointer transition-colors ${
-                      selectedChapters.includes(ch.id)
-                        ? "border-primary bg-primary/5"
-                        : "border-input hover:bg-accent/5"
-                    }`}
-                  >
-                    <input
-                      type="checkbox"
-                      checked={selectedChapters.includes(ch.id)}
-                      onChange={() => toggleChapter(ch.id)}
-                      className="size-4 rounded border-input accent-primary"
-                    />
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium truncate">
-                        Bab {ch.chapterNumber}: {ch.title}
-                      </p>
-                      <p className="text-xs text-muted-foreground">Rp {ch.price.toLocaleString("id-ID")}</p>
-                    </div>
-                    <div className="flex flex-wrap gap-1 shrink-0 ml-auto">
-                      {chapterBundleMap[ch.id]?.map((bundleTitle) => (
-                        <span
-                          key={bundleTitle}
-                          className="inline-flex items-center rounded-md border px-2 py-0.5 text-[10px] font-medium text-muted-foreground bg-muted/30"
-                        >
-                          {bundleTitle}
-                        </span>
-                      ))}
-                    </div>
-                  </label>
-                ))}
-              </div>
+            {slug.length > 0 && !slugChecking && !isSlugAvailable && (
+              <p className="text-xs font-medium" style={{ color: tones.rose }}>Slug sudah digunakan</p>
             )}
-          </CardContent>
-        </Card>
+            {slug.length > 0 && !slugChecking && isSlugAvailable && (
+              <p className="text-xs font-medium" style={{ color: tones.green }}>Slug tersedia</p>
+            )}
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="bundle-desc">Deskripsi (opsional)</Label>
+            <Textarea
+              id="bundle-desc"
+              placeholder="Deskripsi singkat paket..."
+              rows={4}
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="bundle-price">Harga paket (IDR)</Label>
+            <Input
+              id="bundle-price"
+              type="number"
+              min={1000}
+              step={500}
+              placeholder="Min Rp 1.000"
+              value={price}
+              onChange={(e) => setPrice(e.target.value)}
+            />
+            {price && parseInt(price, 10) < 1000 && (
+              <p className="text-xs font-medium" style={{ color: tones.rose }}>Harga minimal Rp 1.000</p>
+            )}
+          </div>
+
+          <div className="rounded-[18px] bg-secondary px-4 py-1 divide-y divide-border">
+            <InfoRow label="Chapter dipilih">
+              <span className="tabular-nums">{selectedChapters.length}</span>
+            </InfoRow>
+            <InfoRow label="Total harga chapter">
+              <span className="tabular-nums">Rp {totalChapterPrice.toLocaleString("id-ID")}</span>
+            </InfoRow>
+          </div>
+        </Panel>
+
+        <Panel
+          title="Pilih chapter"
+          description={`${premiumChapters.length} chapter premium tersedia. Centang untuk memasukkan ke paket.`}
+          className="lg:col-span-2"
+        >
+          {premiumChapters.length === 0 ? (
+            <EmptyState
+              icon={BookLock}
+              title="Belum ada chapter premium"
+              description="Buat chapter premium terlebih dahulu."
+            />
+          ) : (
+            <div className="space-y-1.5">
+              {premiumChapters.map((ch) => (
+                <label
+                  key={ch.id}
+                  className={cn(
+                    "flex items-center gap-3 px-4 py-3 rounded-[16px] cursor-pointer transition-colors",
+                    selectedChapters.includes(ch.id) ? "bg-primary/[0.08] ring-1 ring-primary/30" : "hover:bg-secondary"
+                  )}
+                >
+                  <input
+                    type="checkbox"
+                    checked={selectedChapters.includes(ch.id)}
+                    onChange={() => toggleChapter(ch.id)}
+                    className="size-4 shrink-0 accent-primary"
+                  />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium truncate">
+                      Bab {ch.chapterNumber}: {ch.title}
+                    </p>
+                    <p className="text-xs text-muted-foreground tabular-nums">Rp {ch.price.toLocaleString("id-ID")}</p>
+                  </div>
+                  <div className="flex flex-wrap gap-1 shrink-0 ml-auto">
+                    {chapterBundleMap[ch.id]?.map((bundleTitle) => (
+                      <StatusPill key={bundleTitle} tone="neutral" className="text-[11px]">
+                        {bundleTitle}
+                      </StatusPill>
+                    ))}
+                  </div>
+                </label>
+              ))}
+            </div>
+          )}
+        </Panel>
       </div>
 
       <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Konfirmasi Pembuatan Paket</AlertDialogTitle>
+            <AlertDialogTitle>Konfirmasi pembuatan paket</AlertDialogTitle>
             <AlertDialogDescription>
               Buat paket &ldquo;{title}&rdquo; dengan harga{" "}
               <span className="font-semibold">{formattedPrice}</span> berisi{" "}
@@ -323,7 +299,7 @@ export default function CreateBundlePage({ params }: { params: Promise<{ id: str
           <AlertDialogFooter>
             <AlertDialogCancel>Batal</AlertDialogCancel>
             <AlertDialogAction onClick={handleSave}>
-              Ya, Buat Paket
+              Ya, buat paket
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

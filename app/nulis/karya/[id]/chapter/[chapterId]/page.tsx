@@ -1,14 +1,13 @@
 "use client"
 
 import { use, useState, useCallback, useEffect, useRef } from "react"
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
-import type { Chapter, ChapterStatus } from "@/data/types"
+import { useMutation, useQueryClient } from "@tanstack/react-query"
+import type { ChapterStatus } from "@/data/types"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Checkbox } from "@/components/ui/checkbox"
-import { Badge } from "@/components/ui/badge"
 import {
   Select,
   SelectContent,
@@ -26,8 +25,11 @@ import {
 } from "@/components/ui/dialog"
 import ChapterEditor from "@/components/admin/ChapterEditor"
 import { toast } from "sonner"
-import { Save, GripVertical, PlusCircle, Lock, LockOpen, ChevronRight, ChevronLeft, X, List, SlidersHorizontal, PanelLeftClose, PanelLeftOpen, PanelRightClose, PanelRightOpen, Loader2 } from "lucide-react"
+import { Save, GripVertical, Plus, FileX, Lock, LockOpen, ChevronRight, ChevronLeft, X, List, SlidersHorizontal, PanelLeftClose, PanelLeftOpen, PanelRightClose, PanelRightOpen, Loader2 } from "lucide-react"
 import { useAdminHeaderActions } from "@/components/admin/AdminHeader"
+import { EmptyState, InfoRow, PageLoader, Panel } from "@/components/admin/ui"
+import { StatusPill, tones } from "@/components/admin/tint"
+import { cn } from "@/lib/utils"
 import Link from "next/link"
 import {
   useAdminChapter,
@@ -254,20 +256,23 @@ export default function AdminChapterEditorPage({
   const isLoading = !work || (chapterLoading && !isNew)
 
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-[calc(100vh-3.5rem)]">
-        <Loader2 className="size-8 animate-spin text-muted-foreground" />
-      </div>
-    )
+    return <PageLoader className="h-[calc(100vh-4rem)] py-0" />
   }
 
   if (chapterError && !isNew) {
     return (
-      <div className="flex flex-col items-center justify-center h-[calc(100vh-3.5rem)] gap-4 text-muted-foreground">
-        <p>Chapter tidak ditemukan.</p>
-        <Button variant="outline" asChild>
-          <Link href={`/nulis/karya/${id}`}>Kembali</Link>
-        </Button>
+      <div className="flex items-center justify-center h-[calc(100vh-4rem)]">
+        <EmptyState
+          icon={FileX}
+          tone="rose"
+          title="Chapter tidak ditemukan"
+          description="Chapter ini mungkin sudah dihapus atau tautannya salah."
+          action={
+            <Button variant="secondary" asChild>
+              <Link href={`/nulis/karya/${id}`}>Kembali</Link>
+            </Button>
+          }
+        />
       </div>
     )
   }
@@ -277,11 +282,11 @@ export default function AdminChapterEditorPage({
   }
 
   return (
-    <div className="flex h-[calc(100vh-3.5rem)] gap-0">
+    <div className="flex h-[calc(100vh-4rem)] gap-0">
       {!leftPanelOpen && (
         <button
           onClick={() => setLeftPanelOpen(true)}
-          className="shrink-0 w-8 border-r bg-muted/30 hover:bg-muted/50 flex items-center justify-center transition-colors"
+          className="shrink-0 w-10 bg-sidebar border-r border-border hover:bg-secondary flex items-start justify-center pt-4 transition-colors"
           title="Buka panel chapter"
         >
           <PanelLeftOpen className="size-4 text-muted-foreground" />
@@ -289,28 +294,33 @@ export default function AdminChapterEditorPage({
       )}
 
       {leftPanelOpen && (
-        <aside className="w-72 shrink-0 border-r bg-muted/30 flex flex-col relative">
-          <button
-            onClick={() => setLeftPanelOpen(false)}
-            className="absolute -right-6 top-2 z-10 size-5 rounded-r-md border border-l-0 bg-muted/30 hover:bg-muted/50 flex items-center justify-center transition-colors"
-            title="Tutup panel chapter"
-          >
-            <PanelLeftClose className="size-3 text-muted-foreground" />
-          </button>
-
-          <div className="flex items-center justify-between px-3 h-10 border-b shrink-0">
-            <span className="text-xs font-medium text-muted-foreground">
-              {chapters.length} Chapter
-            </span>
-            <Button variant="ghost" size="icon" className="size-6" asChild>
-              <Link href={`/nulis/karya/${work.id}/chapter/create`}>
-                <PlusCircle className="size-3.5" />
+        <aside className="w-72 shrink-0 bg-sidebar border-r border-border flex flex-col">
+          <div className="flex items-center justify-between gap-2 px-4 pt-4 pb-3 shrink-0">
+            <div className="min-w-0">
+              <p className="text-[15px] font-semibold tracking-[-0.02em]">Chapter</p>
+              <p className="text-[12px] text-muted-foreground tabular-nums">{chapters.length} chapter</p>
+            </div>
+            <div className="flex items-center gap-1">
+              <Link
+                href={`/nulis/karya/${work.id}/chapter/create`}
+                aria-label="Tambah chapter"
+                title="Tambah chapter"
+                className="size-8 rounded-full bg-card shadow-sm text-primary flex items-center justify-center transition hover:brightness-95"
+              >
+                <Plus className="size-4" />
               </Link>
-            </Button>
+              <button
+                onClick={() => setLeftPanelOpen(false)}
+                className="size-8 rounded-full text-muted-foreground flex items-center justify-center transition hover:bg-secondary hover:text-foreground"
+                title="Tutup panel chapter"
+              >
+                <PanelLeftClose className="size-4" />
+              </button>
+            </div>
           </div>
-          <div className="flex-1 overflow-y-auto p-1.5 space-y-0.5">
+          <div className="flex-1 overflow-y-auto px-2.5 pb-3 space-y-0.5">
             {chapters.length === 0 && (
-              <p className="text-xs text-muted-foreground text-center py-8">
+              <p className="text-[13px] text-muted-foreground text-center py-8">
                 Belum ada chapter
               </p>
             )}
@@ -325,30 +335,36 @@ export default function AdminChapterEditorPage({
                   onDragLeave={handleDragLeave}
                   onDragEnd={handleDragEnd}
                   onDrop={(e) => handleDrop(e, index)}
-                  className={`group flex items-center gap-1.5 rounded-md px-2 py-1.5 text-xs transition-all cursor-pointer select-none ${
-                    dragIndex === index
-                      ? "opacity-30"
-                      : dragOverIndex === index && dragIndex !== index
-                      ? "border-t border-primary"
-                      : ""
-                  } ${
+                  className={cn(
+                    "group relative flex items-center gap-2 rounded-[14px] px-2.5 py-2 text-[13px] transition-all cursor-pointer select-none",
+                    dragIndex === index && "opacity-30",
+                    dragOverIndex === index &&
+                      dragIndex !== index &&
+                      "before:absolute before:inset-x-2 before:-top-px before:h-0.5 before:rounded-full before:bg-primary",
                     isActive
-                      ? "bg-primary/10 text-primary font-medium"
-                      : "text-muted-foreground hover:bg-accent/50"
-                  }`}
+                      ? "bg-card shadow-[var(--shadow-card)] text-foreground font-semibold"
+                      : "text-muted-foreground hover:bg-secondary hover:text-foreground"
+                  )}
                   onClick={() => router.push(`/nulis/karya/${work.id}/chapter/${ch.id}`)}
                 >
-                  <span className="shrink-0 cursor-grab active:cursor-grabbing text-muted-foreground/50 group-hover:text-muted-foreground transition-colors">
-                    <GripVertical className="size-3" />
+                  <span className="shrink-0 cursor-grab active:cursor-grabbing text-muted-foreground/40 group-hover:text-muted-foreground transition-colors">
+                    <GripVertical className="size-3.5" />
                   </span>
-                  <span className="shrink-0 tabular-nums w-4 text-center">{ch.chapterNumber}</span>
+                  <span
+                    className={cn(
+                      "shrink-0 tabular-nums w-5 text-center text-[12px] font-semibold",
+                      isActive ? "text-primary" : "text-muted-foreground"
+                    )}
+                  >
+                    {ch.chapterNumber}
+                  </span>
                   <span className="truncate flex-1">{ch.title || "(tanpa judul)"}</span>
                   {ch.isPremium ? (
-                    <Lock className="size-3 shrink-0 text-amber-500" />
+                    <Lock className="size-3.5 shrink-0" style={{ color: tones.amber }} />
                   ) : (
-                    <LockOpen className="size-3 shrink-0 text-muted-foreground/50" />
+                    <LockOpen className="size-3.5 shrink-0 text-muted-foreground/40" />
                   )}
-                  <ChevronRight className="size-3 shrink-0 -mr-1 opacity-0 group-hover:opacity-100 transition-opacity" />
+                  <ChevronRight className="size-3.5 shrink-0 -mr-1 opacity-0 group-hover:opacity-100 transition-opacity" />
                 </div>
               )
             })}
@@ -356,18 +372,19 @@ export default function AdminChapterEditorPage({
         </aside>
       )}
 
-      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-        <div className="shrink-0 p-6 pb-0">
-          <Input
+      <div className="flex-1 flex flex-col min-w-0 overflow-hidden bg-background">
+        <div className="shrink-0 px-8 pt-6 pb-2">
+          <input
             id="title"
             placeholder="Judul chapter..."
             value={title}
-              onChange={(e) => setDraft(prev => ({ ...prev, title: e.target.value }))}
-            className="h-7 text-sm border-0 border-b border-input rounded-none focus-visible:ring-0 focus-visible:border-primary px-0 font-bold"
+            onChange={(e) => setDraft(prev => ({ ...prev, title: e.target.value }))}
+            className="w-full bg-transparent border-0 outline-none p-0 text-2xl font-semibold tracking-[-0.02em] text-foreground placeholder:text-muted-foreground/50"
           />
+          <p className="mt-1 text-[12px] text-muted-foreground tabular-nums">Chapter #{chapterNumber}</p>
         </div>
 
-        <div className="flex-1 min-h-0 p-6 pt-4">
+        <div className="flex-1 min-h-0 px-6 pb-6 pt-3">
           <ChapterEditor
             content={content}
             onChange={(c) => setDraft(prev => ({ ...prev, content: c }))}
@@ -381,7 +398,7 @@ export default function AdminChapterEditorPage({
       {!rightPanelOpen && (
         <button
           onClick={() => setRightPanelOpen(true)}
-          className="shrink-0 w-8 border-l bg-muted/30 hover:bg-muted/50 flex items-center justify-center transition-colors"
+          className="shrink-0 w-10 bg-sidebar border-l border-border hover:bg-secondary flex items-start justify-center pt-4 transition-colors"
           title="Buka panel pengaturan"
         >
           <PanelRightOpen className="size-4 text-muted-foreground" />
@@ -389,132 +406,133 @@ export default function AdminChapterEditorPage({
       )}
 
       {rightPanelOpen && (
-        <aside className="w-72 shrink-0 border-l border-border/50 flex flex-col p-4 gap-4 overflow-y-auto relative">
-          <button
-            onClick={() => setRightPanelOpen(false)}
-            className="absolute -left-6 top-2 z-10 size-5 rounded-l-md border border-r-0 bg-muted/30 hover:bg-muted/50 flex items-center justify-center transition-colors"
-            title="Tutup panel pengaturan"
-          >
-            <PanelRightClose className="size-3 text-muted-foreground" />
-          </button>
-
-          <div className="space-y-1.5">
-            <Label className="text-xs text-muted-foreground uppercase tracking-wider">Status</Label>
-            <Select value={status} onValueChange={(v) => setDraft(prev => ({ ...prev, status: v as ChapterStatus }))}>
-              <SelectTrigger className="h-8 text-xs">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="DRAFT">
-                  <Badge variant="secondary" className="text-[10px] px-1.5 py-0">Draft</Badge>
-                </SelectItem>
-                <SelectItem value="PUBLISHED">
-                  <Badge variant="default" className="text-[10px] px-1.5 py-0">Published</Badge>
-                </SelectItem>
-              </SelectContent>
-            </Select>
+        <aside className="w-80 shrink-0 bg-sidebar border-l border-border flex flex-col overflow-y-auto">
+          <div className="flex items-center justify-between px-4 pt-4 pb-3 shrink-0">
+            <p className="text-[15px] font-semibold tracking-[-0.02em]">Pengaturan</p>
+            <button
+              onClick={() => setRightPanelOpen(false)}
+              className="size-8 rounded-full text-muted-foreground flex items-center justify-center transition hover:bg-secondary hover:text-foreground"
+              title="Tutup panel pengaturan"
+            >
+              <PanelRightClose className="size-4" />
+            </button>
           </div>
 
-          <div className="space-y-3">
-            <Label className="text-xs text-muted-foreground uppercase tracking-wider">Akses</Label>
-            <div className="flex items-center gap-2">
-              <Checkbox
-                id="isPremiumPanel"
-                checked={isPremium}
-                onCheckedChange={(checked) => setDraft(prev => ({ ...prev, isPremium: checked === true }))}
-              />
-              <Label htmlFor="isPremiumPanel" className="cursor-pointer text-xs">
-                Premium
-              </Label>
-            </div>
-            {isPremium && (
-              <div>
-                <Label htmlFor="pricePanel" className="text-[11px] text-muted-foreground">
-                  Harga (Rp)
-                </Label>
-                <Input
-                  id="pricePanel"
-                  type="number"
-                  value={price}
-                  onChange={(e) => setDraft(prev => ({ ...prev, price: e.target.value }))}
-                  className="h-7 text-sm mt-1"
-                  min={1000}
-                  step={500}
-                />
+          <div className="flex flex-col gap-3 px-3 pb-4">
+            <Panel title="Publikasi" className="rounded-[20px]" bodyClassName="space-y-4">
+              <div className="space-y-1.5">
+                <Label className="text-[13px] text-muted-foreground">Status</Label>
+                <Select value={status} onValueChange={(v) => setDraft(prev => ({ ...prev, status: v as ChapterStatus }))}>
+                  <SelectTrigger className="h-9 w-full rounded-full text-[13px]">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="DRAFT">
+                      <StatusPill tone="neutral">Draft</StatusPill>
+                    </SelectItem>
+                    <SelectItem value="PUBLISHED">
+                      <StatusPill tone="green">Published</StatusPill>
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
-            )}
-          </div>
 
-          <div className="space-y-1.5">
-            <Label className="text-xs text-muted-foreground uppercase tracking-wider">Info</Label>
-            <div className="text-xs space-y-1">
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Chapter</span>
-                <span className="tabular-nums">#{chapterNumber}</span>
+              <div className="space-y-2.5">
+                <Label className="text-[13px] text-muted-foreground">Akses</Label>
+                <label
+                  htmlFor="isPremiumPanel"
+                  className="flex items-center gap-2.5 rounded-[14px] bg-secondary px-3 py-2.5 cursor-pointer"
+                >
+                  <Checkbox
+                    id="isPremiumPanel"
+                    checked={isPremium}
+                    onCheckedChange={(checked) => setDraft(prev => ({ ...prev, isPremium: checked === true }))}
+                  />
+                  <span className="text-[13px] font-medium flex-1">Premium</span>
+                  {isPremium && <Lock className="size-3.5" style={{ color: tones.amber }} />}
+                </label>
+                {isPremium && (
+                  <div className="space-y-1.5">
+                    <Label htmlFor="pricePanel" className="text-[12px] text-muted-foreground">
+                      Harga (Rp)
+                    </Label>
+                    <Input
+                      id="pricePanel"
+                      type="number"
+                      value={price}
+                      onChange={(e) => setDraft(prev => ({ ...prev, price: e.target.value }))}
+                      className="h-9 rounded-full text-sm tabular-nums"
+                      min={1000}
+                      step={500}
+                    />
+                  </div>
+                )}
+              </div>
+            </Panel>
+
+            <Panel title="Info" className="rounded-[20px]" bodyClassName="pt-1">
+              <div className="divide-y divide-border">
+                <InfoRow label="Chapter">
+                  <span className="tabular-nums">#{chapterNumber}</span>
+                </InfoRow>
+                {existingChapter && (
+                  <InfoRow label="Dibaca">
+                    <span className="tabular-nums">{existingChapter.readCount.toLocaleString("id-ID")}x</span>
+                  </InfoRow>
+                )}
               </div>
               {title && (
-                <div>
-                  <span className="text-muted-foreground">Slug</span>
-                  <code className="block text-[11px] mt-0.5 text-accent break-all">/{chapterSlug}</code>
+                <div className="mt-2 rounded-[14px] bg-secondary px-3 py-2">
+                  <p className="text-[12px] text-muted-foreground">Slug</p>
+                  <code className="block text-[12px] mt-0.5 text-primary break-all">/{chapterSlug}</code>
                 </div>
               )}
-              {existingChapter && (
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Dibaca</span>
-                  <span className="tabular-nums">{existingChapter.readCount}x</span>
-                </div>
-              )}
-            </div>
-          </div>
+            </Panel>
 
-          <div className="shrink-0 space-y-2">
-            <Label className="text-xs text-muted-foreground uppercase tracking-wider">Preview</Label>
-            <div className="flex justify-center">
-              <div className="w-full rounded-xl border-2 border-foreground/20 bg-background overflow-hidden shadow-lg">
-                <div className="bg-foreground/10 px-3 py-1.5 flex items-center justify-between border-b border-foreground/5">
-                  <span className="text-[9px] font-medium text-foreground/60 truncate max-w-[120px]">
+            <Panel title="Preview" className="rounded-[20px]">
+              <div className="w-full rounded-[18px] border border-border bg-background overflow-hidden">
+                <div className="bg-secondary px-3 py-1.5 flex items-center justify-between">
+                  <span className="text-[10px] font-semibold text-muted-foreground truncate max-w-[160px]">
                     {work.title}
                   </span>
                 </div>
                 <div className="h-[420px] overflow-y-auto">
                   {title ? (
                     <div className="p-3">
-                      <h3 className="text-[11px] font-semibold leading-tight mb-2">{title}</h3>
+                      <h3 className="text-[12px] font-semibold leading-tight mb-2">{title}</h3>
                       <div
                         className="text-[10px] leading-relaxed text-muted-foreground prose prose-sm max-w-none"
                         dangerouslySetInnerHTML={{ __html: content || "<p class='text-muted-foreground/50 italic'>Mulai menulis...</p>" }}
                       />
                     </div>
                   ) : (
-                    <div className="p-3 text-[10px] text-muted-foreground/50 italic text-center py-16">
+                    <div className="p-3 text-[11px] text-muted-foreground/60 italic text-center py-16">
                       Tulis judul & konten...
                     </div>
                   )}
                 </div>
-                <div className="bg-foreground/[0.03] border-t border-foreground/5 px-1.5 py-1 flex items-center justify-between">
-                  <div className="flex items-center gap-1 text-muted-foreground/40">
+                <div className="bg-secondary px-2 py-1.5 flex items-center justify-between text-muted-foreground/60">
+                  <div className="flex items-center gap-1">
                     <ChevronLeft className="size-3.5" />
-                    <span className="text-[8px] font-medium">Prev</span>
+                    <span className="text-[9px] font-medium">Prev</span>
                   </div>
-                  <div className="flex items-center gap-0.5">
-                    <List className="size-3 text-muted-foreground/40" />
-                  </div>
-                  <SlidersHorizontal className="size-3 text-muted-foreground/40" />
-                  <div className="flex items-center gap-1 text-muted-foreground/40">
-                    <span className="text-[8px] font-medium">Next</span>
+                  <List className="size-3" />
+                  <SlidersHorizontal className="size-3" />
+                  <div className="flex items-center gap-1">
+                    <span className="text-[9px] font-medium">Next</span>
                     <ChevronRight className="size-3.5" />
                   </div>
                 </div>
               </div>
-            </div>
+            </Panel>
           </div>
         </aside>
       )}
 
       <Dialog open={reorderDialogOpen} onOpenChange={setReorderDialogOpen}>
-        <DialogContent className="max-w-sm">
+        <DialogContent className="max-w-sm rounded-[24px]">
           <DialogHeader>
-            <DialogTitle>Sortir Chapter?</DialogTitle>
+            <DialogTitle>Sortir chapter?</DialogTitle>
             <DialogDescription>
               Urutan chapter akan diubah. Lanjutkan?
             </DialogDescription>
@@ -527,7 +545,7 @@ export default function AdminChapterEditorPage({
               </p>
               <div className="flex flex-wrap gap-1 mt-1">
                 {pendingReorder.result.slice(0, 6).map((ch) => (
-                  <span key={ch.id} className="px-1.5 py-0.5 rounded bg-muted text-[11px]">
+                  <span key={ch.id} className="px-2 py-0.5 rounded-full bg-secondary text-[11px] text-foreground">
                     {ch.chapterNumber}. {ch.title.slice(0, 12)}{ch.title.length > 12 ? "…" : ""}
                   </span>
                 ))}
@@ -540,12 +558,12 @@ export default function AdminChapterEditorPage({
             </div>
           )}
           <DialogFooter>
-            <Button variant="outline" size="sm" onClick={handleCancelReorder}>
+            <Button variant="secondary" size="sm" onClick={handleCancelReorder}>
               Batal
             </Button>
             <Button size="sm" onClick={handleConfirmReorder} disabled={reorderMutation.isPending}>
               {reorderMutation.isPending ? <Loader2 className="size-4 animate-spin" /> : null}
-              Ya, Sortir
+              Ya, sortir
             </Button>
           </DialogFooter>
         </DialogContent>

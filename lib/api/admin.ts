@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query"
+import { useQuery, keepPreviousData } from "@tanstack/react-query"
 import api from "@/lib/axios"
 import { apiFetch } from "@/lib/axios"
 import type { AdminStats, AdminUser, Purchase } from "@/data/admin-types"
@@ -170,6 +170,8 @@ export function useAdminOrders(params?: OrderParams) {
     queryKey: adminKeys.orders(keyParams),
     queryFn: () => fetchAdminOrders(params),
     staleTime: 0,
+    // Keep the current rows on screen while a new search/filter/page loads.
+    placeholderData: keepPreviousData,
   })
 }
 
@@ -179,6 +181,8 @@ export function useAdminUsers(params?: UserParams) {
     queryKey: adminKeys.users(keyParams),
     queryFn: () => fetchAdminUsers(params),
     staleTime: 0,
+    // Keep the current rows on screen while a new search/filter/page loads.
+    placeholderData: keepPreviousData,
   })
 }
 

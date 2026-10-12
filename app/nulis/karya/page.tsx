@@ -1,13 +1,14 @@
 "use client"
 
+import { StatusPill, workStatusTone, workStatusLabel } from "@/components/admin/tint"
+import { AdminPageTitle } from "@/components/admin/AdminPageTitle"
 import { useState, useEffect } from "react"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { useAdminHeaderActions } from "@/components/admin/AdminHeader"
 import Link from "next/link"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { TablePanel, SearchInput, FilterPills, Toolbar, EmptyState, PageLoader } from "@/components/admin/ui"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import {
   DropdownMenu,
@@ -26,9 +27,9 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
-import { PlusCircle, Search, MoreHorizontal, Edit, Eye, Trash2, Loader2 } from "lucide-react"
+import { PlusCircle, MoreHorizontal, Edit, Eye, Trash2, BookOpen } from "lucide-react"
 import { useAdminWorks, deleteWork, worksKeys, type WorkWithReads } from "@/lib/api/works"
-import type { WorkStatus, Work } from "@/data/types"
+import type { WorkStatus } from "@/data/types"
 
 export default function AdminWorksPage() {
   const { setActions } = useAdminHeaderActions()
@@ -39,7 +40,7 @@ export default function AdminWorksPage() {
       <Button asChild>
         <Link href="/nulis/karya/baru">
           <PlusCircle className="size-4" />
-          Tambah Karya
+          Tambah karya
         </Link>
       </Button>
     )
@@ -67,40 +68,25 @@ export default function AdminWorksPage() {
     return matchSearch && matchStatus
   })
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center py-20">
-        <Loader2 className="size-8 animate-spin text-muted-foreground" />
-      </div>
-    )
-  }
+  const countBy = (status: WorkStatus) => works.filter((w) => w.status === status).length
+  const statusOptions: { value: WorkStatus | "ALL"; label: string; count: number }[] = [
+    { value: "ALL", label: "Semua", count: works.length },
+    { value: "DRAFT", label: "Draft", count: countBy("DRAFT") },
+    { value: "ONGOING", label: "Ongoing", count: countBy("ONGOING") },
+    { value: "COMPLETED", label: "Selesai", count: countBy("COMPLETED") },
+  ]
+
+  if (isLoading) return <PageLoader />
 
   return (
-    <div className="space-y-4 p-4">
-      <div className="flex items-center gap-3">
-        <div className="relative flex-1 max-w-sm">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
-          <Input
-            placeholder="Cari judul karya..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="pl-9"
-          />
-        </div>
-        <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as WorkStatus | "ALL")}>
-          <SelectTrigger className="w-[150px]">
-            <SelectValue placeholder="Semua Status" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="ALL">Semua Status</SelectItem>
-            <SelectItem value="DRAFT">Draft</SelectItem>
-            <SelectItem value="ONGOING">Ongoing</SelectItem>
-            <SelectItem value="COMPLETED">Selesai</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
+    <div className="space-y-5 px-6 pb-10">
+      <AdminPageTitle title="Karya" description={`${works.length} karya · kelola cerita, chapter, dan paket`} />
+      <Toolbar>
+        <SearchInput value={search} onChange={setSearch} placeholder="Cari judul karya..." delay={200} />
+        <FilterPills value={statusFilter} onChange={setStatusFilter} options={statusOptions} />
+      </Toolbar>
 
-      <div className="rounded-md border">
+      <TablePanel>
         <Table>
           <TableHeader>
             <TableRow>
@@ -108,15 +94,15 @@ export default function AdminWorksPage() {
               <TableHead>Status</TableHead>
               <TableHead>Genre</TableHead>
               <TableHead className="text-center">Chapter</TableHead>
-              <TableHead className="text-right">Total Dibaca</TableHead>
+              <TableHead className="text-right">Total dibaca</TableHead>
               <TableHead className="w-[60px]"></TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {filtered.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
-                  Tidak ada karya ditemukan.
+                <TableCell colSpan={6}>
+                  <EmptyState icon={BookOpen} title="Tidak ada karya ditemukan." />
                 </TableCell>
               </TableRow>
             ) : (
@@ -125,24 +111,23 @@ export default function AdminWorksPage() {
                   <TableCell>
                     <div className="flex items-center gap-3">
                       {work.coverUrl.startsWith("http") || work.coverUrl.startsWith("data:") ? (
-                        <img src={work.coverUrl} alt={work.title} className="w-10 h-14 rounded object-cover shrink-0" />
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={work.coverUrl} alt={work.title} className="w-10 h-14 rounded-lg object-cover shrink-0" />
                       ) : (
-                        <div className="w-10 h-14 rounded bg-gradient-to-br from-accent/40 to-accent/10 flex items-center justify-center text-[10px] font-medium text-accent shrink-0">
+                        <div className="w-10 h-14 rounded-lg bg-secondary flex items-center justify-center text-sm font-semibold text-muted-foreground shrink-0">
                           {work.title.charAt(0)}
                         </div>
                       )}
                       <div className="min-w-0">
-                        <Link href={`/nulis/karya/${work.id}`} className="font-medium hover:text-primary transition-colors block truncate">
+                        <Link href={`/nulis/karya/${work.id}`} className="text-[15px] font-semibold hover:text-primary transition-colors block truncate">
                           {work.title}
                         </Link>
-                        <p className="text-xs text-muted-foreground truncate">/{work.slug}</p>
+                        <p className="text-[13px] text-muted-foreground truncate">/{work.slug}</p>
                       </div>
                     </div>
                   </TableCell>
                   <TableCell>
-                    <Badge variant={work.status === "DRAFT" ? "secondary" : work.status === "ONGOING" ? "default" : "outline"}>
-                      {work.status === "DRAFT" ? "Draft" : work.status === "ONGOING" ? "Ongoing" : "Selesai"}
-                    </Badge>
+                    <StatusPill tone={workStatusTone[work.status]}>{workStatusLabel[work.status]}</StatusPill>
                   </TableCell>
                   <TableCell>
                     <div className="flex flex-wrap gap-1">
@@ -154,12 +139,12 @@ export default function AdminWorksPage() {
                       )}
                     </div>
                   </TableCell>
-                  <TableCell className="text-center">{work.totalChapters}</TableCell>
-                  <TableCell className="text-right text-muted-foreground">{(work.totalReads ?? 0).toLocaleString("id-ID")}</TableCell>
+                  <TableCell className="text-center tabular-nums">{work.totalChapters}</TableCell>
+                  <TableCell className="text-right text-muted-foreground tabular-nums">{(work.totalReads ?? 0).toLocaleString("id-ID")}</TableCell>
                   <TableCell>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" className="size-8">
+                        <Button variant="ghost" size="icon" className="size-8 rounded-full">
                           <MoreHorizontal className="size-4" />
                         </Button>
                       </DropdownMenuTrigger>
@@ -167,7 +152,7 @@ export default function AdminWorksPage() {
                         <DropdownMenuItem asChild>
                           <Link href={`/nulis/karya/${work.id}`}>
                             <Eye className="size-4" />
-                            Lihat Detail
+                            Lihat detail
                           </Link>
                         </DropdownMenuItem>
                         <DropdownMenuItem asChild>
@@ -189,16 +174,16 @@ export default function AdminWorksPage() {
             )}
           </TableBody>
         </Table>
-      </div>
+      </TablePanel>
 
-      <div className="flex items-center justify-between text-sm text-muted-foreground">
-        <p>Menampilkan {filtered.length} dari {works.length} karya</p>
-      </div>
+      <p className="text-[13px] text-muted-foreground">
+        Menampilkan {filtered.length} dari {works.length} karya
+      </p>
 
       <AlertDialog open={!!deleteTarget} onOpenChange={(open) => !open && setDeleteTarget(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Hapus Karya</AlertDialogTitle>
+            <AlertDialogTitle>Hapus karya</AlertDialogTitle>
             <AlertDialogDescription>
               Yakin ingin menghapus &ldquo;{deleteTarget?.title}&rdquo;? Karya akan di-soft delete dan bisa dipulihkan.
             </AlertDialogDescription>
