@@ -1,5 +1,14 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query"
+import { isAxiosError } from "axios"
 import api from "@/lib/axios"
+
+export function getUploadErrorMessage(error: unknown): string {
+  if (isAxiosError<{ error?: string; detail?: string }>(error) && error.response?.data?.error) {
+    const { error: message, detail } = error.response.data
+    return detail ? `${message} (${detail})` : message
+  }
+  return (error as Error)?.message ?? "Gagal upload file"
+}
 
 export async function uploadFile(
   file: File,
@@ -9,10 +18,11 @@ export async function uploadFile(
   onProgress?: (percent: number) => void,
 ) {
   const formData = new FormData()
-  formData.append("file", file)
+  // Field teks harus dikirim sebelum file
   formData.append("type", type)
   formData.append("workId", workId)
   if (chapterId) formData.append("chapterId", chapterId)
+  formData.append("file", file)
 
   const { data } = await api.post<{ url: string }>("/api/nulis/upload", formData, {
     headers: { "Content-Type": "multipart/form-data" },

@@ -9,7 +9,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { useAdminImages, deleteAdminImage, adminKeys } from "@/lib/api/admin"
-import { uploadFile } from "@/lib/api/upload"
+import { uploadFile, getUploadErrorMessage } from "@/lib/api/upload"
 import { AlertCircle, Check, Loader2, Plus, RotateCw, Trash2, X } from "lucide-react"
 import { toast } from "sonner"
 
@@ -266,9 +266,9 @@ export default function ImageBucketModal({
         // Tunggu daftar gambar ter-refetch dulu supaya tidak ada kedipan saat preview diganti
         await queryClient.invalidateQueries({ queryKey: adminKeys.images(workId, chapterId) })
         removePending(tempId)
-      } catch {
+      } catch (error) {
         updatePending(tempId, { status: "error" })
-        toast.error(`Gagal upload ${file.name}`)
+        toast.error(`Gagal upload ${file.name}`, { description: getUploadErrorMessage(error) })
       }
     },
     [workId, chapterId, queryClient, updatePending, removePending],
