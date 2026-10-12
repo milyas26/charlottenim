@@ -18,6 +18,7 @@ import {
 } from "@/components/admin/tint"
 import { BookOpen, Users, Eye, BookMarked, ChevronRight, Package, ShoppingCart } from "lucide-react"
 import Link from "next/link"
+import Greeting from "@/components/Greeting"
 import { redirect } from "next/navigation"
 
 type WorkWithReads = Work & { totalReads: number }
@@ -34,16 +35,6 @@ async function getAdminCookie(): Promise<string | null> {
     return null
   }
 }
-
-function greeting() {
-  const hour = Number(
-    new Intl.DateTimeFormat("en-US", { hour: "numeric", hour12: false, timeZone: "Asia/Jakarta" }).format(new Date())
-  )
-  if (hour < 11) return "Selamat pagi"
-  if (hour < 15) return "Selamat siang"
-  if (hour < 19) return "Selamat sore"
-  return "Selamat malam"
-};
 
 function timeAgo(iso: string) {
   const diff = Date.now() - new Date(iso).getTime()
@@ -81,7 +72,7 @@ export default async function AdminDashboardPage() {
   return (
     <div className="space-y-5 px-6 pb-10">
       <AdminPageTitle
-        title={`${greeting()}, Charlotte.`}
+        title={<Greeting name="Charlotte" suffix="." />}
         description={
           pending > 0
             ? `Ada ${pending} transaksi menunggu verifikasi di antara order terbaru.`

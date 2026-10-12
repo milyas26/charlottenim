@@ -2,7 +2,7 @@ import { Mail, Phone, MapPin, ChevronRight } from "lucide-react";
 
 const contacts = [
   { icon: Mail, label: "Email", value: "charlottenimmm@gmail.com", href: "mailto:charlottenimmm@gmail.com" },
-  { icon: Phone, label: "Telepon / WhatsApp", value: "+62 858-3061-0640", href: "tel:+6285830610640" },
+  { icon: Phone, label: "Telepon / WhatsApp", value: "+62 858-3061-0640", href: "https://wa.me/6285830610640", external: true },
   { icon: MapPin, label: "Alamat", value: "Karet, Setiabudi, Jakarta Selatan" },
 ];
 
@@ -35,7 +35,10 @@ export default function ContactList() {
         return (
           <li key={c.label} style={{ borderTop: i > 0 ? "1px solid var(--border)" : undefined }}>
             {c.href ? (
-              <a href={c.href} className="flex items-center gap-3 px-4 py-3.5 transition-colors hover:bg-[var(--surface)] tap-feedback">
+              <a
+                href={c.href}
+                {...("external" in c && c.external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
+                className="flex items-center gap-3 px-4 py-3.5 transition-colors hover:bg-[var(--surface)] tap-feedback">
                 {inner}
               </a>
             ) : (

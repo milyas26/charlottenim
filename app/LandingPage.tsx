@@ -9,20 +9,13 @@ import HeroSection from "@/components/landing/HeroSection";
 import WorkCard from "@/components/landing/WorkCard";
 import SearchBar from "@/components/landing/SearchBar";
 import { SearchX } from "lucide-react";
+import Greeting from "@/components/Greeting";
 
 interface Props {
   works: Work[];
 }
 
 const ALL = "Semua";
-
-function greeting() {
-  const h = new Date().getHours();
-  if (h < 11) return "Selamat pagi";
-  if (h < 15) return "Selamat siang";
-  if (h < 19) return "Selamat sore";
-  return "Selamat malam";
-}
 
 export default function LandingPage({ works }: Props) {
   const { user } = useAuth();
@@ -58,9 +51,8 @@ export default function LandingPage({ works }: Props) {
 
       <main className="max-w-[480px] mx-auto px-4 pt-3 pb-28 relative z-[1]">
         <div className="mb-5">
-          {/* Greeting depends on the viewer's clock, so server and client text may differ. */}
-          <p className="text-[13px]" style={{ color: "var(--muted)" }} suppressHydrationWarning>
-            {greeting()}{firstName ? `, ${firstName}` : ""}
+          <p className="text-[13px]" style={{ color: "var(--muted)" }}>
+            <Greeting name={firstName} />
           </p>
           <h2 className="font-title text-2xl font-semibold leading-tight mt-0.5" style={{ color: "var(--foreground)" }}>
             Mau baca apa hari ini?

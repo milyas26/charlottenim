@@ -1,7 +1,6 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import Link from "next/link";
 import Logo from "@/components/Logo";
 import ContactList from "@/components/layout/ContactList";
 
@@ -20,11 +19,6 @@ export default function Footer() {
         </p>
         <div className="mt-6 text-left">
           <ContactList />
-        </div>
-        <div className="flex items-center justify-center gap-4 mt-5 text-[13px] font-medium">
-          <Link href="/" style={{ color: "var(--foreground)" }} className="hover:opacity-70">Beranda</Link>
-          <Link href="/shop" style={{ color: "var(--foreground)" }} className="hover:opacity-70">Toko</Link>
-          <Link href="/contact" style={{ color: "var(--foreground)" }} className="hover:opacity-70">Kontak</Link>
         </div>
         <p className="text-[11px] mt-5" style={{ color: "var(--muted)" }}>
           © {new Date().getFullYear()} Charlottenimmm
