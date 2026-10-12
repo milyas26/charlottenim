@@ -43,7 +43,7 @@ function greeting() {
   if (hour < 15) return "Selamat siang"
   if (hour < 19) return "Selamat sore"
   return "Selamat malam"
-}
+};
 
 function timeAgo(iso: string) {
   const diff = Date.now() - new Date(iso).getTime()
