@@ -7,9 +7,15 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import Logo from "@/components/Logo";
-import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRouter } from "next/navigation";
+import { Bookmark, MessageCircle, Sparkles } from "lucide-react";
+
+const perks = [
+  { icon: Bookmark, text: "Progres baca tersimpan otomatis" },
+  { icon: MessageCircle, text: "Ikut ngobrol di kolom komentar" },
+  { icon: Sparkles, text: "Buka chapter & paket premium" },
+];
 
 export default function LoginDialog({ children }: { children: React.ReactNode }) {
   const { signInWithGoogle } = useAuth();
@@ -18,21 +24,35 @@ export default function LoginDialog({ children }: { children: React.ReactNode })
   return (
     <Dialog>
       <DialogTrigger asChild>{children}</DialogTrigger>
-      <DialogContent className="w-[90vw] max-w-sm rounded-xl p-8">
-        <DialogTitle className="text-center">
-          <Logo />
+      <DialogContent className="font-ui w-[90vw] max-w-sm rounded-3xl p-7">
+        <DialogTitle className="flex justify-center">
+          <Logo href={undefined} />
         </DialogTitle>
-        <p
-          className="text-center text-sm -mt-2"
-          style={{ color: "var(--muted)" }}
-        >
-          Masuk untuk membaca karya favoritmu
+        <p className="text-center text-sm -mt-1" style={{ color: "var(--muted)" }}>
+          Masuk untuk lanjut membaca cerita favoritmu.
         </p>
 
-        <Button
+        <ul className="mt-2 space-y-2.5">
+          {perks.map((p) => (
+            <li key={p.text} className="flex items-center gap-3 text-[13px]" style={{ color: "var(--foreground)" }}>
+              <span
+                className="size-8 shrink-0 rounded-full flex items-center justify-center"
+                style={{
+                  backgroundColor: "color-mix(in srgb, var(--accent) 12%, transparent)",
+                  color: "var(--accent)",
+                }}
+              >
+                <p.icon className="size-4" />
+              </span>
+              {p.text}
+            </li>
+          ))}
+        </ul>
+
+        <button
           type="button"
-          variant="outline"
-          className="mt-4 w-full gap-2"
+          className="mt-3 w-full h-12 rounded-xl inline-flex items-center justify-center gap-2.5 text-sm font-semibold transition-opacity hover:opacity-90 tap-feedback"
+          style={{ backgroundColor: "var(--foreground)", color: "var(--background)" }}
           onClick={async () => {
             try {
               await signInWithGoogle();
@@ -49,7 +69,7 @@ export default function LoginDialog({ children }: { children: React.ReactNode })
             <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
           </svg>
           Lanjutkan dengan Google
-        </Button>
+        </button>
       </DialogContent>
     </Dialog>
   );

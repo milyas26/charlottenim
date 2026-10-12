@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono, Playfair_Display, Lora } from "next/font/google";
+import { Geist, Geist_Mono, Playfair_Display, Lora, Plus_Jakarta_Sans, Literata } from "next/font/google";
 import { Providers } from "@/contexts";
 import { Toaster } from "sonner";
 import { SerwistProvider } from "@serwist/turbopack/react";
@@ -28,6 +28,18 @@ const lora = Lora({
   variable: "--font-lora",
   subsets: ["latin"],
   weight: ["400", "500"],
+});
+
+const jakarta = Plus_Jakarta_Sans({
+  variable: "--font-jakarta",
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+});
+
+const literata = Literata({
+  variable: "--font-literata",
+  subsets: ["latin"],
+  weight: ["500", "600", "700"],
 });
 
 const APP_NAME = "Charlottenimmm";
@@ -70,7 +82,7 @@ export default function RootLayout({
   return (
     <html
       lang="id"
-      className={`${geistSans.variable} ${geistMono.variable} ${playfairDisplay.variable} ${lora.variable} h-full antialiased`}
+      className={`${geistSans.variable} ${geistMono.variable} ${playfairDisplay.variable} ${lora.variable} ${jakarta.variable} ${literata.variable} h-full antialiased`}
       suppressHydrationWarning
     >
       <head>

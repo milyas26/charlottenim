@@ -16,6 +16,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { createPayment } from "@/lib/api/payments";
 import { fetchChapterBundles } from "@/lib/api/bundles";
 import type { ChapterBundleInfo } from "@/data/types";
+import { Lock, Package, ChevronRight } from "lucide-react";
 
 interface Props {
   price: number;
@@ -77,28 +78,31 @@ export default function PaywallOverlay({ price, chapterId, workSlug, chapterSlug
 
   return (
     <div
-      className="rounded-2xl p-4 text-center"
+      className="font-ui rounded-3xl px-5 py-6 text-center"
       style={{
         backgroundColor: "var(--rm-surface)",
         border: "1px solid var(--rm-border)",
       }}
     >
       <div
-        className="inline-flex items-center justify-center w-12 h-12 rounded-full mb-3 text-xl"
-        style={{ backgroundColor: "color-mix(in srgb, var(--rm-accent) 10%, transparent)" }}
+        className="inline-flex items-center justify-center size-12 rounded-full mb-3"
+        style={{
+          backgroundColor: "color-mix(in srgb, var(--rm-accent) 14%, transparent)",
+          color: "var(--rm-accent)",
+        }}
       >
-        🔒
+        <Lock className="size-5" />
       </div>
 
       <h3
-        className="text-lg font-bold mb-2 font-[family-name:var(--font-display)]"
+        className="font-title text-xl font-semibold mb-1.5"
         style={{ color: "var(--rm-fg)" }}
       >
         Chapter Premium
       </h3>
 
       <p
-        className="text-sm mb-3 leading-relaxed max-w-xs mx-auto"
+        className="text-sm mb-5 leading-relaxed max-w-xs mx-auto"
         style={{ color: "var(--rm-muted)" }}
       >
         Beli chapter ini untuk melanjutkan membaca. Satu kali beli, akses selamanya.
@@ -115,26 +119,26 @@ export default function PaywallOverlay({ price, chapterId, workSlug, chapterSlug
           <button
             onClick={() => setConfirmOpen(true)}
             disabled={buyMutation.isPending}
-            className="w-full max-w-xs py-3 px-6 rounded-xl text-white font-semibold text-sm transition-opacity hover:opacity-90 tap-feedback disabled:opacity-60"
-            style={{ backgroundColor: "var(--rm-accent)" }}>
+            className="w-full max-w-xs h-12 px-6 rounded-xl font-semibold text-sm transition-opacity hover:opacity-90 tap-feedback disabled:opacity-60"
+            style={{ backgroundColor: "var(--rm-accent)", color: "var(--rm-bg)" }}>
             {buyMutation.isPending ? "Memproses..." : `Beli Chapter · ${formattedPrice}`}
           </button>
         </>
       ) : (
         <LoginDialog>
           <button
-            className="w-full max-w-xs py-3 px-6 rounded-xl text-white font-semibold text-sm transition-opacity hover:opacity-90 tap-feedback"
-            style={{ backgroundColor: "var(--rm-accent)" }}
+            className="w-full max-w-xs h-12 px-6 rounded-xl font-semibold text-sm transition-opacity hover:opacity-90 tap-feedback"
+            style={{ backgroundColor: "var(--rm-accent)", color: "var(--rm-bg)" }}
           >
-            Login untuk Beli &middot; {formattedPrice}
+            Masuk untuk Beli &middot; {formattedPrice}
           </button>
         </LoginDialog>
       )}
 
       {bundles.length > 0 && (
-        <div className="mt-4 pt-4" style={{ borderTop: "1px solid var(--rm-border)" }}>
+        <div className="mt-5 pt-5 max-w-xs mx-auto" style={{ borderTop: "1px solid var(--rm-border)" }}>
           <p className="text-xs mb-3" style={{ color: "var(--rm-muted)" }}>
-            Atau beli paket lebih hemat:
+            Atau ambil paket, lebih hemat:
           </p>
           <div className="space-y-2">
             {bundles.map((b) => {
@@ -148,14 +152,17 @@ export default function PaywallOverlay({ price, chapterId, workSlug, chapterSlug
                 <Link
                   key={b.id}
                   href={`/paket/${b.slug}`}
-                  className="w-full max-w-xs py-2.5 px-4 rounded-xl text-sm font-medium transition-opacity hover:opacity-90 tap-feedback flex items-center justify-between mx-auto"
+                  className="w-full py-3 px-3.5 rounded-xl text-sm font-medium transition-opacity hover:opacity-90 tap-feedback flex items-center gap-2.5 text-left"
                   style={{
-                    backgroundColor: "color-mix(in srgb, var(--rm-accent) 10%, transparent)",
-                    color: "var(--rm-accent)",
+                    backgroundColor: "var(--rm-bg)",
+                    border: "1px solid var(--rm-border)",
+                    color: "var(--rm-fg)",
                   }}
                 >
-                  <span className="truncate mr-2">{b.title}</span>
-                  <span className="font-semibold shrink-0">{bundlePrice}</span>
+                  <Package className="size-4 shrink-0" style={{ color: "var(--rm-accent)" }} />
+                  <span className="truncate flex-1">{b.title}</span>
+                  <span className="font-semibold shrink-0" style={{ color: "var(--rm-accent)" }}>{bundlePrice}</span>
+                  <ChevronRight className="size-4 shrink-0" style={{ color: "var(--rm-muted)" }} />
                 </Link>
               )
             })}
@@ -164,9 +171,9 @@ export default function PaywallOverlay({ price, chapterId, workSlug, chapterSlug
       )}
 
       <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
-        <DialogContent className="w-[90vw] max-w-sm rounded-xl p-6">
+        <DialogContent className="font-ui w-[90vw] max-w-sm rounded-2xl p-6">
           <DialogHeader>
-            <DialogTitle className="font-[family-name:var(--font-display)] tracking-tight">
+            <DialogTitle className="font-title">
               Konfirmasi Pembelian
             </DialogTitle>
             <DialogDescription className="text-sm" style={{ color: "var(--rm-muted)" }}>

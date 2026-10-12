@@ -1,8 +1,10 @@
 "use client";
 
+import { useState } from "react";
+import Link from "next/link";
 import { Chapter } from "@/data/types";
 import { formatCompactNumber } from "@/lib/formatNumber";
-import { CheckCircle } from "lucide-react";
+import { ArrowDownUp, CheckCircle2, Lock, MessageCircle, Eye } from "lucide-react";
 
 interface Props {
   chapters: Chapter[];
@@ -11,91 +13,95 @@ interface Props {
 }
 
 export default function ChapterList({ chapters, workSlug, unlockedChapterIds }: Props) {
-  const unlockedSet = new Set(unlockedChapterIds)
+  const unlockedSet = new Set(unlockedChapterIds);
+  const [newestFirst, setNewestFirst] = useState(false);
+  const ordered = newestFirst ? [...chapters].reverse() : chapters;
 
   return (
-    <div>
-      <h2
-        className="text-base font-bold mb-3 font-[family-name:var(--font-display)]"
-        style={{ color: "var(--foreground)" }}
-      >
-        Daftar Chapter
-      </h2>
+    <section>
+      <div className="flex items-center justify-between mb-3">
+        <h2 className="text-base font-semibold" style={{ color: "var(--foreground)" }}>
+          Daftar Chapter
+          <span className="ml-1.5 text-xs font-normal" style={{ color: "var(--muted)" }}>
+            {chapters.length}
+          </span>
+        </h2>
+        {chapters.length > 1 && (
+          <button
+            type="button"
+            onClick={() => setNewestFirst((v) => !v)}
+            className="inline-flex items-center gap-1.5 text-xs font-medium px-2.5 h-7 rounded-full transition-colors hover:bg-[var(--surface)] tap-feedback"
+            style={{ color: "var(--muted)" }}
+          >
+            <ArrowDownUp className="size-3.5" />
+            {newestFirst ? "Terbaru" : "Terlama"}
+          </button>
+        )}
+      </div>
 
-      <div className="space-y-2">
-        {chapters.map((chapter) => {
-          const isUnlocked = unlockedSet.has(chapter.id)
+      <ul className="soft-card rounded-2xl overflow-hidden">
+        {ordered.map((chapter, i) => {
+          const isUnlocked = unlockedSet.has(chapter.id);
+          const locked = chapter.isPremium && !isUnlocked;
 
           return (
-          <div key={chapter.id}>
-          <a
-            href={`/baca/${workSlug}/${chapter.slug}`}
-            className="flex items-center justify-between px-3.5 py-3 rounded-xl transition-all hover:bg-[var(--surface)] group tap-feedback"
-            style={{ border: "1px solid var(--border)" }}
-          >
-            <div className="flex items-center gap-3 min-w-0">
-              <span
-                className="text-xs font-bold w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 font-[family-name:var(--font-sans)]"
-                style={{
-                  backgroundColor: chapter.isPremium && !isUnlocked
-                    ? "color-mix(in srgb, var(--accent) 12%, transparent)"
-                    : "color-mix(in srgb, #5B8C5A 12%, transparent)",
-                  color: chapter.isPremium && !isUnlocked ? "var(--accent)" : "#5B8C5A",
-                }}
+            <li key={chapter.id} style={{ borderTop: i > 0 ? "1px solid var(--border)" : undefined }}>
+              <Link
+                href={`/baca/${workSlug}/${chapter.slug}`}
+                className="flex items-center gap-3.5 px-4 py-3.5 transition-colors hover:bg-[var(--surface)] group tap-feedback"
               >
-                {chapter.chapterNumber}
-              </span>
-              <div className="min-w-0">
-                <p
-                  className="text-sm font-semibold leading-snug truncate group-hover:text-[var(--accent)] transition-colors"
-                  style={{ color: "var(--foreground)" }}
+                <span
+                  className="w-6 shrink-0 text-center text-sm font-semibold tabular-nums"
+                  style={{ color: "var(--muted)" }}
                 >
-                  {chapter.title}
-                </p>
-                <p className="text-[11px] font-medium" style={{ color: "var(--muted)" }}>
-                  {formatCompactNumber(chapter.readCount)} pembaca · {chapter.commentCount.toLocaleString("id-ID")} komentar
-                </p>
-              </div>
-            </div>
+                  {chapter.chapterNumber}
+                </span>
 
-            {chapter.isPremium ? (
-              isUnlocked ? (
-                <span
-                  className="text-[11px] font-semibold px-2.5 py-1 rounded-md flex-shrink-0 font-[family-name:var(--font-sans)] flex items-center gap-1"
-                  style={{
-                    backgroundColor: "color-mix(in srgb, #5B8C5A 12%, transparent)",
-                    color: "#5B8C5A",
-                  }}
-                >
-                  <CheckCircle className="size-3" />
-                  Dibeli
-                </span>
-              ) : (
-                <span
-                  className="text-[11px] font-semibold px-2.5 py-1 rounded-md flex-shrink-0 font-[family-name:var(--font-sans)]"
-                  style={{
-                    backgroundColor: "color-mix(in srgb, var(--accent) 12%, transparent)",
-                    color: "var(--accent)",
-                  }}
-                >
-                  Rp {chapter.price.toLocaleString("id-ID")}
-                </span>
-              )
-            ) : (
-              <span
-                className="text-[11px] font-semibold px-2.5 py-1 rounded-md flex-shrink-0 font-[family-name:var(--font-sans)]"
-                style={{
-                  backgroundColor: "color-mix(in srgb, #5B8C5A 12%, transparent)",
-                  color: "#5B8C5A",
-                }}
-              >
-                Gratis
-              </span>
-            )}
-          </a>
-          </div>
-        )})}
-      </div>
-    </div>
+                <div className="min-w-0 flex-1">
+                  <p
+                    className="text-sm font-medium leading-snug truncate transition-colors group-hover:text-[var(--accent)]"
+                    style={{ color: "var(--foreground)" }}
+                  >
+                    {chapter.title}
+                  </p>
+                  <p className="flex items-center gap-2.5 text-[11px] mt-0.5" style={{ color: "var(--muted)" }}>
+                    <span className="inline-flex items-center gap-1">
+                      <Eye className="size-3" />
+                      {formatCompactNumber(chapter.readCount)}
+                    </span>
+                    <span className="inline-flex items-center gap-1">
+                      <MessageCircle className="size-3" />
+                      {chapter.commentCount.toLocaleString("id-ID")}
+                    </span>
+                  </p>
+                </div>
+
+                {locked ? (
+                  <span
+                    className="shrink-0 inline-flex items-center gap-1 text-[11px] font-semibold px-2.5 py-1 rounded-full"
+                    style={{
+                      backgroundColor: "color-mix(in srgb, var(--accent) 12%, transparent)",
+                      color: "var(--accent)",
+                    }}
+                  >
+                    <Lock className="size-3" />
+                    Rp {chapter.price.toLocaleString("id-ID")}
+                  </span>
+                ) : chapter.isPremium ? (
+                  <span className="shrink-0 inline-flex items-center gap-1 text-[11px] font-semibold text-[#5B8C5A]">
+                    <CheckCircle2 className="size-3.5" />
+                    Dibeli
+                  </span>
+                ) : (
+                  <span className="shrink-0 text-[11px] font-medium" style={{ color: "var(--muted)" }}>
+                    Gratis
+                  </span>
+                )}
+              </Link>
+            </li>
+          );
+        })}
+      </ul>
+    </section>
   );
 }

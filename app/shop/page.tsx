@@ -3,10 +3,33 @@
 import { useQuery } from "@tanstack/react-query"
 import { useAuth } from "@/contexts/AuthContext"
 import BottomNav from "@/components/layout/BottomNav"
+import PageHeader from "@/components/layout/PageHeader"
 import BundleCard from "@/components/shop/BundleCard"
 import { fetchPublicBundles } from "@/lib/api/bundles"
 import { fetchUserPurchases } from "@/lib/api/user"
-import { Loader2, Package, Book, BookOpen } from "lucide-react"
+import { Package, BookOpen } from "lucide-react"
+
+function EmptyState({ icon: Icon, title, text }: { icon: typeof Package; title: string; text: string }) {
+  return (
+    <div className="soft-card rounded-2xl px-6 py-10 text-center">
+      <div
+        className="size-12 rounded-2xl flex items-center justify-center mx-auto mb-3"
+        style={{
+          backgroundColor: "color-mix(in srgb, var(--accent) 12%, transparent)",
+          color: "var(--accent)",
+        }}
+      >
+        <Icon className="size-5" />
+      </div>
+      <p className="text-sm font-semibold" style={{ color: "var(--foreground)" }}>
+        {title}
+      </p>
+      <p className="text-xs mt-1" style={{ color: "var(--muted)" }}>
+        {text}
+      </p>
+    </div>
+  )
+}
 
 export default function ShopPage() {
   const { user } = useAuth()
@@ -25,58 +48,39 @@ export default function ShopPage() {
   const ownedBundleIds = new Set(purchases?.bundles?.map((b) => b.bundleId) ?? [])
 
   return (
-    <div className="min-h-screen bg-[var(--background)] flex flex-col">
-      <div className="flex-1 max-w-[480px] mx-auto w-full px-4 pb-24">
-        <div className="pt-6 pb-4">
-          <h1
-            className="text-xl font-bold font-[family-name:var(--font-display)] text-center tracking-wide"
-            style={{ color: "var(--foreground)" }}
-          >
-            Shop
-          </h1>
-          <div className="gold-rule max-w-[80px] mx-auto my-3" />
-        </div>
+    <div className="font-ui min-h-screen bg-[var(--background)] flex flex-col">
+      <div className="flex-1 max-w-[480px] mx-auto w-full px-4 pb-28">
+        <PageHeader title="Toko" subtitle="Paket chapter premium, lebih hemat dibanding beli satuan." />
 
         <section className="mb-8">
-          <div className="flex items-center gap-2 mb-3">
-            <Package className="size-5" style={{ color: "var(--accent)" }} />
-            <h2
-              className="text-base font-bold font-[family-name:var(--font-display)]"
-              style={{ color: "var(--foreground)" }}
-            >
-              Paket
+          <div className="flex items-baseline justify-between mb-3">
+            <h2 className="text-base font-semibold" style={{ color: "var(--foreground)" }}>
+              Paket Cerita
             </h2>
             {!isLoading && (
               <span className="text-xs" style={{ color: "var(--muted)" }}>
-                ({bundles.length})
+                {bundles.length} paket
               </span>
             )}
           </div>
 
           {isLoading ? (
-            <div className="flex items-center justify-center py-16">
-              <Loader2 className="size-6 animate-spin" style={{ color: "var(--muted)" }} />
+            <div className="space-y-3">
+              {[0, 1, 2].map((i) => (
+                <div key={i} className="soft-card rounded-2xl p-3 flex gap-4 animate-pulse">
+                  <div className="w-[68px] aspect-[2/3] rounded-md bg-[var(--surface)]" />
+                  <div className="flex-1 space-y-2 py-1">
+                    <div className="h-3 w-1/3 rounded bg-[var(--surface)]" />
+                    <div className="h-4 w-3/4 rounded bg-[var(--surface)]" />
+                    <div className="h-3 w-1/4 rounded bg-[var(--surface)]" />
+                  </div>
+                </div>
+              ))}
             </div>
           ) : bundles.length === 0 ? (
-            <div
-              className="rounded-2xl p-8 text-center"
-              style={{
-                backgroundColor: "var(--surface)",
-                border: "1px solid var(--border)",
-              }}
-            >
-              <div
-                className="size-12 rounded-full flex items-center justify-center mx-auto mb-3"
-                style={{ backgroundColor: "color-mix(in srgb, var(--accent) 10%, transparent)" }}
-              >
-                <Package className="size-6" style={{ color: "var(--accent)" }} />
-              </div>
-              <p className="text-sm" style={{ color: "var(--muted)" }}>
-                Belum ada paket tersedia.
-              </p>
-            </div>
+            <EmptyState icon={Package} title="Belum ada paket" text="Paket baru akan muncul di sini." />
           ) : (
-            <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-3">
               {bundles.map((bundle) => (
                 <BundleCard key={bundle.id} bundle={bundle} isOwned={ownedBundleIds.has(bundle.id)} />
               ))}
@@ -85,33 +89,10 @@ export default function ShopPage() {
         </section>
 
         <section>
-          <div className="flex items-center gap-2 mb-3">
-            <Book className="size-5" style={{ color: "var(--accent)" }} />
-            <h2
-              className="text-base font-bold font-[family-name:var(--font-display)]"
-              style={{ color: "var(--foreground)" }}
-            >
-              Buku
-            </h2>
-          </div>
-
-          <div
-            className="rounded-2xl p-8 text-center"
-            style={{
-              backgroundColor: "var(--surface)",
-              border: "1px solid var(--border)",
-            }}
-          >
-            <div
-              className="size-12 rounded-full flex items-center justify-center mx-auto mb-3"
-              style={{ backgroundColor: "color-mix(in srgb, var(--accent) 10%, transparent)" }}
-            >
-              <BookOpen className="size-6" style={{ color: "var(--accent)" }} />
-            </div>
-            <p className="text-sm" style={{ color: "var(--muted)" }}>
-              Segera hadir.
-            </p>
-          </div>
+          <h2 className="text-base font-semibold mb-3" style={{ color: "var(--foreground)" }}>
+            Buku Cetak
+          </h2>
+          <EmptyState icon={BookOpen} title="Segera hadir" text="Versi cetak sedang disiapkan. Nantikan, ya!" />
         </section>
       </div>
       <BottomNav />

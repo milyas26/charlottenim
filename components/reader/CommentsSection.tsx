@@ -83,23 +83,23 @@ export default function CommentsSection({ chapterId }: Props) {
   const formatTime = (id: string) => formattedTimes.get(id) ?? ""
 
   return (
-    <div className="px-4 pt-2.5 pb-3 min-h-[200px]">
+    <div className="font-ui px-4 pt-2 pb-4 min-h-[200px]">
       <h3
-        className="text-xs font-semibold uppercase tracking-wider mb-2"
+        className="text-base font-semibold mb-3"
         style={{ color: "var(--foreground)" }}
       >
         Komentar ({comments.length})
       </h3>
 
       {user ? (
-        <form onSubmit={handleSubmit} className="flex gap-2 mb-3">
+        <form onSubmit={handleSubmit} className="flex gap-2 mb-4">
           <input
             type="text"
             value={newComment}
             onChange={(e) => setNewComment(e.target.value)}
             placeholder="Tulis komentar..."
             maxLength={1000}
-            className="flex-1 px-3 py-2 rounded-xl text-xs outline-none transition-colors"
+            className="flex-1 h-10 px-4 rounded-full text-sm outline-none transition-shadow focus:ring-2 focus:ring-[var(--ring)]"
             style={{
               backgroundColor: "var(--surface)",
               border: "1px solid var(--border)",
@@ -109,7 +109,7 @@ export default function CommentsSection({ chapterId }: Props) {
           <button
             type="submit"
             disabled={!newComment.trim() || submitMutation.isPending}
-            className="px-3 py-1.5 rounded-lg text-[10px] font-semibold transition-all disabled:opacity-40"
+            className="h-10 px-4 rounded-full text-xs font-semibold transition-opacity disabled:opacity-40"
             style={{
               backgroundColor: "var(--accent)",
               color: "#fff",
@@ -121,25 +121,25 @@ export default function CommentsSection({ chapterId }: Props) {
         </form>
       ) : (
         <div
-          className="flex items-center justify-between gap-2 mb-3 px-3 py-2 rounded-xl"
+          className="flex items-center justify-between gap-2 mb-4 pl-4 pr-1.5 py-1.5 rounded-full"
           style={{
             backgroundColor: "var(--surface)",
             border: "1px solid var(--border)",
           }}
         >
           <span className="text-xs" style={{ color: "var(--muted)" }}>
-            Silakan login untuk menulis komentar.
+            Masuk untuk ikut berkomentar.
           </span>
           <LoginDialog>
             <button
               type="button"
-              className="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all hover:opacity-90"
+              className="h-8 px-4 rounded-full text-xs font-semibold transition-opacity hover:opacity-90"
               style={{
                 backgroundColor: "var(--accent)",
                 color: "#fff",
               }}
             >
-              Login
+              Masuk
             </button>
           </LoginDialog>
         </div>
@@ -154,7 +154,7 @@ export default function CommentsSection({ chapterId }: Props) {
           Belum ada komentar. Jadilah yang pertama!
         </p>
       ) : (
-        <div className="space-y-3 max-h-[420px] overflow-y-auto pr-1">
+        <div className="space-y-4 max-h-[420px] overflow-y-auto pr-1">
           {comments.map((c) => (
             <div key={c.id} className="flex gap-3">
               <Avatar className="size-8">

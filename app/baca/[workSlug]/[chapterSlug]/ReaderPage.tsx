@@ -20,8 +20,6 @@ interface Props {
   isUnlocked: boolean;
 }
 
-const gratisBg = "rgba(91, 140, 90, 0.1)";
-const gratisText = "#5B8C5A";
 const premiumBgLight = "rgba(184, 123, 92, 0.1)";
 const premiumBgDark = "rgba(212, 165, 116, 0.12)";
 
@@ -98,9 +96,9 @@ export default function ReaderPage({
   }
 
   return (
-    <div className="min-h-screen w-full flex justify-center bg-[var(--rm-bg)] animate-page-enter">
+    <div className="font-ui min-h-screen w-full flex justify-center bg-[var(--rm-bg)] animate-page-enter">
       <div
-        className="fixed top-0 left-0 right-0 h-[3px] z-50"
+        className="fixed top-0 left-0 h-[2px] z-50"
         style={{
           backgroundColor: "var(--rm-accent)",
           width: `${progress}%`,
@@ -110,7 +108,7 @@ export default function ReaderPage({
 
       <div className="w-full max-w-[480px] flex flex-col min-h-screen">
         <header
-          className="sticky top-0 z-40 px-5 py-3 flex items-center gap-3 backdrop-blur-md"
+          className="sticky top-0 z-40 px-2 h-14 flex items-center gap-1 backdrop-blur-md"
           style={{
             backgroundColor: "var(--rm-header-bg)",
             borderBottom: "1px solid var(--rm-border)",
@@ -119,43 +117,39 @@ export default function ReaderPage({
           <a
             href={`/karya/${work.slug}`}
             onClick={hapticTap}
-            className="flex-shrink-0 p-1.5 -ml-1.5 rounded-lg hover:bg-[var(--rm-surface)] transition-colors tap-feedback"
-            style={{ color: "var(--rm-muted)" }}
+            aria-label="Kembali ke detail karya"
+            className="size-10 flex-shrink-0 rounded-full flex items-center justify-center hover:bg-[var(--rm-surface)] transition-colors tap-feedback"
+            style={{ color: "var(--rm-fg)" }}
           >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M19 12H5M12 19l-7-7 7-7" />
             </svg>
           </a>
 
-          <div className="flex-1 min-w-0 flex items-center gap-2">
-            <span
-              className="text-[10px] font-bold tracking-wider px-1.5 py-0.5 rounded flex-shrink-0 font-[family-name:var(--font-sans)]"
-              style={{
-                backgroundColor: chapter.isPremium ? tagBgPremium : gratisBg,
-                color: chapter.isPremium ? "var(--rm-accent)" : gratisText,
-              }}
-            >
-              {chapter.chapterNumber}
-            </span>
-            <span className="text-sm font-semibold truncate" style={{ color: "var(--rm-fg)" }}>
-              {chapter.title}
-            </span>
+          <div className="flex-1 min-w-0 leading-tight">
+            <p className="text-[11px] truncate" style={{ color: "var(--rm-muted)" }}>
+              {work.title}
+            </p>
+            <p className="text-[13px] font-semibold truncate" style={{ color: "var(--rm-fg)" }}>
+              Chapter {chapter.chapterNumber}
+              <span className="font-normal" style={{ color: "var(--rm-muted)" }}> · {chapter.title}</span>
+            </p>
           </div>
 
           {chapter.isPremium && (
             <span
-              className="text-[9px] font-bold uppercase tracking-widest px-1.5 py-0.5 rounded flex-shrink-0"
+              className="mr-2 text-[10px] font-semibold px-2 py-0.5 rounded-full flex-shrink-0"
               style={{
                 backgroundColor: tagBgPremium,
                 color: "var(--rm-accent)",
               }}
             >
-              PREMIUM
+              Premium
             </span>
           )}
         </header>
 
-        <div className="flex-1 px-4 pt-4 pb-3">
+        <div className="flex-1 px-5 pt-4 pb-3">
           {paymentStatus === "success" && (
             <div
               className="rounded-xl p-3 mb-3 text-center text-sm font-medium"
@@ -168,13 +162,70 @@ export default function ReaderPage({
             </div>
           )}
 
+          <div className="text-center pt-8 pb-10">
+            <p
+              className="text-[11px] font-semibold uppercase tracking-[0.18em]"
+              style={{ color: "var(--rm-accent)" }}
+            >
+              Chapter {chapter.chapterNumber}
+            </p>
+            <h1
+              className="font-title text-[1.6rem] font-semibold leading-tight mt-2 px-2"
+              style={{ color: "var(--rm-fg)" }}
+            >
+              {chapter.title}
+            </h1>
+            <div className="mx-auto mt-5 h-px w-10" style={{ backgroundColor: "var(--rm-border)" }} />
+          </div>
+
           {isUnlocked ? (
-            <ChapterContent
-              content={chapter.content}
-              settings={settings}
-              isPremium={chapter.isPremium}
-              isUnlocked={true}
-            />
+            <>
+              <ChapterContent
+                content={chapter.content}
+                settings={settings}
+                isPremium={chapter.isPremium}
+                isUnlocked={true}
+              />
+
+              <div className="pt-10 pb-6 text-center">
+                <p className="text-xs" style={{ color: "var(--rm-muted)" }}>
+                  — Akhir chapter {chapter.chapterNumber} —
+                </p>
+                {nextChapter ? (
+                  <a
+                    href={`/baca/${nextChapter.workSlug}/${nextChapter.slug}`}
+                    onClick={hapticTap}
+                    className="mt-5 flex items-center gap-3 rounded-2xl p-4 text-left transition-opacity hover:opacity-90 tap-feedback"
+                    style={{ backgroundColor: "var(--rm-surface)", border: "1px solid var(--rm-border)" }}
+                  >
+                    <div className="min-w-0 flex-1">
+                      <p className="text-[11px] font-medium" style={{ color: "var(--rm-muted)" }}>
+                        Selanjutnya · Chapter {nextChapter.chapterNumber}
+                      </p>
+                      <p className="text-sm font-semibold truncate mt-0.5" style={{ color: "var(--rm-fg)" }}>
+                        {nextChapter.title}
+                      </p>
+                    </div>
+                    <span
+                      className="size-9 shrink-0 rounded-full flex items-center justify-center"
+                      style={{ backgroundColor: "var(--rm-accent)", color: "var(--rm-bg)" }}
+                    >
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.25" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M5 12h14M12 5l7 7-7 7" />
+                      </svg>
+                    </span>
+                  </a>
+                ) : (
+                  <a
+                    href={`/karya/${work.slug}`}
+                    className="mt-4 inline-block text-[13px] font-semibold"
+                    style={{ color: "var(--rm-accent)" }}
+                  >
+                    Kembali ke {work.title}
+                  </a>
+                )}
+              </div>
+            </>
           ) : (
             <>
               <div className="relative">
@@ -193,12 +244,12 @@ export default function ReaderPage({
                   }}
                 />
               </div>
-              <div className="relative my-3 text-center">
+              <div className="relative my-5 text-center">
                 <div className="absolute inset-0 flex items-center" aria-hidden="true">
                   <div className="w-full" style={{ borderTop: "1px dashed var(--rm-border)" }} />
                 </div>
-                <span className="relative px-4 text-xs tracking-wider uppercase font-semibold text-[var(--rm-muted)] bg-[var(--rm-bg)] font-[family-name:var(--font-sans)]">
-                  konten terkunci
+                <span className="relative px-3 text-[11px] font-medium text-[var(--rm-muted)] bg-[var(--rm-bg)]">
+                  Lanjutan cerita terkunci
                 </span>
               </div>
               <PaywallOverlay

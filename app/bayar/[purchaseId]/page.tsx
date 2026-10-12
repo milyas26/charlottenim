@@ -5,8 +5,9 @@ import { useRouter } from "next/navigation";
 import { usePurchaseDetail, useUploadPaymentProof } from "@/lib/api/payments";
 import { createManualBundlePayment } from "@/lib/api/bundles";
 import { compressImage, MAX_IMAGE_INPUT_SIZE } from "@/lib/image";
-import { Loader2, ArrowLeft, Upload, CheckCircle, XCircle, Clock, AlertCircle, Copy, Timer } from "lucide-react";
+import { Loader2, Upload, CheckCircle, XCircle, Clock, AlertCircle, Copy, Timer } from "lucide-react";
 import BottomNav from "@/components/layout/BottomNav";
+import TopBar from "@/components/layout/TopBar";
 import LoginDialog from "@/components/LoginDialog";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -93,7 +94,8 @@ export default function BayarPage({
 
   if (!purchase) {
     return (
-      <div className="min-h-screen bg-[var(--background)] flex flex-col">
+      <div className="font-ui min-h-screen bg-[var(--background)] flex flex-col">
+        <TopBar title="Pembayaran" />
         <div className="flex-1 max-w-[480px] mx-auto w-full px-4 flex items-center justify-center pb-24">
           <p className="text-sm" style={{ color: "var(--muted)" }}>Pembelian tidak ditemukan.</p>
         </div>
@@ -154,22 +156,10 @@ export default function BayarPage({
   };
 
   return (
-    <div className="min-h-screen bg-[var(--background)] flex flex-col">
-      <div className="flex-1 max-w-[480px] mx-auto w-full px-4 pb-24">
-        <div className="flex items-center gap-3 pt-4 pb-2">
-          <button
-            onClick={() => router.back()}
-            className="p-1.5 -ml-1.5 rounded-lg hover:bg-[var(--surface)] transition-colors"
-            style={{ color: "var(--muted)" }}
-          >
-            <ArrowLeft className="size-5" />
-          </button>
-          <p className="text-xs font-medium" style={{ color: "var(--muted)" }}>
-            Kembali
-          </p>
-        </div>
-
-        <div className="text-center my-6">
+    <div className="font-ui min-h-screen bg-[var(--background)] flex flex-col">
+      <TopBar title="Pembayaran" />
+      <div className="flex-1 max-w-[480px] mx-auto w-full px-4 pb-28">
+        <div className="text-center mt-2 mb-4">
           {statusBadge()}
           {showCountdown && (
             <div className="mt-4">
@@ -195,37 +185,34 @@ export default function BayarPage({
         </div>
 
         <h1
-          className="text-lg font-bold text-center mb-6 font-[family-name:var(--font-display)]"
+          className="font-title text-xl font-semibold text-center mb-6"
           style={{ color: "var(--foreground)" }}
         >
           {purchase.bundleTitle}
         </h1>
 
-        <div
-          className="rounded-2xl p-6 mb-6"
-          style={{ backgroundColor: "var(--surface)", border: "1px solid var(--border)" }}
-        >
-          <div className="flex items-center justify-between mb-4">
+        <div className="soft-card rounded-2xl p-5 mb-4">
+          <div className="flex items-center justify-between">
             <p className="text-sm font-semibold" style={{ color: "var(--foreground)" }}>
               Total Pembayaran
             </p>
             <p
-              className="text-2xl font-bold font-[family-name:var(--font-display)]"
-              style={{ color: "var(--accent)" }}
+              className="text-2xl font-bold"
+              style={{ color: "var(--foreground)" }}
             >
               {formattedPrice}
             </p>
           </div>
 
-          <div className="gold-rule max-w-[80px] my-4" />
+          <div className="h-px my-4" style={{ backgroundColor: "var(--border)" }} />
 
           <p className="text-xs mb-4" style={{ color: "var(--muted)" }}>
             Transfer tepat sejumlah di atas ke rekening:
           </p>
 
           <div
-            className="rounded-xl p-4 mb-4"
-            style={{ backgroundColor: "color-mix(in srgb, var(--accent) 5%, transparent)" }}
+            className="rounded-xl p-4"
+            style={{ backgroundColor: "var(--surface)" }}
           >
             <div className="flex items-center gap-3 mb-3">
               <div
@@ -271,11 +258,8 @@ export default function BayarPage({
         {purchase.status === "PENDING" && (
           <div className="mb-6">
             {!purchase.paymentProofUrl ? (
-              <div
-                className="rounded-2xl p-6"
-                style={{ backgroundColor: "var(--surface)", border: "1px solid var(--border)" }}
-              >
-                <p className="text-sm font-semibold mb-4" style={{ color: "var(--foreground)" }}>
+              <div className="soft-card rounded-2xl p-5">
+                <p className="text-sm font-semibold mb-1.5" style={{ color: "var(--foreground)" }}>
                   Upload Bukti Pembayaran
                 </p>
                 <p className="text-xs mb-4" style={{ color: "var(--muted)" }}>
@@ -293,14 +277,14 @@ export default function BayarPage({
                     <button
                       onClick={handleRestart}
                       disabled={isRestarting}
-                      className="w-full flex items-center justify-center gap-2 py-3 px-6 rounded-xl text-white font-semibold text-sm transition-opacity hover:opacity-90 tap-feedback disabled:opacity-60"
+                      className="w-full flex items-center justify-center gap-2 h-12 px-6 rounded-xl text-white font-semibold text-sm transition-opacity hover:opacity-90 tap-feedback disabled:opacity-60"
                       style={{ backgroundColor: "var(--accent)" }}
                     >
                       {isRestarting ? "Memproses..." : "Buat Transaksi Baru"}
                     </button>
                   ) : (
                     <label
-                      className="flex items-center justify-center gap-2 py-3 px-6 rounded-xl text-white font-semibold text-sm transition-opacity tap-feedback hover:opacity-90 cursor-pointer"
+                      className="flex items-center justify-center gap-2 h-12 px-6 rounded-xl text-white font-semibold text-sm transition-opacity tap-feedback hover:opacity-90 cursor-pointer"
                       style={{ backgroundColor: "var(--accent)" }}
                     >
                       <Upload className="size-4" />
@@ -318,11 +302,11 @@ export default function BayarPage({
                   <LoginDialog>
                     <button
                       disabled={isExpiredOnPage}
-                      className="w-full flex items-center justify-center gap-2 py-3 px-6 rounded-xl text-white font-semibold text-sm transition-opacity hover:opacity-90 tap-feedback disabled:opacity-60"
+                      className="w-full flex items-center justify-center gap-2 h-12 px-6 rounded-xl text-white font-semibold text-sm transition-opacity hover:opacity-90 tap-feedback disabled:opacity-60"
                       style={{ backgroundColor: "var(--accent)" }}
                     >
                       <Upload className="size-4" />
-                      Login untuk Upload
+                      Masuk untuk Upload
                     </button>
                   </LoginDialog>
                 )}

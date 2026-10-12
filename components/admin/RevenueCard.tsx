@@ -150,24 +150,30 @@ export function RevenueCard({
 
   return (
     <div
-      className="rounded-xl p-3.5"
+      className="rounded-2xl p-4"
       style={{
-        backgroundColor: "var(--surface)",
-        border: "1px solid var(--border)",
+        background:
+          "linear-gradient(135deg, color-mix(in srgb, var(--accent) 16%, var(--card)) 0%, var(--card) 70%)",
+        border: "1px solid color-mix(in srgb, var(--accent) 22%, var(--border))",
       }}
     >
-      <div className="flex items-center justify-between mb-1.5">
-        <div className="flex items-center gap-1.5">
-          <DollarSign className="size-3.5" style={{ color: "var(--accent)" }} />
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
           <span
-            className="text-[11px] font-semibold uppercase tracking-wider"
-            style={{ color: "var(--muted)" }}
+            className="size-7 rounded-full flex items-center justify-center"
+            style={{
+              backgroundColor: "color-mix(in srgb, var(--accent) 16%, transparent)",
+              color: "var(--accent)",
+            }}
           >
-            Revenue
+            <DollarSign className="size-3.5" />
+          </span>
+          <span className="text-[13px] font-medium" style={{ color: "var(--muted)" }}>
+            Pendapatan
           </span>
         </div>
         <span
-          className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full"
+          className="text-[10px] font-semibold px-2 py-0.5 rounded-full"
           style={{
             backgroundColor: allTime
               ? "var(--accent)"
@@ -177,16 +183,16 @@ export function RevenueCard({
               : "var(--accent)",
           }}
         >
-          {allTime ? "All Time" : "Bulan Ini"}
+          {allTime ? "All Time" : "Bulanan"}
         </span>
       </div>
       <div
-        className="text-lg font-bold font-[family-name:var(--font-display)] leading-tight"
+        className="text-[1.75rem] font-bold leading-tight mt-3 tabular-nums"
         style={{ color: "var(--foreground)" }}
       >
         {formatRp(value)}
       </div>
-      <div className="mt-1">{monthSwitcher}</div>
+      <div className="mt-2">{monthSwitcher}</div>
     </div>
   );
 }

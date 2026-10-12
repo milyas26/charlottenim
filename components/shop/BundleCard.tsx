@@ -2,7 +2,8 @@
 
 import Link from "next/link"
 import type { PublicBundleListItem } from "@/data/types"
-import { Package, CheckCircle } from "lucide-react"
+import BookCover from "@/components/work/BookCover"
+import { CheckCircle2, ChevronRight, Layers } from "lucide-react"
 
 interface Props {
   bundle: PublicBundleListItem
@@ -16,74 +17,42 @@ export default function BundleCard({ bundle, isOwned }: Props) {
     minimumFractionDigits: 0,
   }).format(bundle.price)
 
-  const hasCover = bundle.workCoverUrl && (bundle.workCoverUrl.startsWith("http") || bundle.workCoverUrl.startsWith("data:"))
-
   return (
     <Link
       href={`/paket/${bundle.slug}`}
-      className="rounded-2xl overflow-hidden flex flex-col transition-transform hover:scale-[1.02] active:scale-[0.98] tap-feedback relative"
-      style={{
-        backgroundColor: "var(--surface)",
-        border: "1px solid var(--border)",
-      }}
+      className="soft-card group flex items-center gap-4 rounded-2xl p-3 transition-colors hover:bg-[var(--surface)] tap-feedback"
     >
-      {isOwned && (
-        <div className="absolute top-2 right-2 z-20 flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-green-600 text-white">
-          <CheckCircle className="size-3" />
-          Dimiliki
-        </div>
-      )}
+      <BookCover src={bundle.workCoverUrl} title={bundle.workTitle} className="w-[68px] shrink-0 rounded-md" />
 
-      <div className="aspect-[3/2] relative overflow-hidden">
-        {hasCover ? (
-          <>
-            <img
-              src={bundle.workCoverUrl}
-              alt=""
-              className="absolute inset-0 w-full h-full object-cover blur-md opacity-95 scale-110"
-            />
-            <img
-              src={bundle.workCoverUrl}
-              alt={bundle.workTitle}
-              className="relative z-10 h-[90%] mx-auto aspect-[10/15] object-cover shadow-md"
-            />
-          </>
-        ) : (
-          <div
-            className="w-full h-full flex items-center justify-center"
-            style={{ backgroundColor: "color-mix(in srgb, var(--accent) 15%, transparent)" }}
-          >
-            <Package className="size-8" style={{ color: "var(--accent)", opacity: 0.4 }} />
-          </div>
-        )}
-      </div>
-
-      <div className="p-3 flex flex-col flex-1">
-        <p className="text-[10px] font-medium truncate" style={{ color: "var(--muted)" }}>
+      <div className="min-w-0 flex-1 py-0.5">
+        <p className="text-[11px] truncate" style={{ color: "var(--muted)" }}>
           {bundle.workTitle}
         </p>
-
         <h3
-          className="text-sm font-bold mt-0.5 line-clamp-2 leading-snug font-[family-name:var(--font-display)]"
+          className="font-title text-[15px] font-semibold leading-snug line-clamp-2 mt-0.5"
           style={{ color: "var(--foreground)" }}
         >
           {bundle.title}
         </h3>
-
-        <div className="mt-auto pt-2 flex items-center justify-between gap-2">
-          <div className="min-w-0">
-            <p
-              className="text-sm font-bold leading-none"
-              style={{ color: "var(--accent)" }}
-            >
+        <p className="inline-flex items-center gap-1 text-[11px] mt-1" style={{ color: "var(--muted)" }}>
+          <Layers className="size-3" />
+          {bundle.chapterCount} chapter
+        </p>
+        <div className="mt-1.5">
+          {isOwned ? (
+            <span className="inline-flex items-center gap-1 text-xs font-semibold text-[#5B8C5A]">
+              <CheckCircle2 className="size-3.5" />
+              Sudah dimiliki
+            </span>
+          ) : (
+            <span className="text-sm font-semibold" style={{ color: "var(--accent)" }}>
               {formattedPrice}
-            </p>
-            <p className="text-[10px] mt-0.5" style={{ color: "var(--muted)" }}>
-              {bundle.chapterCount} chapter
-            </p>
-          </div>
+            </span>
+          )}
         </div>
       </div>
+
+      <ChevronRight className="size-4 shrink-0 transition-transform group-hover:translate-x-0.5" style={{ color: "var(--muted)" }} />
     </Link>
   )
 }

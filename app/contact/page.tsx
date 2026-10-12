@@ -1,97 +1,23 @@
 "use client";
 
 import BottomNav from "@/components/layout/BottomNav";
-import Link from "next/link";
-import { Mail, Phone, MapPin, ArrowLeft } from "lucide-react";
+import TopBar from "@/components/layout/TopBar";
+import ContactList from "@/components/layout/ContactList";
 
 export default function ContactSupportPage() {
   return (
-    <div className="min-h-screen px-4 pb-28">
-      <div className="max-w-[480px] mx-auto pt-8">
-        <Link
-          href="/user"
-          className="inline-flex items-center gap-1.5 text-sm font-medium mb-8 tap-feedback"
-          style={{ color: "var(--muted)" }}
-        >
-          <ArrowLeft size={16} />
-          Kembali
-        </Link>
-
-        <section
-          className="rounded-xl p-5 space-y-5"
-          style={{
-            backgroundColor: "var(--surface)",
-            border: "1px solid var(--border)",
-          }}
-        >
-          <h2 className="text-sm font-bold font-[family-name:var(--font-display)]">
+    <div className="font-ui min-h-screen pb-28">
+      <TopBar backHref="/user" />
+      <div className="max-w-[480px] mx-auto px-4">
+        <div className="pt-2 pb-5">
+          <h1 className="font-title text-[1.75rem] font-semibold leading-tight" style={{ color: "var(--foreground)" }}>
             Hubungi Kami
-          </h2>
-
-          <a
-            href="mailto:charlottenimmm@gmail.com"
-            className="flex items-center gap-3 text-sm tap-feedback transition-colors hover:opacity-80"
-          >
-            <div
-              className="size-9 rounded-full flex items-center justify-center shrink-0"
-              style={{
-                backgroundColor: "color-mix(in srgb, var(--accent) 12%, transparent)",
-                color: "var(--accent)",
-              }}
-            >
-              <Mail size={16} />
-            </div>
-            <div className="min-w-0">
-              <p className="text-[11px]" style={{ color: "var(--muted)" }}>
-                Email
-              </p>
-              <p className="text-sm font-medium truncate">
-                charlottenimmm@gmail.com
-              </p>
-            </div>
-          </a>
-
-          <a
-            href="tel:+6285830610640"
-            className="flex items-center gap-3 text-sm tap-feedback transition-colors hover:opacity-80"
-          >
-            <div
-              className="size-9 rounded-full flex items-center justify-center shrink-0"
-              style={{
-                backgroundColor: "color-mix(in srgb, var(--accent) 12%, transparent)",
-                color: "var(--accent)",
-              }}
-            >
-              <Phone size={16} />
-            </div>
-            <div className="min-w-0">
-              <p className="text-[11px]" style={{ color: "var(--muted)" }}>
-                Telepon
-              </p>
-              <p className="text-sm font-medium">+62 858-3061-0640</p>
-            </div>
-          </a>
-
-          <div className="flex items-center gap-3 text-sm">
-            <div
-              className="size-9 rounded-full flex items-center justify-center shrink-0"
-              style={{
-                backgroundColor: "color-mix(in srgb, var(--accent) 12%, transparent)",
-                color: "var(--accent)",
-              }}
-            >
-              <MapPin size={16} />
-            </div>
-            <div className="min-w-0">
-              <p className="text-[11px]" style={{ color: "var(--muted)" }}>
-                Alamat
-              </p>
-              <p className="text-sm font-medium">
-                Karet, Setiabudi, Jakarta Selatan
-              </p>
-            </div>
-          </div>
-        </section>
+          </h1>
+          <p className="text-sm mt-1" style={{ color: "var(--muted)" }}>
+            Ada kendala pembayaran atau pertanyaan seputar cerita? Kabari kami, ya.
+          </p>
+        </div>
+        <ContactList />
       </div>
 
       <BottomNav />

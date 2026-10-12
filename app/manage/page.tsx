@@ -6,6 +6,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import BottomNav from "@/components/layout/BottomNav";
+import PageHeader from "@/components/layout/PageHeader";
 import {
   useAdminStats,
   useAdminOrders,
@@ -31,6 +32,7 @@ import {
   X,
   ChevronRight,
   Clock,
+  Package,
 } from "lucide-react";
 
 type StatusFilter = "ALL" | "PAID" | "PENDING" | "FAILED";
@@ -141,7 +143,7 @@ export default function ManagePage() {
 
   if (authLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[var(--background)]">
+      <div className="font-ui min-h-screen flex items-center justify-center bg-[var(--background)]">
         <div className="w-6 h-6 rounded-full border-2 border-[var(--border)] border-t-[var(--accent)] animate-spin" />
       </div>
     );
@@ -150,64 +152,39 @@ export default function ManagePage() {
   if (!isAdmin) return null;
 
   return (
-    <div className="min-h-screen bg-[var(--background)] flex flex-col">
-      <div className="flex-1 max-w-[480px] mx-auto w-full px-4 pb-24">
-        <div className="pt-6 pb-4">
-          <h1
-            className="text-xl font-bold font-[family-name:var(--font-display)] text-center tracking-wide"
-            style={{ color: "var(--foreground)" }}
-          >
-            Manage
-          </h1>
-          <div className="gold-rule max-w-[80px] mx-auto my-3" />
-        </div>
+    <div className="font-ui min-h-screen bg-[var(--background)] flex flex-col">
+      <div className="flex-1 max-w-[480px] mx-auto w-full px-4 pb-28">
+        <PageHeader title="Kelola" subtitle="Pantau performa cerita dan verifikasi pembayaran." />
 
         <div
-          className="flex gap-1 mb-4 p-1 rounded-xl"
+          className="flex gap-1 mb-5 p-1 rounded-full"
           style={{ backgroundColor: "var(--surface)" }}
         >
-          <button
-            onClick={() => setTab("ringkasan")}
-            className="flex-1 py-2 px-3 rounded-lg text-sm font-semibold transition-colors"
-            style={{
-              backgroundColor:
-                tab === "ringkasan" ? "var(--accent)" : "transparent",
-              color:
-                tab === "ringkasan"
-                  ? "var(--primary-foreground)"
-                  : "var(--muted)",
-            }}
-          >
-            Ringkasan
-          </button>
-          <button
-            onClick={() => setTab("order")}
-            className="flex-1 py-2 px-3 rounded-lg text-sm font-semibold transition-colors flex items-center justify-center gap-1.5"
-            style={{
-              backgroundColor:
-                tab === "order" ? "var(--accent)" : "transparent",
-              color:
-                tab === "order"
-                  ? "var(--primary-foreground)"
-                  : "var(--muted)",
-            }}
-          >
-            Order
-            {pendingCount > 0 && (
-              <span
-                className="text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center"
+          {(["ringkasan", "order"] as const).map((key) => {
+            const active = tab === key;
+            return (
+              <button
+                key={key}
+                onClick={() => setTab(key)}
+                className="flex-1 h-9 px-3 rounded-full text-sm font-semibold transition-all flex items-center justify-center gap-1.5 tap-feedback"
                 style={{
-                  backgroundColor:
-                    tab === "order"
-                      ? "rgba(255,255,255,0.25)"
-                      : "var(--destructive)",
-                  color: "white",
+                  backgroundColor: active ? "var(--card)" : "transparent",
+                  color: active ? "var(--foreground)" : "var(--muted)",
+                  boxShadow: active ? "0 1px 3px rgba(44,36,26,0.12)" : undefined,
                 }}
               >
-                {pendingCount}
-              </span>
-            )}
-          </button>
+                {key === "ringkasan" ? "Ringkasan" : "Order"}
+                {key === "order" && pendingCount > 0 && (
+                  <span
+                    className="text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center leading-none"
+                    style={{ backgroundColor: "var(--destructive)", color: "white" }}
+                  >
+                    {pendingCount}
+                  </span>
+                )}
+              </button>
+            );
+          })}
         </div>
 
         {tab === "ringkasan" ? (
@@ -352,35 +329,36 @@ function RingkasanTab({
         revenueByMonth={stats.revenueByMonth ?? []}
         variant="manage"
       />
+      <h2 className="text-[13px] font-semibold pt-3 pb-0.5 px-1" style={{ color: "var(--muted)" }}>
+        Statistik
+      </h2>
       <div className="grid grid-cols-2 gap-3">
       {cards.map((card) => {
         const Icon = card.icon;
         return (
-          <div
-            key={card.label}
-            className="rounded-xl p-3.5"
-            style={{
-              backgroundColor: "var(--surface)",
-              border: "1px solid var(--border)",
-            }}
-          >
-            <div className="flex items-center gap-1.5 mb-1.5">
-              <Icon className="size-3.5" style={{ color: "var(--accent)" }} />
+          <div key={card.label} className="soft-card rounded-2xl p-4">
+            <div className="flex items-center gap-2 mb-3">
               <span
-                className="text-[11px] font-semibold uppercase tracking-wider"
-                style={{ color: "var(--muted)" }}
+                className="size-7 rounded-full flex items-center justify-center"
+                style={{
+                  backgroundColor: "color-mix(in srgb, var(--accent) 12%, transparent)",
+                  color: "var(--accent)",
+                }}
               >
+                <Icon className="size-3.5" />
+              </span>
+              <span className="text-[13px] font-medium" style={{ color: "var(--muted)" }}>
                 {card.label}
               </span>
             </div>
             <div
-              className="text-lg font-bold font-[family-name:var(--font-display)] leading-tight"
+              className="text-xl font-bold leading-tight tabular-nums"
               style={{ color: "var(--foreground)" }}
             >
               {card.value}
             </div>
             <p
-              className="text-[10px] mt-1 leading-snug"
+              className="text-[11px] mt-1 leading-snug"
               style={{ color: "var(--muted)" }}
             >
               {card.sub}
@@ -441,45 +419,47 @@ function OrderTab({
 
   return (
     <div className="space-y-3">
-      <div className="flex gap-2">
-        <div
-          className="flex-1 flex items-center gap-2 px-3 py-2 rounded-xl text-sm"
+      <div className="relative">
+        <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 size-4 pointer-events-none" style={{ color: "var(--muted)" }} />
+        <input
+          type="search"
+          placeholder="Cari user, karya, chapter…"
+          value={search}
+          onChange={(e) => onSearchChange(e.target.value)}
+          className="w-full h-11 pl-10 pr-4 rounded-xl text-sm outline-none transition-shadow placeholder:text-[var(--muted)] focus:ring-2 focus:ring-[var(--ring)]"
           style={{
-            backgroundColor: "var(--surface)",
-            border: "1px solid var(--border)",
-          }}
-        >
-          <Search className="size-3.5 shrink-0" style={{ color: "var(--muted)" }} />
-          <input
-            type="text"
-            placeholder="Cari user, karya, chapter..."
-            value={search}
-            onChange={(e) => onSearchChange(e.target.value)}
-            className="flex-1 bg-transparent outline-none text-sm"
-            style={{ color: "var(--foreground)" }}
-          />
-        </div>
-        <select
-          value={statusFilter}
-          onChange={(e) => onStatusFilterChange(e.target.value as StatusFilter)}
-          className="px-3 py-2 rounded-xl text-sm font-medium outline-none appearance-none"
-          style={{
-            backgroundColor: "var(--surface)",
+            backgroundColor: "var(--card)",
             border: "1px solid var(--border)",
             color: "var(--foreground)",
           }}
-        >
-          <option value="ALL">Semua</option>
-          <option value="PAID">Berhasil</option>
-          <option value="PENDING">Menunggu</option>
-          <option value="FAILED">Gagal</option>
-        </select>
+        />
+      </div>
+
+      <div className="no-scrollbar -mx-4 px-4 flex gap-2 overflow-x-auto">
+        {(["ALL", "PENDING", "PAID", "FAILED"] as const).map((key) => {
+          const active = statusFilter === key;
+          return (
+            <button
+              key={key}
+              type="button"
+              onClick={() => onStatusFilterChange(key)}
+              className="shrink-0 h-8 px-3.5 rounded-full text-xs font-medium transition-colors tap-feedback"
+              style={{
+                backgroundColor: active ? "var(--foreground)" : "var(--card)",
+                color: active ? "var(--background)" : "var(--foreground)",
+                border: `1px solid ${active ? "var(--foreground)" : "var(--border)"}`,
+              }}
+            >
+              {key === "ALL" ? "Semua" : statusLabel[key]}
+            </button>
+          );
+        })}
       </div>
 
       <button
         onClick={onBulkExpireClick}
         disabled={isBulkExpiring}
-        className="w-full flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-xs font-semibold transition-colors disabled:opacity-60"
+        className="w-full flex items-center justify-center gap-1.5 h-10 rounded-xl text-xs font-semibold transition-opacity hover:opacity-85 disabled:opacity-60 tap-feedback"
         style={{
           backgroundColor: "color-mix(in srgb, #ea580c 12%, transparent)",
           color: "#ea580c",
@@ -494,13 +474,13 @@ function OrderTab({
       </button>
 
       {purchases.length === 0 ? (
-        <div className="text-center py-16">
+        <div className="soft-card rounded-2xl text-center py-12">
           <p className="text-sm" style={{ color: "var(--muted)" }}>
             Tidak ada order ditemukan.
           </p>
         </div>
       ) : (
-        <div className="flex flex-col">
+        <div className="soft-card rounded-2xl overflow-hidden flex flex-col">
           {purchases.map((p, i) => (
             <div
               key={`${p.createdAt}-${p.userId || i}`}
@@ -508,14 +488,13 @@ function OrderTab({
               tabIndex={0}
               onClick={() => onDetailPurchaseChange(p)}
               onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onDetailPurchaseChange(p); } }}
-              className="flex items-center gap-3 py-3 transition-colors hover:bg-[var(--surface)] active:bg-[var(--surface)] -mx-4 px-4 text-left cursor-pointer"
+              className="flex items-center gap-3 py-3.5 px-4 transition-colors hover:bg-[var(--surface)] active:bg-[var(--surface)] text-left cursor-pointer"
               style={{
-                borderBottom:
-                  i < purchases.length - 1 ? "1px solid var(--border)" : undefined,
+                borderTop: i > 0 ? "1px solid var(--border)" : undefined,
               }}
             >
               <div
-                className="size-9 rounded-lg shrink-0 flex items-center justify-center text-[11px] font-bold font-[family-name:var(--font-display)]"
+                className="size-9 rounded-full shrink-0 flex items-center justify-center"
                 style={{
                   backgroundColor:
                     p.status === "PAID"
@@ -532,14 +511,9 @@ function OrderTab({
                 }}
               >
                 {p.type === "bundle" ? (
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
-                  </svg>
+                  <Package className="size-4" />
                 ) : (
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M4 19.5A2.5 2.5 0 016.5 17H20" />
-                    <path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z" />
-                  </svg>
+                  <BookOpen className="size-4" />
                 )}
               </div>
 
@@ -558,7 +532,7 @@ function OrderTab({
                     Rp {p.amount.toLocaleString("id-ID")}
                   </p>
                   <span
-                    className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full"
+                    className="inline-block mt-0.5 text-[10px] font-semibold px-2 py-0.5 rounded-full"
                     style={{
                       backgroundColor:
                         p.status === "PAID"
@@ -585,7 +559,7 @@ function OrderTab({
                       <button
                         onClick={() => onConfirmActionChange({ id: p.id, type: "approve" })}
                         disabled={isMutating}
-                        className="p-1.5 rounded-lg transition-colors hover:bg-green-100"
+                        className="size-8 rounded-full flex items-center justify-center transition-colors hover:bg-green-100 disabled:opacity-40"
                         style={{ color: "#16a34a" }}
                       >
                         <Check className="size-3.5" />
@@ -593,7 +567,7 @@ function OrderTab({
                       <button
                         onClick={() => onConfirmActionChange({ id: p.id, type: "reject" })}
                         disabled={isMutating}
-                        className="p-1.5 rounded-lg transition-colors hover:bg-red-100"
+                        className="size-8 rounded-full flex items-center justify-center transition-colors hover:bg-red-100 disabled:opacity-40"
                         style={{ color: "#dc2626" }}
                       >
                         <X className="size-3.5" />
@@ -606,7 +580,7 @@ function OrderTab({
                     <button
                       onClick={() => onConfirmActionChange({ id: p.id, type: "expire" })}
                       disabled={isMutating}
-                      className="p-1.5 rounded-lg transition-colors hover:bg-orange-100"
+                      className="size-8 rounded-full flex items-center justify-center transition-colors hover:bg-orange-100 disabled:opacity-40"
                       style={{ color: "#ea580c" }}
                     >
                       <Clock className="size-3.5" />
@@ -614,7 +588,7 @@ function OrderTab({
                   </div>
                 )}
 
-                <ChevronRight className="size-3.5 shrink-0" style={{ color: "var(--muted)", opacity: 0.4 }} />
+                <ChevronRight className="size-4 shrink-0" style={{ color: "var(--muted)", opacity: 0.6 }} />
               </div>
             </div>
           ))}
@@ -648,7 +622,7 @@ function OrderDetailDialog({
 }) {
   return (
     <div
-      className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center"
+      className="font-ui fixed inset-0 z-[60] flex items-end sm:items-center justify-center"
       onClick={onClose}
     >
       <div
@@ -656,28 +630,30 @@ function OrderDetailDialog({
         onClick={onClose}
       />
       <div
-        className="relative w-full max-w-[480px] max-h-[85vh] overflow-y-auto rounded-t-2xl sm:rounded-2xl px-5 pt-5 pb-8 animate-slide-up"
+        className="relative w-full max-w-[480px] max-h-[85vh] overflow-y-auto rounded-t-3xl sm:rounded-3xl px-5 pt-3 pb-8 animate-slide-up"
         style={{
           backgroundColor: "var(--background)",
         }}
         onClick={(e) => e.stopPropagation()}
       >
+        <div className="mx-auto mb-3 h-1.5 w-10 rounded-full sm:hidden" style={{ backgroundColor: "var(--border)" }} />
         <div className="flex items-center justify-between mb-4">
           <h3
-            className="text-base font-bold font-[family-name:var(--font-display)]"
+            className="font-title text-lg font-semibold"
             style={{ color: "var(--foreground)" }}
           >
             Detail Order
           </h3>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-lg hover:bg-[var(--surface)] transition-colors"
+            aria-label="Tutup"
+            className="size-9 rounded-full flex items-center justify-center hover:bg-[var(--surface)] transition-colors"
           >
             <X className="size-4" style={{ color: "var(--muted)" }} />
           </button>
         </div>
 
-        <div className="text-sm space-y-3">
+        <div className="text-sm space-y-3 soft-card rounded-2xl p-4 [&>div.flex]:gap-4 [&>div.flex>span:last-child]:text-right">
           <div className="flex justify-between">
             <span style={{ color: "var(--muted)" }}>User</span>
             <span className="font-medium" style={{ color: "var(--foreground)" }}>
@@ -816,14 +792,14 @@ function OrderDetailDialog({
             <div className="flex gap-2 mt-4">
               <button
                 onClick={onApprove}
-                className="flex-1 py-2.5 rounded-xl text-sm font-semibold text-white transition-colors"
+                className="flex-1 h-11 rounded-xl text-sm font-semibold text-white transition-colors"
                 style={{ backgroundColor: "#16a34a" }}
               >
                 Setujui
               </button>
               <button
                 onClick={onReject}
-                className="flex-1 py-2.5 rounded-xl text-sm font-semibold text-white transition-colors"
+                className="flex-1 h-11 rounded-xl text-sm font-semibold text-white transition-colors"
                 style={{ backgroundColor: "#dc2626" }}
               >
                 Tolak
@@ -838,7 +814,7 @@ function OrderDetailDialog({
             <div className="flex gap-2 mt-4">
               <button
                 onClick={onApprove}
-                className="flex-1 py-2.5 rounded-xl text-sm font-semibold text-white transition-colors"
+                className="flex-1 h-11 rounded-xl text-sm font-semibold text-white transition-colors"
                 style={{ backgroundColor: "#16a34a" }}
               >
                 Approve tanpa bukti pembayaran
@@ -850,7 +826,7 @@ function OrderDetailDialog({
           <div className="flex gap-2 mt-4">
             <button
               onClick={onExpire}
-              className="flex-1 py-2.5 rounded-xl text-sm font-semibold text-white transition-colors"
+              className="flex-1 h-11 rounded-xl text-sm font-semibold text-white transition-colors"
               style={{ backgroundColor: "#ea580c" }}
             >
               Kedaluwarsa
@@ -879,14 +855,14 @@ function ConfirmDialog({
   const isExpire = action.type === "expire";
 
   return (
-    <div className="fixed inset-0 z-[70] flex items-center justify-center px-4">
+    <div className="font-ui fixed inset-0 z-[70] flex items-center justify-center px-4">
       <div className="absolute inset-0 bg-black/50" onClick={onCancel} />
       <div
-        className="relative w-full max-w-sm rounded-2xl p-5"
+        className="relative w-full max-w-sm rounded-3xl p-6"
         style={{ backgroundColor: "var(--background)" }}
       >
         <h3
-          className="text-base font-bold font-[family-name:var(--font-display)] mb-2"
+          className="font-title text-lg font-semibold mb-2"
           style={{ color: "var(--foreground)" }}
         >
           {isExpire ? "Kedaluwarsa?" : isApprove ? "Setujui Pembayaran?" : "Tolak Pembayaran?"}
@@ -916,7 +892,7 @@ function ConfirmDialog({
           <button
             onClick={onCancel}
             disabled={isMutating}
-            className="flex-1 py-2.5 rounded-xl text-sm font-semibold transition-colors"
+            className="flex-1 h-11 rounded-xl text-sm font-semibold transition-colors"
             style={{
               backgroundColor: "var(--surface)",
               color: "var(--foreground)",
@@ -927,7 +903,7 @@ function ConfirmDialog({
           <button
             onClick={onConfirm}
             disabled={isMutating}
-            className="flex-1 py-2.5 rounded-xl text-sm font-semibold text-white transition-colors flex items-center justify-center gap-1.5"
+            className="flex-1 h-11 rounded-xl text-sm font-semibold text-white transition-colors flex items-center justify-center gap-1.5"
             style={{
               backgroundColor: isExpire ? "#ea580c" : isApprove ? "#16a34a" : "#dc2626",
             }}
@@ -953,14 +929,14 @@ function BulkExpireConfirmDialog({
   isPending: boolean;
 }) {
   return (
-    <div className="fixed inset-0 z-[70] flex items-center justify-center px-4">
+    <div className="font-ui fixed inset-0 z-[70] flex items-center justify-center px-4">
       <div className="absolute inset-0 bg-black/50" onClick={onCancel} />
       <div
-        className="relative w-full max-w-sm rounded-2xl p-5"
+        className="relative w-full max-w-sm rounded-3xl p-6"
         style={{ backgroundColor: "var(--background)" }}
       >
         <h3
-          className="text-base font-bold font-[family-name:var(--font-display)] mb-2"
+          className="font-title text-lg font-semibold mb-2"
           style={{ color: "var(--foreground)" }}
         >
           Proses Order Kedaluwarsa?
@@ -975,7 +951,7 @@ function BulkExpireConfirmDialog({
           <button
             onClick={onCancel}
             disabled={isPending}
-            className="flex-1 py-2.5 rounded-xl text-sm font-semibold transition-colors"
+            className="flex-1 h-11 rounded-xl text-sm font-semibold transition-colors"
             style={{
               backgroundColor: "var(--surface)",
               color: "var(--foreground)",
@@ -986,7 +962,7 @@ function BulkExpireConfirmDialog({
           <button
             onClick={onConfirm}
             disabled={isPending}
-            className="flex-1 py-2.5 rounded-xl text-sm font-semibold text-white transition-colors flex items-center justify-center gap-1.5"
+            className="flex-1 h-11 rounded-xl text-sm font-semibold text-white transition-colors flex items-center justify-center gap-1.5"
             style={{ backgroundColor: "#ea580c" }}
           >
             {isPending ? <Loader2 className="size-4 animate-spin" /> : null}

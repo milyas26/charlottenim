@@ -3,19 +3,32 @@
 import { useAuth } from "@/contexts/AuthContext";
 import { useRouter } from "next/navigation";
 import Logo from "@/components/Logo";
+import { BookOpen } from "lucide-react";
 
 export default function LoginGate() {
   const { signInWithGoogle } = useAuth();
   const router = useRouter();
 
   return (
-    <div className="min-h-screen w-full flex items-center justify-center animate-page-enter"
+    <div className="font-ui min-h-screen w-full flex items-center justify-center animate-page-enter"
       style={{ backgroundColor: "var(--rm-bg)" }}>
       <div className="w-[90vw] max-w-sm mx-auto text-center px-6 py-12">
         <Logo />
 
-        <p className="mt-6 text-sm leading-relaxed" style={{ color: "var(--rm-muted)" }}>
-          Kamu sudah membaca 2 bab. Masuk untuk melanjutkan membaca karya favoritmu.
+        <div
+          className="mx-auto mt-8 size-14 rounded-2xl flex items-center justify-center"
+          style={{
+            backgroundColor: "color-mix(in srgb, var(--rm-accent) 14%, transparent)",
+            color: "var(--rm-accent)",
+          }}
+        >
+          <BookOpen className="size-6" />
+        </div>
+        <h1 className="font-title text-xl font-semibold mt-4" style={{ color: "var(--rm-fg)" }}>
+          Ceritanya masih berlanjut
+        </h1>
+        <p className="mt-2 text-sm leading-relaxed" style={{ color: "var(--rm-muted)" }}>
+          Kamu sudah membaca 2 chapter. Masuk gratis untuk lanjut membaca dan menyimpan progresmu.
         </p>
 
         <button
@@ -26,11 +39,10 @@ export default function LoginGate() {
               router.refresh();
             } catch {}
           }}
-          className="mt-6 w-full inline-flex items-center justify-center gap-2 rounded-xl px-5 py-3 text-sm font-semibold transition-all hover:opacity-80 tap-feedback"
+          className="mt-7 w-full inline-flex items-center justify-center gap-2 rounded-xl h-12 px-5 text-sm font-semibold transition-opacity hover:opacity-90 tap-feedback"
           style={{
-            backgroundColor: "var(--rm-surface)",
-            color: "var(--rm-fg)",
-            border: "1.5px solid var(--rm-border)",
+            backgroundColor: "var(--rm-fg)",
+            color: "var(--rm-bg)",
           }}
         >
           <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
